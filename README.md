@@ -126,7 +126,7 @@ The trace file is the only interface between training, evaluation and the demo. 
 | Role | Model | Details | Licence |
 |---|---|---|---|
 | Core model | [`CohereLabs/tiny-aya-global`](https://huggingface.co/CohereLabs/tiny-aya-global) | 3.35B parameters, 8K context, base model `CohereLabs/tiny-aya-base`. bf16, no quantisation. Latest revision at job time; no revision pin. | CC-BY-NC-4.0 (model card), plus Cohere Labs' Acceptable Use Policy. Gated. |
-| Adapters (ours) | LoRA on all 7 linear projections (`q,k,v,o,gate,up,down`) | r=16, alpha=32, dropout 0.05. GRPO adapters train on top of the merged SFT adapter, so inference merges both in order. | Not set yet. See `{{HF_ADAPTERS_REPO}}`. Use with the base model follows the base model's terms. |
+| Adapters (ours) | LoRA on all 7 linear projections (`q,k,v,o,gate,up,down`) | r=16, alpha=32, dropout 0.05. GRPO adapters train on top of the merged SFT adapter, so inference merges both in order. | CC-BY-NC-4.0, set on each adapter repo, the same as the base model. Use with the base model follows the base model's terms. |
 | Teacher | None (scripted oracle in `frugal_analyst/policies.py`) | Replays the efficient tool path stored with each task. | Our code. |
 | Local smoke tests only | [`HuggingFaceTB/SmolLM2-135M-Instruct`](https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct) | CPU checks of the code paths. No reported number uses it. | See the model card. |
 | Closed-model baseline | None | Not run. | |
@@ -485,11 +485,11 @@ Expected before/after is a forecast: we expect the largest new gain from more he
 
 | Artifact | Link |
 |---|---|
-| HF models collection (adapters) | `{{HF_MODELS_COLLECTION}}` |
-| Adapters repo | `{{HF_ADAPTERS_REPO}}` |
-| HF datasets collection (tasks, teacher traces, eval traces, GRPO logs and rollouts) | `{{HF_DATASETS_COLLECTION}}` |
-| Traces and logs dataset | `{{HF_TRACES_DATASET}}` |
-| GitHub repository | `{{GITHUB_REPO}}` |
+| HF models collection (adapters) | https://huggingface.co/collections/prathameshk421/frugal-analyst-models-and-adapters-6af8aee6fad812f5859dc8f9 |
+| Adapter repos | 6 adapter repos, one per run: [`grpo`](https://huggingface.co/prathameshk421/frugal-analyst-tiny-aya-grpo) (final), [`distilled`](https://huggingface.co/prathameshk421/frugal-analyst-tiny-aya-sft), [`grpo-ungated`](https://huggingface.co/prathameshk421/frugal-analyst-tiny-aya-grpo-ungated), [`distilled-all`](https://huggingface.co/prathameshk421/frugal-analyst-tiny-aya-sft-all-templates), [`distilled-mixed`](https://huggingface.co/prathameshk421/frugal-analyst-tiny-aya-sft-mixed-teacher), [`grpo-mixed`](https://huggingface.co/prathameshk421/frugal-analyst-tiny-aya-grpo-mixed-teacher) |
+| HF datasets collection (tasks, teacher traces, eval traces, GRPO logs and rollouts) | https://huggingface.co/collections/prathameshk421/frugal-analyst-datasets-traces-and-logs-6af8aee8307f37a24ac0d10d |
+| Traces and logs dataset | https://huggingface.co/datasets/prathameshk421/frugal-analyst-data |
+| GitHub repository | https://github.com/prathameshk421/lexsi_hackathon |
 | HF article (write-up) | `{{HF_ARTICLE}}` |
 | Demo Space | `{{HF_SPACE}}` |
 

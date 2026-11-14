@@ -4,7 +4,7 @@
   "bootstrap": 2000,
   "baseline": "zero-shot",
   "headline": "tool_call_f1_name",
-  "tasks_dir": "/Volumes/SSD/Projects/Hackathons/Lexsi/reconciliation-agent/.claude/worktrees/frugal-analyst/data/tasks",
+  "tasks_dir": "data/tasks",
   "inputs": [
     {
       "path": "outputs/traces/distilled-all_test_id.jsonl",

@@ -452,7 +452,8 @@ def run(args: argparse.Namespace) -> int:
     results = {
         "auditkit_version": ak.__version__,
         "seed": args.seed, "bootstrap": args.bootstrap, "baseline": baseline, "headline": headline,
-        "tasks_dir": str(tasks_dir),
+        # A path inside the repo, so the report does not show a local folder name.
+        "tasks_dir": str(tasks_dir.resolve().relative_to(ROOT)) if tasks_dir.resolve().is_relative_to(ROOT) else tasks_dir.name,
         "inputs": inputs,
         "scorers": AUDITKIT_SCORERS,
         "metric_info": {k: {"label": v[0], "direction": v[1], "auditkit_score": v[2]} for k, v in METRICS.items()},
