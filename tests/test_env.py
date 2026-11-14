@@ -151,3 +151,12 @@ def test_format_number():
     assert env.format_number(3.14159) == "3.14"
     assert env.format_number(-0.001) == "0"
     assert env.format_number(12.5) == "12.5"
+
+
+def test_run_tool_rejects_unknown_arguments():
+    from frugal_analyst.env import run_tool
+    bad = run_tool("run_sql", {"database": "retail", "query": "SELECT 1", "limit": 5})
+    assert not bad.ok and bad.output.startswith("ERROR:")
+    bad = run_tool("get_schema", {"database": "retail", "verbose": True})
+    assert not bad.ok and bad.output.startswith("ERROR:")
+    assert run_tool("run_sql", {"database": "retail", "query": "SELECT 1"}).ok

@@ -250,6 +250,13 @@ def run_tool(name: str, arguments: dict, db_dir: str | Path | None = None) -> To
     try:
         if not isinstance(arguments, dict):
             return ToolResult("ERROR: arguments must be an object", False)
+        # The live tools are plain functions, so an extra key makes the real
+        # call fail. The reward must see the same failure, or a bad call would
+        # count as a good one.
+        allowed = {"get_schema": {"database"}, "run_sql": {"database", "query"}}
+        extra = sorted(set(arguments) - allowed.get(name, set(arguments)))
+        if extra:
+            return ToolResult(f"ERROR: unexpected argument {extra[0]!r}", False, is_sql=(name == "run_sql"))
         if name == "get_schema":
             if "database" not in arguments:
                 return ToolResult("ERROR: missing argument 'database'", False)
