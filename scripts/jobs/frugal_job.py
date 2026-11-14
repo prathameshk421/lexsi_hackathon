@@ -138,12 +138,16 @@ def main() -> None:
     p.add_argument("--output-repo-type", default="model", choices=["model", "dataset"])
     p.add_argument("--run-name", required=True, help="folder name inside the output repo")
     p.add_argument("--model", default="CohereLabs/tiny-aya-global")
+    # `hf jobs uv run` drops a bare `--`, so step arguments can also come as one string.
+    p.add_argument("--extra", default="", help='arguments for the step script as one string, e.g. --extra "--epochs 2 --lr 2e-4"')
     p.add_argument("--label", default=None, help="trace label for baseline/eval (zero-shot, distilled, grpo, grpo-ungated)")
     p.add_argument("--splits", default="test_id,test_ood", help="task splits for baseline/eval")
     p.add_argument("--adapters", default=None, help="eval: comma list of adapter refs, merged in order")
     p.add_argument("--init-adapter", default=None, help="grpo: SFT adapter ref")
     p.add_argument("--smoke", action="store_true", help="tiny settings that cost a few cents; args after -- still win")
     args = p.parse_args(argv)
+    import shlex
+    extra = extra + shlex.split(args.extra)
     if args.smoke:
         # Put the smoke settings first so anything after `--` overrides them
         # (argparse keeps the last value of a repeated option).
