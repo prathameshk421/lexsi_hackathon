@@ -114,18 +114,18 @@ with both, in order.
 
 ```bash
 hf jobs uv run --flavor a10g-small --timeout 3h --secrets HF_TOKEN \
-    scripts/jobs/frugal_job.py --step eval --run-name eval-distilled --label distilled \
+    scripts/jobs/frugal_job.py --step eval --run-name eval-distilled --trace-label distilled \
     --adapters YOU/frugal-runs:sft/adapter $COMMON
 
 hf jobs uv run --flavor a10g-small --timeout 3h --secrets HF_TOKEN \
-    scripts/jobs/frugal_job.py --step eval --run-name eval-grpo --label grpo \
+    scripts/jobs/frugal_job.py --step eval --run-name eval-grpo --trace-label grpo \
     --adapters YOU/frugal-runs:sft/adapter,YOU/frugal-runs:grpo/adapter $COMMON
 ```
 
 ### 5. Optional ablation: ungated reward
 
 Same as step 3 with `--run-name grpo-ungated` and `--reward-mode ungated`, then
-step 4 with `--label grpo-ungated` and `--adapters ...:sft/adapter,...:grpo-ungated/adapter`.
+step 4 with `--trace-label grpo-ungated` and `--adapters ...:sft/adapter,...:grpo-ungated/adapter`.
 
 ### Get the results back
 

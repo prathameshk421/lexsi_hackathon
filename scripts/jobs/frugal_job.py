@@ -140,7 +140,8 @@ def main() -> None:
     p.add_argument("--model", default="CohereLabs/tiny-aya-global")
     # `hf jobs uv run` drops a bare `--`, so step arguments can also come as one string.
     p.add_argument("--extra", default="", help='arguments for the step script as one string, e.g. --extra "--epochs 2 --lr 2e-4"')
-    p.add_argument("--label", default=None, help="trace label for baseline/eval (zero-shot, distilled, grpo, grpo-ungated)")
+    # `hf jobs uv run` takes `--label` for itself, so use `--trace-label` in job commands.
+    p.add_argument("--trace-label", "--label", dest="label", default=None, help="trace label for baseline/eval (zero-shot, distilled, grpo, grpo-ungated)")
     p.add_argument("--splits", default="test_id,test_ood", help="task splits for baseline/eval")
     p.add_argument("--adapters", default=None, help="eval: comma list of adapter refs, merged in order")
     p.add_argument("--init-adapter", default=None, help="grpo: SFT adapter ref")
