@@ -23,7 +23,9 @@ Code source, one of:
     --code-git-url URL           a git URL (needs git in the job image)
 
 Adapter references (--init-adapter, --adapters) are a local path or
-REPO_ID:SUBDIR, for example `me/frugal-runs:sft-r16/adapter`.
+REPO_ID:SUBDIR, for example `me/frugal-runs:sft-r16/adapter`. Use `REPO_ID:.`
+for a public adapter repo that keeps the adapter at its root. Both flags take a
+comma list. The adapters are merged in that order.
 
 Step arguments go in one string: `--extra "--max-steps 30 --num-generations 4"`.
 `hf jobs uv run` drops a bare `--`, so `--` works only when you run this file directly.
@@ -96,8 +98,13 @@ def resolve_ref(ref: str, repo_type: str) -> str:
     repo_id, sub = ref.split(":", 1)
     sub = sub.strip("/")
     local = WORK / "refs" / repo_id.replace("/", "__")
-    snapshot_download(repo_id=repo_id, repo_type=repo_type, local_dir=str(local), allow_patterns=[f"{sub}/*"])
-    path = local / sub
+    if sub in ("", "."):
+        # The public adapter repos keep the adapter at the repo root: `me/adapter-repo:.`
+        snapshot_download(repo_id=repo_id, repo_type="model", local_dir=str(local))
+        path = local
+    else:
+        snapshot_download(repo_id=repo_id, repo_type=repo_type, local_dir=str(local), allow_patterns=[f"{sub}/*"])
+        path = local / sub
     if not (path / "adapter_config.json").exists():
         raise SystemExit(f"no adapter_config.json under {ref}")
     return str(path)
@@ -194,7 +201,9 @@ def main() -> None:
         elif args.step == "grpo":
             cmd = [py, "scripts/train_grpo.py", "--model", args.model, "--out", str(run_dir / "adapter")]
             if args.init_adapter:
-                cmd += ["--init-adapter", resolve_ref(args.init_adapter, args.output_repo_type)]
+                # A comma list is merged in order, for example the SFT adapter then a GRPO adapter.
+                refs = [resolve_ref(a, args.output_repo_type) for a in args.init_adapter.split(",")]
+                cmd += ["--init-adapter", ",".join(refs)]
             status = run(cmd + extra, code, logfile)
     finally:
         (run_dir / "job_info.txt").write_text(
