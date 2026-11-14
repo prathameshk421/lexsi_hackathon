@@ -36,6 +36,7 @@ frugal_analyst/
   reward.py      score_trajectory(), answer matching, RewardConfig
   policies.py    scripted policies: oracle (teacher), naive (wasteful), used with no GPU
   traces.py      trace record schema, jsonl read/write, run_scripted_policy()
+  metrics.py     per-episode metrics, aggregate(), paired bootstrap interval
   trajectory.py  parse AgentTune completion text into tool calls + final answer   [training agent]
   runner.py      run a HF model (+ optional LoRA adapter) over tasks, write traces [training agent]
 scripts/
@@ -203,7 +204,7 @@ One JSON object per line. This is the only interface between runs, evaluation an
 
 ## Evaluation (eval agent)
 
-`scripts/eval_auditkit.py --traces outputs/traces/*.jsonl --out outputs/eval/` uses AuditKit (`import auditkit as ak`) with custom `@ak.scorer` functions over precomputed outputs. Metrics per model and split: accuracy, grounded rate, answered rate, mean reward, mean efficiency, mean tool calls, mean rows returned, mean VM steps, VM-step ratio to optimal, and "correct and optimal" rate. It uses `compare_models` (or the verified equivalent) with paired bootstrap for before/after pairs. It writes `results.json` and `results.md`, and reports AuditKit's failed-sample count. It fails loudly if a trace file is malformed.
+`scripts/eval_auditkit.py --traces outputs/traces/*.jsonl --out outputs/eval/` uses AuditKit (`import auditkit as ak`) with custom `@ak.scorer` functions over precomputed outputs. Metrics per model and split: accuracy, grounded rate, answered rate, mean reward, mean efficiency, mean tool calls, mean rows returned, mean VM steps, VM-step ratio to optimal, and "correct and optimal" rate. It runs one `ak.evaluate` per model and uses `ak.compare` for significance. `compare_models` does not work with precomputed outputs (see `docs/eval-notes.md`). The 95% interval is our own paired bootstrap in `frugal_analyst/metrics.py`. It writes `results.json` and `results.md`, and reports AuditKit's failed-sample count. It fails loudly if a trace file is malformed.
 
 ## Demo (demo agent)
 
