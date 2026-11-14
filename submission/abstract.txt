@@ -1,0 +1,17 @@
+Frugal Analyst: a 3.35B model that answers database questions with few, verified tool calls
+
+Team Dear_Basketball. Track 3, Agentic Fine-tuning. Problem statements 6 (Data and database agents) and 2 (Efficient trajectories). The work also touches 3 (Agentic distillation) and 9 (Reward design and reward-hacking defences).
+
+Small models can call tools, but they waste calls and guess answers. We train Tiny Aya Global (CohereLabs/tiny-aya-global, 3.35B, LoRA r=16) to answer analytics questions over SQLite with two tools, get_schema and run_sql. The reward pays for a correct answer and for low cost: tool calls, rows returned and SQLite VM steps. An answer counts as correct only if a query that read a real table returned it, and the value is not a typed literal in that query's select list.
+
+All data is synthetic and English: 5 generated databases and 48 question templates. One domain (saas, 100 test tasks) is held out from all training. In the 4 training domains, 12 of 38 templates are kept out of SFT, so 38 of the 120 in-domain test tasks use templates that SFT never saw.
+
+Pipeline. AgentTune does LoRA SFT on scripted oracle trajectories through Project.distill, then GRPO with real tool rollouts. AuditKit evaluates every model from saved traces with ak.evaluate and custom scorers, ak.compare for p-values, and AgentEvalRunner for tool-call accuracy. 95% intervals come from our own paired bootstrap over tasks.
+
+Results. On the held-out domain, task success goes from 0.080 zero-shot to 0.460 after SFT and 0.470 after GRPO (+0.390, 95% CI +0.290 to +0.490). Mean latency falls from 11.6 s to 6.3 s, and tool-call name F1 rises from 0.677 to 0.903. On in-domain templates that SFT never saw, task success goes from 0.158 to 0.447 after SFT and 0.526 after GRPO (38 tasks).
+
+GRPO on top of SFT gives no statistically clear gain: +0.025 in-domain (CI -0.008 to +0.058, AuditKit p=0.254) and +0.010 held-out (p=0.760). In a second experiment we gave the teacher one unneeded preview query on half the traces, on purpose. SFT copied the habit. 30 GRPO steps cut mean tool calls from 2.89 to 2.80 (CI -0.150 to -0.033) at unchanged accuracy. The effect is small.
+
+An offline audit on 40 validation tasks shows the evidence gate at work. Nine scripted cheats score 0.5 without the gate and 0.0 to 0.1 with it. Two gaps stay open: arithmetic on literals and an echoed filter value. An ungated GRPO run of 30 steps did not learn to cheat, so it is too short to test the gate under RL.
+
+Negative results: the first GRPO run had no reward spread because SFT had seen every template. Held-out code-lookup tasks stay hard (0.075). Limits: synthetic data, one seed, small test sets, short GRPO and no general-capability check. Compute: 13.6 GPU hours on Hugging Face Jobs, about 16.64 USD, failed runs included.

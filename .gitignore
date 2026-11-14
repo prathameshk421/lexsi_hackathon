@@ -3,3 +3,10 @@ __pycache__/
 .venv/
 *.db
 outputs/
+
+.vendor/
+data/dbs/
+*.sqlite
+.pytest_cache/
+*.egg-info/
+.gradio/

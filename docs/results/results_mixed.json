@@ -1,0 +1,685 @@
+{
+  "auditkit_version": "1.1.11",
+  "seed": 0,
+  "bootstrap": 2000,
+  "baseline": "distilled-mixed",
+  "inputs": [
+    {
+      "path": "outputs/traces/distilled-mixed_test_id.jsonl",
+      "records": 120,
+      "sha256": "868eaeb58cbd6a272bc451ff344c232aa8df2298080bc951bfc859a07a9939ed"
+    },
+    {
+      "path": "outputs/traces/distilled-mixed_test_ood.jsonl",
+      "records": 100,
+      "sha256": "6bd0884722fbf320345ce234ab99af500312710aa0dbb20fdeabd7f8438ff42f"
+    },
+    {
+      "path": "outputs/traces/grpo-mixed_test_id.jsonl",
+      "records": 120,
+      "sha256": "e1126077fa48633a99eb9633c71996ea2c8c91ca60bf282208fe037fab2829f4"
+    },
+    {
+      "path": "outputs/traces/grpo-mixed_test_ood.jsonl",
+      "records": 100,
+      "sha256": "6509c00a4df12fe0db048b86d3022102659d87145c367dd329fbac25aee258b9"
+    }
+  ],
+  "metric_info": {
+    "accuracy": {
+      "direction": "max",
+      "label": "accuracy"
+    },
+    "answered_rate": {
+      "direction": "max",
+      "label": "answered rate"
+    },
+    "grounded_rate": {
+      "direction": "max",
+      "label": "grounded rate"
+    },
+    "unread_answer_rate": {
+      "direction": "min",
+      "label": "answered with no table read"
+    },
+    "answer_in_sql_literal_rate": {
+      "direction": "min",
+      "label": "answer is a literal in its supporting SQL"
+    },
+    "no_failed_call_rate": {
+      "direction": "max",
+      "label": "episodes with 0 failed calls"
+    },
+    "reward": {
+      "direction": "max",
+      "label": "mean reward"
+    },
+    "efficiency": {
+      "direction": "max",
+      "label": "mean efficiency"
+    },
+    "efficiency_when_correct": {
+      "direction": "max",
+      "label": "efficiency (correct only)"
+    },
+    "correct_and_optimal_rate": {
+      "direction": "max",
+      "label": "correct and optimal"
+    },
+    "tool_calls": {
+      "direction": "min",
+      "label": "mean tool calls"
+    },
+    "failed_calls": {
+      "direction": "min",
+      "label": "mean failed calls"
+    },
+    "rows_returned": {
+      "direction": "min",
+      "label": "mean rows returned"
+    },
+    "vm_steps": {
+      "direction": "min",
+      "label": "mean VM steps"
+    },
+    "call_ratio": {
+      "direction": "min",
+      "label": "call ratio to optimal"
+    },
+    "vm_step_ratio": {
+      "direction": "min",
+      "label": "VM-step ratio to optimal"
+    },
+    "latency_s": {
+      "direction": "min",
+      "label": "mean latency (s)"
+    },
+    "completion_tokens": {
+      "direction": "min",
+      "label": "mean completion tokens"
+    },
+    "tool_call_validity": {
+      "direction": "max",
+      "label": "tool-call validity (1 - failed/all calls)"
+    }
+  },
+  "conditional_metrics": [
+    "efficiency_when_correct",
+    "answer_in_sql_literal_rate",
+    "latency_s",
+    "completion_tokens"
+  ],
+  "splits": {
+    "test_id": {
+      "coverage": {
+        "union": 120,
+        "shared": 120,
+        "complete": true,
+        "missing": {}
+      },
+      "models": {
+        "distilled-mixed": {
+          "n": 120,
+          "metrics": {
+            "accuracy": 0.775,
+            "answered_rate": 0.9583333333333334,
+            "grounded_rate": 1.0,
+            "unread_answer_rate": 0.0,
+            "answer_in_sql_literal_rate": 0.008333333333333333,
+            "no_failed_call_rate": 0.9583333333333334,
+            "reward": 0.7347206679092889,
+            "efficiency": 0.8280968262617431,
+            "efficiency_when_correct": 0.8433651644970898,
+            "correct_and_optimal_rate": 0.4,
+            "tool_calls": 2.8916666666666666,
+            "failed_calls": 0.08333333333333333,
+            "rows_returned": 7.841666666666667,
+            "vm_steps": 9377.25,
+            "call_ratio": 1.2486111111111111,
+            "vm_step_ratio": 0.9407617887310438,
+            "latency_s": 6.4048,
+            "completion_tokens": 140.53333333333333,
+            "tool_call_validity": 0.9711815561959655
+          },
+          "counts": {
+            "accuracy": 120,
+            "answered_rate": 120,
+            "grounded_rate": 120,
+            "unread_answer_rate": 120,
+            "answer_in_sql_literal_rate": 120,
+            "no_failed_call_rate": 120,
+            "reward": 120,
+            "efficiency": 120,
+            "efficiency_when_correct": 93,
+            "correct_and_optimal_rate": 120,
+            "tool_calls": 120,
+            "failed_calls": 120,
+            "rows_returned": 120,
+            "vm_steps": 120,
+            "call_ratio": 120,
+            "vm_step_ratio": 120,
+            "latency_s": 120,
+            "completion_tokens": 120,
+            "tool_call_validity": 120
+          },
+          "auditkit_failed_samples": 0,
+          "auditkit_errors": [],
+          "auditkit_unscored": {
+            "efficiency_when_correct": {
+              "unknown": 0,
+              "not_tested": 27
+            }
+          },
+          "by_level": {
+            "1": {
+              "n": 40,
+              "accuracy": 0.8,
+              "reward": 0.7530387135255416,
+              "tool_calls": 2.475
+            },
+            "2": {
+              "n": 38,
+              "accuracy": 0.7894736842105263,
+              "reward": 0.7320277930285164,
+              "tool_calls": 2.789473684210526
+            },
+            "3": {
+              "n": 42,
+              "accuracy": 0.7380952380952381,
+              "reward": 0.7197113207859378,
+              "tool_calls": 3.380952380952381
+            }
+          },
+          "by_domain": {
+            "clinic": {
+              "n": 30,
+              "accuracy": 0.7,
+              "reward": 0.6722836986076159,
+              "tool_calls": 2.8666666666666667
+            },
+            "logistics": {
+              "n": 30,
+              "accuracy": 0.9666666666666667,
+              "reward": 0.8917127797708269,
+              "tool_calls": 2.7333333333333334
+            },
+            "retail": {
+              "n": 30,
+              "accuracy": 0.9,
+              "reward": 0.8599995649016972,
+              "tool_calls": 2.7
+            },
+            "school": {
+              "n": 30,
+              "accuracy": 0.5333333333333333,
+              "reward": 0.5148866283570159,
+              "tool_calls": 3.2666666666666666
+            }
+          },
+          "by_template_group": {
+            "rl_only": {
+              "n": 38,
+              "accuracy": 0.4473684210526316,
+              "reward": 0.4599587344923304,
+              "tool_calls": 2.8684210526315788
+            },
+            "sft_seen": {
+              "n": 82,
+              "accuracy": 0.926829268292683,
+              "reward": 0.8620493687610503,
+              "tool_calls": 2.902439024390244
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "mismatches": []
+          }
+        },
+        "grpo-mixed": {
+          "n": 120,
+          "metrics": {
+            "accuracy": 0.7666666666666667,
+            "answered_rate": 0.9666666666666667,
+            "grounded_rate": 1.0,
+            "unread_answer_rate": 0.0,
+            "answer_in_sql_literal_rate": 0.025,
+            "no_failed_call_rate": 0.9416666666666667,
+            "reward": 0.739669641429498,
+            "efficiency": 0.8612164445876815,
+            "efficiency_when_correct": 0.8730512385117338,
+            "correct_and_optimal_rate": 0.4666666666666667,
+            "tool_calls": 2.8,
+            "failed_calls": 0.09166666666666666,
+            "rows_returned": 7.3,
+            "vm_steps": 9881.083333333334,
+            "call_ratio": 1.202777777777778,
+            "vm_step_ratio": 0.9596917553368232,
+            "latency_s": 6.286166666666667,
+            "completion_tokens": 139.1,
+            "tool_call_validity": 0.9672619047619048
+          },
+          "counts": {
+            "accuracy": 120,
+            "answered_rate": 120,
+            "grounded_rate": 120,
+            "unread_answer_rate": 120,
+            "answer_in_sql_literal_rate": 120,
+            "no_failed_call_rate": 120,
+            "reward": 120,
+            "efficiency": 120,
+            "efficiency_when_correct": 92,
+            "correct_and_optimal_rate": 120,
+            "tool_calls": 120,
+            "failed_calls": 120,
+            "rows_returned": 120,
+            "vm_steps": 120,
+            "call_ratio": 120,
+            "vm_step_ratio": 120,
+            "latency_s": 120,
+            "completion_tokens": 120,
+            "tool_call_validity": 120
+          },
+          "auditkit_failed_samples": 0,
+          "auditkit_errors": [],
+          "auditkit_unscored": {
+            "efficiency_when_correct": {
+              "unknown": 0,
+              "not_tested": 28
+            }
+          },
+          "by_level": {
+            "1": {
+              "n": 40,
+              "accuracy": 0.8,
+              "reward": 0.7750793483117763,
+              "tool_calls": 2.35
+            },
+            "2": {
+              "n": 38,
+              "accuracy": 0.8157894736842105,
+              "reward": 0.7668675770970971,
+              "tool_calls": 2.6315789473684212
+            },
+            "3": {
+              "n": 42,
+              "accuracy": 0.6904761904761905,
+              "reward": 0.6813384549852147,
+              "tool_calls": 3.380952380952381
+            }
+          },
+          "by_domain": {
+            "clinic": {
+              "n": 30,
+              "accuracy": 0.7333333333333333,
+              "reward": 0.7184972674413667,
+              "tool_calls": 2.7
+            },
+            "logistics": {
+              "n": 30,
+              "accuracy": 0.9666666666666667,
+              "reward": 0.8976441507615107,
+              "tool_calls": 2.7
+            },
+            "retail": {
+              "n": 30,
+              "accuracy": 0.8333333333333334,
+              "reward": 0.8259838524914319,
+              "tool_calls": 2.533333333333333
+            },
+            "school": {
+              "n": 30,
+              "accuracy": 0.5333333333333333,
+              "reward": 0.5165532950236825,
+              "tool_calls": 3.2666666666666666
+            }
+          },
+          "by_template_group": {
+            "rl_only": {
+              "n": 38,
+              "accuracy": 0.42105263157894735,
+              "reward": 0.43681100357960634,
+              "tool_calls": 2.8157894736842106
+            },
+            "sft_seen": {
+              "n": 82,
+              "accuracy": 0.926829268292683,
+              "reward": 0.8800187662867649,
+              "tool_calls": 2.792682926829268
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "mismatches": []
+          }
+        }
+      }
+    },
+    "test_ood": {
+      "coverage": {
+        "union": 100,
+        "shared": 100,
+        "complete": true,
+        "missing": {}
+      },
+      "models": {
+        "distilled-mixed": {
+          "n": 100,
+          "metrics": {
+            "accuracy": 0.49,
+            "answered_rate": 0.86,
+            "grounded_rate": 0.94,
+            "unread_answer_rate": 0.0,
+            "answer_in_sql_literal_rate": 0.0,
+            "no_failed_call_rate": 0.76,
+            "reward": 0.475644891013631,
+            "efficiency": 0.8217205059060898,
+            "efficiency_when_correct": 0.7618158816882898,
+            "correct_and_optimal_rate": 0.18,
+            "tool_calls": 2.99,
+            "failed_calls": 0.41,
+            "rows_returned": 4.3,
+            "vm_steps": 7511.6,
+            "call_ratio": 1.2783333333333333,
+            "vm_step_ratio": 1.0340868869060205,
+            "latency_s": 7.007770000000001,
+            "completion_tokens": 155.47,
+            "tool_call_validity": 0.862876254180602
+          },
+          "counts": {
+            "accuracy": 100,
+            "answered_rate": 100,
+            "grounded_rate": 100,
+            "unread_answer_rate": 100,
+            "answer_in_sql_literal_rate": 100,
+            "no_failed_call_rate": 100,
+            "reward": 100,
+            "efficiency": 100,
+            "efficiency_when_correct": 49,
+            "correct_and_optimal_rate": 100,
+            "tool_calls": 100,
+            "failed_calls": 100,
+            "rows_returned": 100,
+            "vm_steps": 100,
+            "call_ratio": 100,
+            "vm_step_ratio": 100,
+            "latency_s": 100,
+            "completion_tokens": 100,
+            "tool_call_validity": 100
+          },
+          "auditkit_failed_samples": 0,
+          "auditkit_errors": [],
+          "auditkit_unscored": {
+            "efficiency_when_correct": {
+              "unknown": 0,
+              "not_tested": 51
+            }
+          },
+          "by_level": {
+            "1": {
+              "n": 30,
+              "accuracy": 0.8333333333333334,
+              "reward": 0.7671146256284704,
+              "tool_calls": 2.533333333333333
+            },
+            "2": {
+              "n": 30,
+              "accuracy": 0.6666666666666666,
+              "reward": 0.5944083574652147,
+              "tool_calls": 3.1
+            },
+            "3": {
+              "n": 40,
+              "accuracy": 0.1,
+              "reward": 0.1679699902138137,
+              "tool_calls": 3.25
+            }
+          },
+          "by_domain": {
+            "saas": {
+              "n": 100,
+              "accuracy": 0.49,
+              "reward": 0.475644891013631,
+              "tool_calls": 2.99
+            }
+          },
+          "by_template_group": {
+            "unseen_domain": {
+              "n": 100,
+              "accuracy": 0.49,
+              "reward": 0.475644891013631,
+              "tool_calls": 2.99
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "mismatches": []
+          }
+        },
+        "grpo-mixed": {
+          "n": 100,
+          "metrics": {
+            "accuracy": 0.5,
+            "answered_rate": 0.86,
+            "grounded_rate": 0.94,
+            "unread_answer_rate": 0.0,
+            "answer_in_sql_literal_rate": 0.0,
+            "no_failed_call_rate": 0.76,
+            "reward": 0.4834281523281636,
+            "efficiency": 0.8219598532713038,
+            "efficiency_when_correct": 0.7617126093126546,
+            "correct_and_optimal_rate": 0.19,
+            "tool_calls": 2.99,
+            "failed_calls": 0.41,
+            "rows_returned": 4.3,
+            "vm_steps": 7463.8,
+            "call_ratio": 1.2783333333333333,
+            "vm_step_ratio": 1.0205828709455518,
+            "latency_s": 7.043229999999999,
+            "completion_tokens": 155.71,
+            "tool_call_validity": 0.862876254180602
+          },
+          "counts": {
+            "accuracy": 100,
+            "answered_rate": 100,
+            "grounded_rate": 100,
+            "unread_answer_rate": 100,
+            "answer_in_sql_literal_rate": 100,
+            "no_failed_call_rate": 100,
+            "reward": 100,
+            "efficiency": 100,
+            "efficiency_when_correct": 50,
+            "correct_and_optimal_rate": 100,
+            "tool_calls": 100,
+            "failed_calls": 100,
+            "rows_returned": 100,
+            "vm_steps": 100,
+            "call_ratio": 100,
+            "vm_step_ratio": 100,
+            "latency_s": 100,
+            "completion_tokens": 100,
+            "tool_call_validity": 100
+          },
+          "auditkit_failed_samples": 0,
+          "auditkit_errors": [],
+          "auditkit_unscored": {
+            "efficiency_when_correct": {
+              "unknown": 0,
+              "not_tested": 50
+            }
+          },
+          "by_level": {
+            "1": {
+              "n": 30,
+              "accuracy": 0.8333333333333334,
+              "reward": 0.7671146256284704,
+              "tool_calls": 2.533333333333333
+            },
+            "2": {
+              "n": 30,
+              "accuracy": 0.7,
+              "reward": 0.6203525618469902,
+              "tool_calls": 3.1
+            },
+            "3": {
+              "n": 40,
+              "accuracy": 0.1,
+              "reward": 0.1679699902138137,
+              "tool_calls": 3.25
+            }
+          },
+          "by_domain": {
+            "saas": {
+              "n": 100,
+              "accuracy": 0.5,
+              "reward": 0.4834281523281636,
+              "tool_calls": 2.99
+            }
+          },
+          "by_template_group": {
+            "unseen_domain": {
+              "n": 100,
+              "accuracy": 0.5,
+              "reward": 0.4834281523281636,
+              "tool_calls": 2.99
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "mismatches": []
+          }
+        }
+      }
+    }
+  },
+  "comparisons": {
+    "test_id": {
+      "baseline": "distilled-mixed",
+      "pairs": [
+        {
+          "model": "grpo-mixed",
+          "n_paired": 120,
+          "metrics": {
+            "accuracy": {
+              "direction": "max",
+              "baseline_mean": 0.775,
+              "candidate_mean": 0.7666666666666667,
+              "delta": -0.008333333333333333,
+              "ci_low": -0.041666666666666664,
+              "ci_high": 0.016666666666666666,
+              "excludes_zero": false,
+              "verdict": "no clear change",
+              "auditkit_p_value": 0.751249,
+              "auditkit_delta": -0.008333,
+              "auditkit_error": null
+            },
+            "reward": {
+              "direction": "max",
+              "baseline_mean": 0.7347206679092889,
+              "candidate_mean": 0.739669641429498,
+              "delta": 0.0049489735202090405,
+              "ci_low": -0.025798776078791642,
+              "ci_high": 0.02887358263075896,
+              "excludes_zero": false,
+              "verdict": "no clear change",
+              "auditkit_p_value": 0.685315,
+              "auditkit_delta": 0.004949,
+              "auditkit_error": null
+            },
+            "efficiency": {
+              "direction": "max",
+              "baseline_mean": 0.8280968262617431,
+              "candidate_mean": 0.8612164445876815,
+              "delta": 0.03311961832593851,
+              "ci_low": 0.015463842618418454,
+              "ci_high": 0.05209988256877099,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.03312,
+              "auditkit_error": null
+            },
+            "tool_calls": {
+              "direction": "min",
+              "baseline_mean": 2.8916666666666666,
+              "candidate_mean": 2.8,
+              "delta": -0.09166666666666666,
+              "ci_low": -0.15,
+              "ci_high": -0.03333333333333333,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.007992,
+              "auditkit_delta": -0.091667,
+              "auditkit_error": null
+            }
+          }
+        }
+      ]
+    },
+    "test_ood": {
+      "baseline": "distilled-mixed",
+      "pairs": [
+        {
+          "model": "grpo-mixed",
+          "n_paired": 100,
+          "metrics": {
+            "accuracy": {
+              "direction": "max",
+              "baseline_mean": 0.49,
+              "candidate_mean": 0.5,
+              "delta": 0.01,
+              "ci_low": 0.0,
+              "ci_high": 0.03,
+              "excludes_zero": false,
+              "verdict": "no clear change",
+              "auditkit_p_value": 0.61039,
+              "auditkit_delta": 0.01,
+              "auditkit_error": null
+            },
+            "reward": {
+              "direction": "max",
+              "baseline_mean": 0.475644891013631,
+              "candidate_mean": 0.4834281523281636,
+              "delta": 0.007783261314532636,
+              "ci_low": 0.0,
+              "ci_high": 0.023349783943597907,
+              "excludes_zero": false,
+              "verdict": "no clear change",
+              "auditkit_p_value": 0.61039,
+              "auditkit_delta": 0.007783,
+              "auditkit_error": null
+            },
+            "efficiency": {
+              "direction": "max",
+              "baseline_mean": 0.8217205059060898,
+              "candidate_mean": 0.8219598532713038,
+              "delta": 0.00023934736521425304,
+              "ci_low": -0.0009523809523809512,
+              "ci_high": 0.0016679187937856798,
+              "excludes_zero": false,
+              "verdict": "no clear change",
+              "auditkit_p_value": 0.757243,
+              "auditkit_delta": 0.000239,
+              "auditkit_error": null
+            },
+            "tool_calls": {
+              "direction": "min",
+              "baseline_mean": 2.99,
+              "candidate_mean": 2.99,
+              "delta": 0.0,
+              "ci_low": -0.03,
+              "ci_high": 0.03,
+              "excludes_zero": false,
+              "verdict": "no clear change",
+              "auditkit_p_value": 1.0,
+              "auditkit_delta": 0.0,
+              "auditkit_error": null
+            }
+          }
+        }
+      ]
+    }
+  },
+  "comparison_method": "Per-episode values come from AuditKit (ak.evaluate with model='precomputed' and custom scorers). Confidence intervals are a percentile paired bootstrap over tasks (frugal_analyst.metrics.paired_bootstrap_ci), because AuditKit 1.1.11 has no confidence interval. ak.compare(...).significance() adds AuditKit's own paired bootstrap p-value. ak.compare_models cannot take a different precomputed output per model, so it is not used.",
+  "auditkit_failed_samples_total": 0,
+  "crosscheck_ok": true
+}

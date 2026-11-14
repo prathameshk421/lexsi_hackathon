@@ -1,0 +1,22 @@
+# Training and inference dependencies (scripts/train_sft.py, scripts/train_grpo.py,
+# frugal_analyst/runner.py, frugal_analyst/trajectory.py). The core package needs none.
+#
+# AgentTune at commit 1dfd054. It pins torch==2.11.0, trl==1.7.1 and
+# transformers>=5.15,<6, and pulls in peft, datasets, accelerate and huggingface-hub.
+# Install: uv pip install --python .venv/bin/python -r requirements-train.txt
+#
+# Versions it resolved to on macOS arm64 (2026-11-14): torch 2.11.0, transformers 5.23.0,
+# trl 1.7.1, peft 0.21.3, datasets 5.2.0, accelerate 1.15.0, huggingface-hub 1.33.0.
+# Side effects in our venv: huggingface-hub 2.4.0 -> 1.33.0, pillow 13.0.0 -> 11.3.0,
+# python-dateutil 4.0.0 -> 2.9.0.post0. gradio 6.32.0 and auditkit 1.1.11 still import.
+agenttune @ git+https://github.com/Lexsi-Labs/AgentTune.git@1dfd054ce59e1c1bdd566cb7e5826f836b1c8c2e
+
+# Imported directly by our scripts. All are already AgentTune dependencies; listed so
+# a missing one fails at install time, not mid-run.
+torch==2.11.0
+trl==1.7.1
+transformers>=5.15,<6
+peft>=0.6.0
+datasets>=2.14.0
+accelerate>=0.24.0
+huggingface-hub>=1.0
