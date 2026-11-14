@@ -87,7 +87,10 @@ def test_replay_assembles_two_sides(trace_dir):
     assert html.count("fa-card fa-side-") == 2
     assert "Cost at a glance" in html
     assert "Wrong" in html and "Correct" in html
-    assert "SELECT COUNT(*)\nFROM orders" in html  # SQL is shown with one clause per line
+    text = re.sub(r"<[^>]+>", "", html)  # SQL keywords are wrapped in colour spans
+    assert "SELECT COUNT(*)\nFROM orders" in text  # SQL is shown with one clause per line
+    assert '<span class="sq-k">SELECT</span>' in html
+    assert "Both answers are correct." not in html and "Only <b>grpo</b> is correct." in html  # the one-line story
     assert "optimal 2" in html
 
 
@@ -187,7 +190,13 @@ def test_untrusted_text_is_rendered_inert(tmp_path):
     assert "&lt;script&gt;alert(1)&lt;/script&gt;" in html
     # every "<" in the page starts one of our own tags
     own = set(re.findall(r"<\s*/?\s*([a-zA-Z0-9]+)", html))
-    assert own <= {"div", "span", "section", "header", "pre", "code", "b"}
+    assert own <= {"div", "span", "section", "header", "pre", "code", "b", "h2", "h3", "p", "ol", "li", "details", "summary",
+                   "dl", "dt", "dd"}
+    # every attribute in the page is one we wrote: a fixed class, a width, a title, or aria-hidden
+    for attrs in re.findall(r"<[a-z0-9]+(\s[^>]*)>", html):
+        for name in re.findall(r'\s([a-zA-Z-]+)="', attrs):
+            assert name in {"class", "style", "title", "aria-hidden", "role"}, name
+    assert not re.search(r"<[a-z0-9]+[^>]*\son[a-z]+\s*=", html, re.I)
     # task dropdown labels are plain text, and the escape helper is exact
     assert render.esc("<b>&\"'") == "&lt;b&gt;&amp;&quot;&#x27;"
 
@@ -200,6 +209,90 @@ def test_evil_text_in_live_and_playground_views():
     assert "<script" not in render.notice_html(EVIL, "info", EVIL).lower()
     assert "<script" not in render.pair_html([(EVIL, EVIL, 1, 1, EVIL)]).lower()
     assert "<script" not in render.headline_html(EVIL, EVIL, [(EVIL, 1, 2, EVIL)], EVIL).lower()
+
+
+SAFE_ATTRS = re.compile(r'^(\s+(class="[a-z0-9 -]*"|style="width:[0-9.]+%"|aria-hidden="true"|role="(status|alert|region)"))*$')
+
+
+def tags_are_own(page: str, allowed: set) -> None:
+    """Every tag is one of ours, and no tag carries an attribute that came from the text."""
+    for name, attrs in re.findall(r"<\s*/?\s*([a-zA-Z0-9]+)([^>]*)>", page):
+        assert name.lower() in allowed, name
+        assert not re.search(r"\son[a-z]+\s*=", attrs, re.I), attrs
+
+
+def test_sql_highlight_escapes_every_token():
+    evil_sql = (
+        "SELECT '</span><script>alert(1)</script>' AS \"<img src=x onerror=alert(2)>\" FROM t "
+        "WHERE x = 1 -- <b onmouseover=alert(3)>\n</code></pre><script>alert(4)</script> <a href=javascript:alert(5)>x</a>"
+    )
+    out = render.highlight_sql(evil_sql)
+    assert "<script" not in out.lower() and "<img" not in out.lower() and "<a " not in out.lower() and "<b " not in out
+    assert "&lt;script&gt;" in out and "&lt;/code&gt;" in out
+    for name, attrs in re.findall(r"<\s*/?\s*([a-zA-Z0-9]+)([^>]*)>", out):
+        assert name == "span" and (attrs == "" or re.fullmatch(r' class="sq-[ksnfc]"', attrs)), (name, attrs)
+    # the text is the same after the tags are taken out and the entities are read back
+    import html as _html
+    assert _html.unescape(re.sub(r"<[^>]+>", "", out)) == evil_sql
+    # inside a step, with the long output behind a disclosure
+    step = {"type": "tool_call", "name": "run_sql", "arguments": {"database": "retail", "query": evil_sql}, "ok": False,
+            "n_rows": 0, "vm_steps": 0, "output": "\n".join([EVIL] * 30)}
+    page = render.step_html(1, step)
+    tags_are_own(page, {"li", "span", "div", "pre", "code", "details", "summary"})
+    assert "Show full output (30 lines)" in page and "failed" in page
+
+
+def test_new_views_keep_untrusted_text_inert():
+    page = render.schema_html(f"t{EVIL}(a TEXT) -- 3 rows\n{EVIL}\nok_table(a INTEGER, b TEXT) -- 1,200 rows")
+    tags_are_own(page, {"div", "details", "summary", "ul", "li", "span"})
+    assert "ok_table" in page and "1,200 rows" in page and "&lt;script&gt;" in page
+    table = render.table_html([EVIL, "n"], [[EVIL, 1.5], ["x", 20.25]], ["fa-row-scripted", EVIL])
+    tags_are_own(table, {"div", "table", "thead", "tbody", "tr", "th", "td"})
+    assert "&lt;script&gt;" in table and ">1.50<" in table and ">20.25<" in table and 'class="fa-num"' in table
+    story = render.story_html(fa_data.clean_trace(make_trace(rows=500, vm=9000, calls=6)), EVIL,
+                              fa_data.clean_trace(make_trace()), "oracle")
+    tags_are_own(story, {"div", "p", "b", "span"})
+    words = re.sub(r"<[^>]+>", "", story)
+    assert "Both answers are correct." in words and "500x the rows" in words and "3.0x the tool calls" in words
+    assert "90x the VM steps of oracle (scripted)." in words  # every number comes from the two traces
+    trace = fa_data.clean_trace(make_trace(question=EVIL, output=EVIL, final=EVIL))
+    for page in (render.live_html(trace, EVIL, 1, False, False, EVIL, EVIL), render.trajectory_html(trace, EVIL)):
+        tags_are_own(page, {"div", "span", "section", "header", "pre", "code", "b", "h2", "ol", "li", "details", "summary"})
+    assert "<script" not in render.headline_html(EVIL, EVIL, [(EVIL, 1, 2, EVIL), ("tool calls", 5, 2)], EVIL).lower()
+    assert "better" in render.headline_html("a", "b", [("mean tool calls", 5.0, 2.0)], "x")
+    assert "worse" in render.headline_html("a", "b", [("accuracy", 0.9, 0.5)], "x")
+
+
+def test_playground_and_results_tables_are_html(trace_dir, tmp_path):
+    stats, table = logic.playground_view("retail", "SELECT name, unit_price FROM products LIMIT 3")
+    assert "Rows returned" in stats and table.count("<tr") == 4 and 'class="fa-num"' in table
+    stats, table = logic.playground_view("retail", "DROP TABLE orders")
+    assert "Query refused or failed" in stats and "No rows to show" in table
+    v = logic.results_view("all", trace_dir, tmp_path / "nope.json")
+    html = logic.results_table_html(v)
+    assert html.count("<tr") == 3 and "zero-shot" in html and "<th" in html
+    assert "No results yet" in logic.results_table_html(logic.results_view("all", tmp_path / "x", tmp_path / "x.json"))
+    assert "Schema: 4 tables" in logic.schema_view("retail") and "Pick a database" in logic.schema_view("../x")
+    assert logic.split_options(["test_id", "weird"]) == [("Seen domains", "test_id"), ("weird", "weird")]
+    first = logic.initial_ask_page(None)
+    assert "Correct" in first and "fa-step" in first and "Running..." not in first
+
+
+def test_footer_links_are_validated_and_hidden_when_unset():
+    import app as app_module
+    assert render.safe_url("https://github.com/org/repo") == "https://github.com/org/repo"
+    for bad in ["javascript:alert(1)", "http://x.org", 'https://x.org/"onmouseover=alert(1)', "https://x.org/<script>",
+                "https://x .org", None, 5, "", "data:text/html,hi"]:
+        assert render.safe_url(bad) is None, bad
+    page = render.footer_html(app_module.EVENT, EVIL, [("GitHub repository", "https://github.com/org/repo"),
+                                                      (EVIL, "javascript:alert(1)"), ("Write-up", "")])
+    assert page.count("<a ") == 1 and 'href="https://github.com/org/repo"' in page and "noopener" in page
+    assert "<script" not in page.lower() and "Agentic Fine-tuning track" in page
+    empty = render.footer_html(app_module.EVENT, "m", app_module.footer_links({}))
+    assert "<a " not in empty and "<nav" not in empty
+    links = app_module.footer_links({"FRUGAL_LINK_WRITEUP": "https://example.org/post"})
+    assert ("Write-up", "https://example.org/post") in links
+    assert app_module.base_model_name({}) == fa_backend.DEFAULT_MODEL_ID
 
 
 def test_format_sql_keeps_meaning_and_quotes():

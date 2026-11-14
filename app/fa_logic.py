@@ -51,6 +51,23 @@ def split_choices(trace_dir: Path | None = None) -> list[str]:
     return data.splits_available(trace_dir)
 
 
+SPLIT_NAMES = {"test_id": "Seen domains", "test_ood": "Held-out domain", "val": "Validation", "train": "Train",
+               "all": "All splits"}
+
+
+def split_label(split: str) -> str:
+    return SPLIT_NAMES.get(split, str(split))
+
+
+def split_options(splits: list[str]) -> list[tuple[str, str]]:
+    """(shown name, value) for a split radio. The value stays the file split name."""
+    return [(split_label(s), s) for s in splits]
+
+
+def task_info(n: int) -> str:
+    return f"Task ({n:,} that both runs answered)" if n else "Task (none that both runs answered)"
+
+
 def model_choices(split, trace_dir: Path | None = None) -> list[tuple[str, str]]:
     """(shown name, label). Scripted reference policies are marked so they are not mistaken for models."""
     return [(data.display_label(l), l) for l in data.labels_available(split, trace_dir)]
@@ -212,6 +229,14 @@ def schema_for(database) -> str:
     except Exception as exc:
         _log(exc)
         return "The schema could not be read."
+
+
+def schema_view(database) -> str:
+    """The schema as HTML. Table and column names are escaped like any other text."""
+    db = valid_database(database)
+    if db is None:
+        return render.notice_html("Pick a database.", "info")
+    return render.schema_html(schema_for(db))
 
 
 def example_choices(database) -> list[tuple[str, str]]:
@@ -443,7 +468,7 @@ def playground_run(database, sql):
         return render.notice_html("Pick a database from the list.", "info"), _empty_table()
     text = sql if isinstance(sql, str) else ""
     if not text.strip():
-        return render.notice_html("Type a SELECT query, or load an example pair below.", "info"), _empty_table()
+        return render.notice_html("Type a SELECT query, or pick an example pair.", "info"), _empty_table()
     if len(text) > MAX_SQL_CHARS:
         return render.notice_html(f"The query is too long. The limit is {MAX_SQL_CHARS} characters.", "bad"), _empty_table()
     try:
@@ -457,6 +482,30 @@ def playground_run(database, sql):
     extra = f"The table shows the first {MAX_TABLE_ROWS} rows." if res.n_rows > MAX_TABLE_ROWS else ""
     stats = render.query_stats_html(res.n_rows, res.vm_steps, capped, cost_hint(res.n_rows, capped), note=extra)
     return stats, _table(res.columns, res.rows)
+
+
+def table_view(df, empty: str = "Run a query to see rows here.") -> str:
+    """A result frame as an escaped HTML table."""
+    if df is None or len(df) == 0:
+        return render.table_html([], [], empty=empty)
+    return render.table_html([str(c) for c in df.columns], df.values.tolist(), label="Query result")
+
+
+def playground_view(database, sql) -> tuple[str, str]:
+    """Same as playground_run, with the rows as HTML."""
+    stats, df = playground_run(database, sql)
+    return stats, table_view(df, "No rows to show.")
+
+
+def initial_ask_page(backend=None) -> str:
+    """A finished oracle run on the first retail example, so the tab is not empty on first open."""
+    ex = example_choices("retail")
+    if not ex:
+        return render.notice_html("Pick a question and press Run.", "info")
+    page = None
+    for page in ask_run("retail", question_for_example("retail", ex[0][1]), "oracle", backend, pace=False):
+        pass
+    return page or render.notice_html("Pick a question and press Run.", "info")
 
 
 def run_pair(index) -> str:
@@ -743,6 +792,22 @@ def results_table(view: dict, full: bool = False):
         return round(v, 3) if isinstance(v, float) else v
 
     return pd.DataFrame([[cell(r, k) for k, _ in headers] for r in view["rows"]], columns=[h for _, h in headers])
+
+
+def results_table_html(view: dict, full: bool = False) -> str:
+    """The results table as escaped HTML. Scripted reference rows are marked in text and style."""
+    headers = view["all_headers"] if full else view["headers"]
+    if not view["rows"] or not headers:
+        return render.table_html([], [], empty="No results yet.")
+    rows, classes, seen_scripted = [], [], False
+    for r in view["rows"]:
+        rows.append([r.get(k, "") for k, _ in headers])
+        cls = ""
+        if r.get("raw") in data.SCRIPTED_LABELS:
+            cls = "fa-row-scripted" + ("" if seen_scripted else " fa-row-first-scripted")
+            seen_scripted = True
+        classes.append(cls)
+    return render.table_html([h for _, h in headers], rows, classes, label="Results table")
 
 
 def table_widths(df) -> list[int]:

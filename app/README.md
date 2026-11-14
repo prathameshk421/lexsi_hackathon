@@ -34,6 +34,19 @@ The Ask tab shows a model policy only when a backend is available. That needs al
 Optional: `FRUGAL_MODEL_ID` (default `CohereLabs/tiny-aya-global`), `FRUGAL_ADAPTER` (comma separated adapter dirs), `FRUGAL_MODEL_LABEL` (name in the UI).
 Without these, the tab says that live inference is off and replay is on.
 
+## Footer links (optional)
+
+The footer shows a link only when its variable holds a plain `https://` URL. Unset links are hidden.
+
+| Variable | Link text |
+| --- | --- |
+| `FRUGAL_LINK_GITHUB` | GitHub repository |
+| `FRUGAL_LINK_MODELS` | Model collection |
+| `FRUGAL_LINK_DATASETS` | Dataset collection |
+| `FRUGAL_LINK_WRITEUP` | Write-up |
+
+The footer also names the base model from `FRUGAL_MODEL_ID` (default `CohereLabs/tiny-aya-global`).
+
 ## Hugging Face Space
 
 Use the Gradio SDK. The repo root holds the whole project, so set `app_file: app/app.py` in the Space metadata.
@@ -45,7 +58,8 @@ The Space runtime sets the host. Paths are relative to the repo root.
 - All SQL runs through `frugal_analyst.env.execute_metered`: read-only file, one SELECT or WITH statement, row cap, output cap, VM-step abort.
 - The database name comes from a fixed list and is checked on the server. Trace and task files come from fixed names found on disk. No path is built from user text.
 - Question text is capped at 300 characters and SQL at 2000.
-- Text from traces, models and databases is escaped before it goes into HTML.
+- Text from traces, models and databases is escaped before it goes into HTML. SQL colour is added per token after escaping. Long output expands with a native `<details>` element, so the page has no custom script.
+- The only external request is one Google Fonts stylesheet. The page keeps its layout with system fonts if it fails.
 - The queue is small, with a concurrency limit per handler. No `share=True`, no file serving, no tokens.
 
 ## Tests
@@ -54,7 +68,8 @@ The Space runtime sets the host. Paths are relative to the repo root.
 
 ## Files
 
-- `app.py` layout and event wiring.
+- `DESIGN.md` design principles and the reasons for them.
+- `app.py` layout, theme and event wiring.
 - `fa_logic.py` handler logic, no Gradio import.
 - `fa_render.py` HTML and CSS.
 - `fa_data.py` trace, task and results reading.
