@@ -171,7 +171,7 @@ def score_trajectory(task: Task, calls: list[ToolCall], final_text: str | None,
   - not correct but grounded and answered: `0.1`
   - at least one valid tool call (any tool, no error) but no grounded answer: `0.05`
   - else `0.0`
-- Ungated reward for the ablation (`mode="ungated"`): `0.5 * correct + 0.5 * efficiency_naive`, where `efficiency_naive` gives full marks for zero calls. This is the hackable reward. It must be easy to see in tests that "answer with no query" beats an honest wrong attempt under this mode and loses under the gated mode. `correct` uses the same evidence rule in both modes.
+- Ungated reward for the ablation (`mode="ungated"`): `0.5 * correct + 0.5 * efficiency_naive`, where `efficiency_naive` gives full marks for zero calls. This is the hackable reward. Under this mode "answer with no query" scores 0.5, the same as an honest wrong attempt on the oracle path and more than a wrong attempt with extra calls. Under the gated mode it scores 0 and loses to both. Tests and `scripts/reward_audit.py` show this. `correct` uses the same evidence rule in both modes.
 - Required tests: oracle scores 1.0 on every train and val task; empty trajectory scores 0.0; correct answer with a `SELECT *` dump scores below the oracle; a correct number with no query scores at most 0.05 in gated mode (not grounded); `SELECT 1` then gold scores at most 0.05; `SELECT '<gold>'` scores at most 0.05; `SELECT '<gold>' FROM t LIMIT 1` scores at most 0.1; `SELECT 1` then a wrong answer scores 0.05; oracle plus one `LIMIT 5` preview scores strictly between naive and oracle; the 2 tasks with the answer in `WHERE` still score 1.0; a literal in a CTE, a `FROM` subquery, `VALUES`, a scalar subquery or a `CASE` result scores at most 0.1; the `WHERE` echo gap is tested and documented.
 - `scripts/reward_audit.py` scores scripted honest and cheating behaviours on the val split only (never a test split), under both modes. It prints a markdown table and writes `outputs/eval/reward_audit.md`.
 
@@ -210,7 +210,7 @@ One JSON object per line. This is the only interface between runs, evaluation an
 - `write_traces(path, traces)`, `read_traces(path) -> list[dict]`.
 - `scripts/rescore_traces.py --traces ... --out DIR` scores old trace files again with the current reward. It replays every recorded tool call against the local databases and stops, writing nothing, if a replayed output, ok flag or row count differs. A VM-step difference also stops it, unless `--allow-vm-drift` is given. It never writes into the folder of an input file. It prints how many traces changed `correct`, `grounded` or `reward`.
 - `run_scripted_policy(policy_name, tasks, out_path)` for `oracle`, `naive`, `guess`.
-- Model labels used everywhere: `zero-shot`, `distilled`, `grpo`, `grpo-ungated`, `oracle`, `naive`.
+- Model labels used everywhere: `zero-shot`, `distilled`, `grpo`, `grpo-ungated`, `oracle`, `naive`. Extra labels for experiments: `zero-shot-stop`, `distilled-all`, `distilled-mixed`, `grpo-mixed`. The README explains each one.
 
 ## `scripts/gen_data.py`
 

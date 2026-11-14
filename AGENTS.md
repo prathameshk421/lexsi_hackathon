@@ -61,6 +61,9 @@ tests/                    pytest files, one per module group
 data/tasks/, data/teacher/ task and teacher jsonl (committed)
 data/dbs/                 SQLite files, git-ignored, rebuilt by gen_data.py
 docs/                     spec.md (contract), eval-notes.md, training-notes.md, other plan notes
+docs/results/             AuditKit reports of the saved runs (committed). README numbers come from here
+submission/               abstract.txt, links.md, checklist.md, reproduce.md for the hackathon form
+README.md                 the write-up. It follows the official layout of the hackathon submit page
 outputs/                  runs, traces, eval results, HF cache. git-ignored
 pyproject.toml, requirements-train.txt   package and pytest config; AgentTune pin and training deps
 ```
