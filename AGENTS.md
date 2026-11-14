@@ -31,7 +31,7 @@ Pipeline: zero-shot baseline, SFT on teacher traces, GRPO with a gated reward. A
 - Abstract under 500 words. Optional ROI table.
 - Every write-up number traces to a saved run (config, seed, trace file). A number with no source is removed.
 
-## 4. Layout (real tree; "not committed" means untracked)
+## 4. Layout (real tree)
 
 ```
 frugal_analyst/           core package, standard library only
@@ -43,14 +43,14 @@ frugal_analyst/           core package, standard library only
   policies.py             scripted policies: oracle, naive, guess (no model)
   traces.py               trace schema, jsonl io, run_scripted_policy()
   metrics.py              per-episode metrics, aggregate, paired bootstrap CI
-  trajectory.py           parse AgentTune completion text (not committed)
-  runner.py               run a HF model with optional LoRA, write traces (not committed)
+  trajectory.py           parse AgentTune completion text
+  runner.py               run a HF model with optional LoRA, write traces
 scripts/
   gen_data.py             build databases, tasks and teacher traces
   eval_auditkit.py        AuditKit evaluation over trace files
-  train_sft.py            distillation with AgentTune (not committed)
-  train_grpo.py           GRPO with AgentTune (not committed)
-  jobs/                   HF Jobs entry point and README (not committed)
+  train_sft.py            distillation with AgentTune
+  train_grpo.py           GRPO with AgentTune
+  jobs/                   HF Jobs entry point and README
 app/
   app.py                  Gradio demo, also the HF Space entry point
   fa_*.py, README.md, requirements.txt   demo helpers, docs, deps
@@ -77,6 +77,7 @@ uv pip install --python .venv/bin/python -r requirements-train.txt   # training 
 ```
 
 Training and HF Jobs commands: see `scripts/jobs/README.md`. Do not launch a job without a human's go-ahead.
+Pass step arguments to `frugal_job.py` as one `--extra "..."` string. `hf jobs uv run` drops a bare `--`.
 
 ## 6. Toolkit facts
 
@@ -114,9 +115,7 @@ Training and HF Jobs commands: see `scripts/jobs/README.md`. Do not launch a job
 - If nothing changed, do not touch this file.
 - Claude Code reads this file only when no `CLAUDE.md` or `CLAUDE.local.md` exists. Do not add one. If you must, its first line is `@AGENTS.md`.
 
-Open items. Remove each one when it is fixed:
 
-- `docs/training-notes.md` still has a `SMOKE_RESULTS_PLACEHOLDER` line.
 
 ## 10. Writing style (README, write-up, docs, comments, commits)
 

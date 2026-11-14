@@ -25,8 +25,8 @@ Code source, one of:
 Adapter references (--init-adapter, --adapters) are a local path or
 REPO_ID:SUBDIR, for example `me/frugal-runs:sft-r16/adapter`.
 
-Everything after `--` goes to the step's script unchanged, for example
-`-- --max-steps 30 --num-generations 4`.
+Step arguments go in one string: `--extra "--max-steps 30 --num-generations 4"`.
+`hf jobs uv run` drops a bare `--`, so `--` works only when you run this file directly.
 
 See scripts/jobs/README.md for the exact launch commands and costs.
 """

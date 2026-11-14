@@ -88,8 +88,10 @@ Writes `zero-shot/traces/zero-shot_test_id.jsonl` and `zero-shot_test_ood.jsonl`
 ```bash
 hf jobs uv run --flavor a10g-small --timeout 2h --secrets HF_TOKEN \
     scripts/jobs/frugal_job.py --step sft --run-name sft $COMMON \
-    -- --epochs 2 --lr 2e-4 --lora-r 16 --batch-size 2 --grad-accum 8
+    --extra "--epochs 2 --lr 2e-4 --lora-r 16 --batch-size 2 --grad-accum 8"
 ```
+
+Pass step arguments as one `--extra "..."` string. `hf jobs uv run` drops a bare `--`.
 
 Writes the adapter to `sft/adapter/`.
 
@@ -99,9 +101,7 @@ Writes the adapter to `sft/adapter/`.
 hf jobs uv run --flavor a10g-small --timeout 4h --secrets HF_TOKEN \
     scripts/jobs/frugal_job.py --step grpo --run-name grpo \
     --init-adapter YOU/frugal-runs:sft/adapter $COMMON \
-    -- --max-steps 40 --num-generations 4 --batch-size 4 --grad-accum 4 \
-       --lr 1e-5 --beta 0.04 --temperature 0.8 --max-completion-length 256 \
-       --max-tool-steps 4 --reward-mode gated
+    --extra "--max-steps 40 --num-generations 4 --batch-size 4 --grad-accum 4 --lr 1e-5 --beta 0.04 --temperature 0.8 --max-completion-length 256 --max-tool-steps 4 --reward-mode gated"
 ```
 
 Writes the adapter to `grpo/adapter/`, plus `reward_log.jsonl` (mean reward per
