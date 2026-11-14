@@ -48,6 +48,7 @@ frugal_analyst/           core package, standard library only
 scripts/
   gen_data.py             build databases, tasks and teacher traces
   eval_auditkit.py        AuditKit evaluation over trace files
+  eval_agent.py           AuditKit agent evaluator: tool-call accuracy against the oracle calls
   rescore_traces.py       replay old trace files, score them with the current reward
   reward_audit.py         mean reward of honest and cheating behaviours, val split only
   train_sft.py            distillation with AgentTune
@@ -75,6 +76,7 @@ uv pip install --python .venv/bin/python -r requirements-train.txt   # training 
 .venv/bin/python -m pytest -q
 .venv/bin/python scripts/gen_data.py --seed 0
 .venv/bin/python scripts/eval_auditkit.py --traces outputs/traces/*.jsonl --out outputs/eval/
+.venv/bin/python scripts/eval_agent.py --traces outputs/traces/*.jsonl --out outputs/eval/   # agent_results.json and .md
 .venv/bin/python scripts/rescore_traces.py --traces outputs/traces/*.jsonl --out outputs/rescored/ --allow-vm-drift
 .venv/bin/python scripts/reward_audit.py                             # writes outputs/eval/reward_audit.md
 .venv/bin/python app/app.py                                          # http://127.0.0.1:7860
@@ -92,6 +94,7 @@ Use `--trace-label`, not `--label`: `hf jobs uv run` takes `--label` for itself.
 - In agentic GRPO the reward gets each completion as one flat string. Our reward reads the `trajectories` kwarg first and parses text only as a fallback.
 - AuditKit 1.1.11: `ak.evaluate(model="precomputed", cache=False)` per (model, split), `ak.compare` for pairs, `ak.scorer` for metrics. Do not use `ak.compare_models`: it cannot give each model its own precomputed output.
 - AuditKit has no confidence interval. Our CI is `metrics.paired_bootstrap_ci`: paired, task resampling, fixed seed. `ak.compare(...).significance()` gives AuditKit's own p-value. Label both.
+- Tool-call accuracy comes from `auditkit.agent_eval` (`AgentEvalRunner`, recorded mode), with the oracle calls from `data/tasks/<split>.jsonl` as the reference. Use `CustomPredicate(fn, version=...)` for the outcome: `AnswerAssertion` fails on `ANSWER: 42`. Set no `budgets`: a case over `max_tool_calls` is reported as budget exhausted, not scored.
 - A non-zero `failed_count` makes an evaluation run invalid. Exit codes: 0 ok, 1 failed samples, 2 bad input, 3 cross-check mismatch.
 
 ## 7. Working rules

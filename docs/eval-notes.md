@@ -42,9 +42,9 @@ Each (model, split) group becomes one `ak.evaluate(samples, model="precomputed",
 - **Left-out values:** a `not_tested` score is counted in `.unscored`, not in `failed_count` and not in `.errors`. The script uses it for
   null latency, null completion tokens and for incorrect episodes in `efficiency_when_correct`.
 - **Agent metrics:** `ak.ToolCallValidity`, `ak.TaskCompletion`, `ak.TrajectoryMatch`, `ak.RedundantToolCalls` and
-  `ak.AgentEvalRunner` are importable in 1.1.11. I did not use them, because they expect AuditKit's own
-  tool-call trace format, and our metrics (VM steps, rows, optimal-cost ratios) do not exist there. The notes from
-  earlier that some agent metrics were removed were not checked further. Custom scorers are what the script uses.
+  `ak.AgentEvalRunner` are importable in 1.1.11. `scripts/eval_auditkit.py` does not use them, because our metrics
+  (VM steps, rows, optimal-cost ratios) do not exist there. It uses custom scorers. The tool-call accuracy numbers
+  come from `AgentEvalRunner` in `scripts/eval_agent.py`. See the section "Tool-call accuracy" below.
 - **Cache:** I set `cache=False`. In a probe, two runs with different `actual_output` did give different results with
   the cache on, so I saw no stale result. I still turn it off so nothing is replayed or written to `~/.cache/auditkit`.
 
@@ -72,6 +72,58 @@ Breakdowns by level and by domain: accuracy, reward and tool calls, from AuditKi
 No episode is excluded from any denominator, except for the four conditional metrics above.
 
 There is no "supported and correct" rate. `correct` implies `supported`, so that rate equals accuracy.
+
+## Tool-call accuracy (`scripts/eval_agent.py`)
+
+Checked in `.venv/lib/python3.12/site-packages/auditkit/agent_eval/` (`runner.py`, `types.py`, `importers.py`,
+`outcome.py`, `report.py`) and `auditkit/metrics/agent.py`, `auditkit/trace.py`.
+
+How it runs. Each (model, split) group is one `AgentEvalRunner().run(AgentEvalSpec(mode="recorded", ...))`.
+One `AgentCase` per task. Its `reference_turns` are the oracle calls from `data/tasks/<split>.jsonl`, one call per turn.
+The trace steps are never the reference. One episode per trace, from `episode_from_sample`. The outcome is
+`CustomPredicate(fn, version="1")` over the `correct` flag of the trace, because `AnswerAssertion` fails on `ANSWER: 42`.
+The cases have no `budgets`: a case over `max_tool_calls` is reported as budget exhausted and not scored,
+and a wasteful model must still be scored. Per-episode values are in `row.diagnostics[score]["value"]`.
+The raw AuditKit runs are saved in `outputs/eval/agent_runs/<model>_<split>.json`.
+
+| Metric | Dir | AuditKit scorer and what it measures |
+|---|---|---|
+| name precision, recall, F1 (headline: name F1) | up | `tool_call_f1_name`. Multiset match on tool name only. Precision: share of the calls that match an oracle call. Recall: share of the oracle calls that were made. An extra `SELECT *` lowers precision. Stopping after one call lowers recall. |
+| argument F1 | up | `tool_call_f1`. Same, but a call matches only if name and all arguments are equal as JSON values. |
+| repeated call share | down | `redundant_tool_calls`. Share of calls that exactly repeat an earlier call. Skips an episode with no calls. |
+| loop-free | up | `agent_loop_detection`. 1.0 if no loop. 0.0 if one call is made 3 or more times, or the call sequence returns to an earlier call (a to b to a). Skips an episode with no calls. |
+| schema-valid calls | up | `tool_call_validity`. Share of calls that fit the tool schemas (tool exists, required arguments present, no unknown argument, right types). I pass the two real schemas, so it checks argument names too. It does not run the SQL, so a query that fails in SQLite still counts as valid. `no_failed_call_rate` in `results.md` covers failed SQL. Skips an episode with no calls. |
+| task success | up | The verdict of the case outcome, from the `correct` flag. Cross-check of the trace field, not an independent judge. |
+
+Not used: `trajectory_match` (turn order, as strict as argument F1), `parallel_tool_calls` (no parallel calls),
+`tool_permission` and `tool_selection` (judge), `retrieval` (no contexts), `task_completion` (needs a judge model).
+
+Strictness, read this before you quote a number. Argument F1 compares the SQL text byte for byte (as a JSON string).
+A query that is correct but worded differently from the oracle query counts as a miss. A model that finds the right
+answer in its own way scores low on argument F1 and high on task success. Name F1 does not look at the SQL, so it answers a
+different question: did the model call the right tools, in the right number? It cannot tell a right query from a wrong one.
+That is why name F1 is the headline (it does not punish equivalent SQL), argument F1 is reported next to it, and task
+success is the check on the answer. `--headline tool_call_f1` switches the headline.
+
+Directions that look odd. `naive` has name recall 1.0 and task success 1.0, but name precision about 0.5, since it
+calls `get_schema` and runs `SELECT *` before the gold query. `zero-shot-stop` has name precision near 1.0 and recall
+near 0.45, since it stops after the first call. Name F1 is one number for both. Read precision and recall too.
+
+Cross-check (exit code 3). For each episode the script recomputes name-level and argument-level precision, recall and F1
+in plain Python and compares with AuditKit. The difference limit is 1e-6. AuditKit uses a maximum matching on calls,
+so duplicates count (multiset), unlike set-based F1: calling the same query twice adds a false positive. The plain
+Python version counts `min(count in trace, count in reference)` per key, which is the same number, because for an exact
+match "same name and arguments" is an equivalence relation. One known difference in definition: AuditKit compares
+arguments as JSON values (`1` equals `1.0`), and the script compares `json.dumps` text. Our arguments are strings, so
+the two agree here. If a trace ever had numeric arguments, the check could report a false mismatch.
+
+Failed episodes (exit code 1). An episode is failed if its AuditKit status is not `completed` or its outcome is not
+success or failure. An episode with no calls is not failed: its F1 scores are 0 and its repeat, loop and validity
+scores are left out (the cell shows the count, for example `(80/120)`).
+
+Paired comparison. Our `metrics.paired_bootstrap_ci` (AuditKit has no confidence interval), on the task ids both
+models have. It runs for name F1 and argument F1. `ak.compare` is not used: it takes `RunResult`, and the agent
+evaluator returns `AgentEvalResult`.
 
 ## Evidence rule (reward change)
 

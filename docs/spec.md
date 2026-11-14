@@ -44,6 +44,7 @@ scripts/
   train_sft.py       distillation with AgentTune                                   [training agent]
   train_grpo.py      GRPO with AgentTune                                           [training agent]
   eval_auditkit.py   AuditKit evaluation over trace files                          [eval agent]
+  eval_agent.py      AuditKit agent evaluator: tool-call accuracy vs oracle calls  [eval agent]
   rescore_traces.py  replay old trace files and score them with the current reward [eval agent]
   reward_audit.py    mean reward of honest and cheating behaviours on val           [eval agent]
   jobs/              HF Jobs entry points                                          [training agent]
@@ -233,6 +234,8 @@ It also writes `data/tasks/train_sft.jsonl` and `data/teacher/train_sft.jsonl` (
 ## Evaluation (eval agent)
 
 `scripts/eval_auditkit.py --traces outputs/traces/*.jsonl --out outputs/eval/` uses AuditKit (`import auditkit as ak`) with custom `@ak.scorer` functions over precomputed outputs. Metrics per model and split: accuracy, grounded rate, answered rate, "answered with no table read" rate (lower is better), the `answer_in_sql_literal` rate (lower is better, only for traces that have the field), mean reward, mean efficiency, mean tool calls, mean rows returned, mean VM steps, VM-step ratio to optimal, and "correct and optimal" rate. It runs one `ak.evaluate` per model and uses `ak.compare` for significance. `compare_models` does not work with precomputed outputs (see `docs/eval-notes.md`). The 95% interval is our own paired bootstrap in `frugal_analyst/metrics.py`. It writes `results.json` and `results.md`, and reports AuditKit's failed-sample count. It fails loudly if a trace file is malformed.
+
+`scripts/eval_agent.py --traces outputs/traces/*.jsonl --out outputs/eval/` gives the tool-call accuracy metric. It uses `auditkit.agent_eval` (`AgentEvalRunner`, recorded mode). The reference for each task is `oracle_calls` from `data/tasks/<split>.jsonl`, never the steps of the trace. The headline metric is the name-level F1 of tool calls (higher is better). The script also reports name precision and recall, argument-level F1, repeated call share (lower is better), loop-free rate, schema-valid call rate and task success. It breaks in-domain results down by template group, compares each model with the baseline (default `zero-shot`) using our paired bootstrap, and writes `agent_results.json`, `agent_results.md` and the raw AuditKit runs in `agent_runs/`. Exit codes: 0 ok, 1 failed or errored episodes, 2 bad input, 3 AuditKit and the plain-Python recomputation of name-level and argument-level precision, recall and F1 differ by more than 1e-6. Definitions are in `docs/eval-notes.md`.
 
 ## Demo (demo agent)
 
