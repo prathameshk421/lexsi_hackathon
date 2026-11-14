@@ -90,7 +90,7 @@ def test_replay_assembles_two_sides(trace_dir):
     text = re.sub(r"<[^>]+>", "", html)  # SQL keywords are wrapped in colour spans
     assert "SELECT COUNT(*)\nFROM orders" in text  # SQL is shown with one clause per line
     assert '<span class="sq-k">SELECT</span>' in html
-    assert "Both answers are correct." not in html and "Only <b>grpo</b> is correct." in html  # the one-line story
+    assert "Both answers are correct." not in html and "Only <b>SFT + GRPO (final)</b> is correct." in html  # the story
     assert "optimal 2" in html
 
 
@@ -254,7 +254,7 @@ def test_new_views_keep_untrusted_text_inert():
     tags_are_own(story, {"div", "p", "b", "span"})
     words = re.sub(r"<[^>]+>", "", story)
     assert "Both answers are correct." in words and "500x the rows" in words and "3.0x the tool calls" in words
-    assert "90x the VM steps of oracle (scripted)." in words  # every number comes from the two traces
+    assert "90x the VM steps of Oracle (scripted)." in words  # every number comes from the two traces
     trace = fa_data.clean_trace(make_trace(question=EVIL, output=EVIL, final=EVIL))
     for page in (render.live_html(trace, EVIL, 1, False, False, EVIL, EVIL), render.trajectory_html(trace, EVIL)):
         tags_are_own(page, {"div", "span", "section", "header", "pre", "code", "b", "h2", "ol", "li", "details", "summary"})
@@ -489,7 +489,7 @@ def test_policy_choices_and_backend_note():
     assert [v for _, v in logic.policy_choices(None)] == ["oracle", "naive"]
     assert [v for _, v in logic.policy_choices(fa_backend.NoBackend())] == ["oracle", "naive"]
     assert [v for _, v in logic.policy_choices(FakeBackend())] == ["oracle", "naive", "model"]
-    assert "Live model inference is off" in logic.backend_note(None) and "replay is on" in logic.backend_note(None)
+    assert "Live model inference is off" in logic.backend_note(None) and "Compare tab" in logic.backend_note(None)
     assert "is on" in logic.backend_note(FakeBackend())
 
 
@@ -540,10 +540,10 @@ def test_results_missing_file_falls_back_to_traces(trace_dir, tmp_path):
     assert by_model["zero-shot"]["n"] == 3
     assert by_model["zero-shot"]["accuracy"] == pytest.approx(2 / 3, abs=1e-3)  # computed from the trace fields
     assert by_model["grpo"]["tool_calls"] == 2
-    assert "computed from traces" in v["headline"] and "zero-shot to grpo" in v["headline"]
+    assert "computed from traces" in v["headline"] and "Zero-shot (base model) to SFT + GRPO (final)" in v["headline"]
     assert len(logic.results_table(v)) == 2
-    chart = logic.results_chart(v, "Accuracy")
-    assert list(chart["name"]) == ["zero-shot", "grpo"]
+    chart = logic.results_chart(v, "Task success")
+    assert list(chart["name"]) == ["Zero-shot (base model)", "SFT + GRPO (final)"]
 
 
 def test_results_nothing_at_all(tmp_path):
@@ -577,11 +577,12 @@ def test_results_file_in_the_eval_agent_shape(trace_dir, tmp_path):
     f.write_text(json.dumps(doc))
     v = logic.results_view("all", trace_dir, f)
     assert v["source"] == "results" and len(v["rows"]) == 4
-    assert "from results.json" in v["headline"] and "zero-shot to grpo" in v["headline"] and "better" in v["headline"]
+    assert "Seen domains: Zero-shot (base model) to SFT + GRPO (final)" in v["headline"] and "better" in v["headline"]
+    assert "+0.300 to +0.500" in v["headline"]  # the interval comes from the file
     assert "Tool calls" in v["metrics"]
     one = logic.results_view("test_ood", trace_dir, f)
-    assert len(one["rows"]) == 2 and "Split: test_ood" in one["note"]
-    assert len(logic.results_chart(v, "Accuracy")) == 4
+    assert len(one["rows"]) == 2 and "Test set: Held-out domain" in one["note"]
+    assert len(logic.results_chart(v, "Task success")) == 4
     # the generic reader handles other shapes too
     g = tmp_path / "other.json"
     g.write_text(json.dumps({"a": {"zero-shot": {"accuracy": 0.1, "tool_calls": 5}, "grpo": {"accuracy": 0.9, "tool_calls": 2}}}))
@@ -612,33 +613,34 @@ def five_label_dir(tmp_path):
 def test_default_pair_is_zero_shot_vs_grpo_and_models_come_before_scripted(five_label_dir):
     st = logic.initial_compare_state(five_label_dir)
     assert (st["a"], st["b"]) == ("zero-shot", "grpo")
-    # dropdown order: models, then scripted reference policies, clearly marked
-    assert st["labels"] == [("zero-shot", "zero-shot"), ("distilled", "distilled"), ("grpo", "grpo"),
-                            ("naive (scripted)", "naive"), ("oracle (scripted)", "oracle")]
+    # dropdown order: baseline, SFT, GRPO, then scripted reference policies, with plain names and the label
+    assert st["labels"] == [("Zero-shot (base model) [zero-shot]", "zero-shot"), ("SFT, 274 tasks [distilled]", "distilled"),
+                            ("SFT + GRPO (final) [grpo]", "grpo"), ("Oracle (scripted) [oracle]", "oracle"),
+                            ("Naive (scripted) [naive]", "naive")]
     v = logic.results_view("test_id", five_label_dir, five_label_dir / "none.json")
-    assert [r["raw"] for r in v["rows"]] == ["zero-shot", "distilled", "grpo", "naive", "oracle"]
-    assert [r["model"] for r in v["rows"]][-2:] == ["naive (scripted)", "oracle (scripted)"]
+    assert [r["raw"] for r in v["rows"]] == ["zero-shot", "distilled", "grpo", "oracle", "naive"]
+    assert [r["model"] for r in v["rows"]][-2:] == ["Oracle (scripted)", "Naive (scripted)"]
     assert [r["kind"] for r in v["rows"]] == ["model"] * 3 + ["scripted reference"] * 2
     assert "scripted reference policies, not models" in v["note"]
-    assert "zero-shot to grpo" in v["headline"]
-    chart = logic.results_chart(v, "Efficiency")
-    assert list(chart["name"])[-1] == "oracle (scripted)" and list(chart["group"]).count("scripted reference") == 2
+    assert "Zero-shot (base model) to SFT + GRPO (final)" in v["headline"]
+    chart = logic.results_chart(v, "Efficiency, correct answers only")
+    assert list(chart["name"])[-1] == "Naive (scripted)" and list(chart["group"]).count("scripted reference") == 2
     html = logic.replay_view("test_id", "naive", "grpo", "retail-L1-0001", five_label_dir)
     assert "scripted reference" in html
     all_splits = logic.results_view("all", five_label_dir, five_label_dir / "none.json")
-    assert all_splits["rows"][0]["name"] == "zero-shot"  # traces aggregate over splits for 'all'
+    assert all_splits["rows"][0]["name"] == "Zero-shot (base model)"  # traces aggregate over splits for 'all'
 
 
 def test_results_short_table_and_latency_validity(five_label_dir, tmp_path):
     v = logic.results_view("test_id", five_label_dir, five_label_dir / "none.json")
     short = [h for _, h in v["headers"]]
-    assert short[:3] == ["Model", "Tasks", "Accuracy"] or short[:4] == ["Model", "Tasks", "Accuracy", "Tool-call validity"]
+    assert short[:4] == ["Model", "Label", "Tasks", "Task success"]
     assert "Tool-call validity" in short and "Latency (s)" in short  # latency exists for zero-shot only
     df = logic.results_table(v)
-    assert df.loc[df["Model"] == "zero-shot", "Latency (s)"].iloc[0] == 1.5
-    assert df.loc[df["Model"] == "zero-shot", "Tool-call validity"].iloc[0] == 1.0
+    assert df.loc[df["Label"] == "zero-shot", "Latency (s)"].iloc[0] == 1.5
+    assert df.loc[df["Label"] == "zero-shot", "Tool-call validity"].iloc[0] == 1.0
     assert all(w >= 96 for w in logic.table_widths(df))
-    assert logic.default_metric(v) == "Efficiency"
+    assert logic.default_metric(v) == "Task success"
     # latency is hidden when no trace has it
     v2 = logic.results_view("all", tmp_path / "none", tmp_path / "none.json")
     assert v2["source"] == "none"
@@ -655,8 +657,9 @@ def test_results_json_short_and_full_tables(trace_dir, tmp_path):
     f.write_text(json.dumps(doc))
     v = logic.results_view("all", trace_dir, f)
     short = [h for _, h in v["headers"]]
-    assert short == ["Model", "Split", "Tasks", "Accuracy", "Tool-call validity", "Reward", "Efficiency", "Tool calls", "Rows",
-                     "VM steps", "Latency (s)"]
+    # honest measures first; with no correct-only efficiency in the file, the raw one is shown and named as such
+    assert short == ["Model", "Label", "Split", "Tasks", "Task success", "Tool calls", "Latency (s)", "Tool-call validity",
+                     "Reward", "Rows", "VM steps", "Efficiency, all runs (wrong ones too)"]
     full = [h for _, h in v["all_headers"]]
     assert len(full) > len(short) and "Failed calls" in full and "Grounded rate" in full
     assert [r["raw"] for r in v["rows"]] == ["zero-shot", "grpo", "oracle"]
@@ -678,7 +681,7 @@ def test_chart_axis_starts_at_zero_and_has_headroom():
             "metric_keys": {"Accuracy": "accuracy"}}
     html = logic.chart_html(view, "Accuracy")
     assert html.count("width:100.0%") == 2 and "fa-hatch" in html and "<span>0</span>" in html and "<span>1</span>" in html
-    assert "test_id" in html and "test_ood" in html  # split is the colour legend
+    assert "Seen domains" in html and "Held-out domain" in html  # split is the colour legend
     assert "No chart yet" in logic.chart_html({"rows": [], "metric_keys": {}}, "x")
     assert "<script" not in render.chart_html("<script>", [("<script>", 1.0, "<script>", False)], 1.0).lower()
 
@@ -740,3 +743,250 @@ def test_launch_settings_are_conservative():
     text = (ROOT / "app" / "app.py").read_text(encoding="utf-8")
     assert "share=False" in text and "show_error=False" in text
     assert "demo.queue(" in text and "default_concurrency_limit" in text and "max_size" in text
+
+
+# ---------------------------------------------------------------------------
+# Default pair, plain names, wrong-answer efficiency, honest chart default
+# ---------------------------------------------------------------------------
+
+
+def _agg(reward):
+    return {"tasks": 5, "mean_reward": reward}
+
+
+def test_default_pair_prefers_baseline_against_final_then_sft():
+    every = {"zero-shot-stop": _agg(0.02), "zero-shot": _agg(0.1), "distilled": _agg(0.8), "grpo": _agg(0.85),
+             "distilled-all": _agg(0.99), "grpo-mixed": _agg(0.8), "oracle": _agg(1.0), "naive": _agg(0.6)}
+    assert fa_data.default_pair(every) == ("zero-shot", "grpo")
+    # The bug seen in a browser: without grpo, the old rule picked the worst and best run by reward.
+    no_grpo = {k: v for k, v in every.items() if k != "grpo"}
+    assert fa_data.default_pair(no_grpo) == ("zero-shot", "distilled")
+    # No baseline: worst and best main model, experiments left out while two main models exist.
+    assert fa_data.default_pair({"distilled": _agg(0.8), "grpo": _agg(0.85), "distilled-all": _agg(0.99)}) == ("distilled", "grpo")
+    assert fa_data.default_pair({"zero-shot-stop": _agg(0.02), "distilled-all": _agg(0.99), "oracle": _agg(1.0)}) == (
+        "zero-shot-stop", "distilled-all")
+    assert fa_data.default_pair({"new-run": _agg(0.3), "other-run": _agg(0.4)}) == ("new-run", "other-run")
+
+
+def test_display_names_come_from_one_table_with_fallback():
+    assert fa_data.display_label("grpo") == "SFT + GRPO (final)"
+    assert fa_data.display_label("zero-shot") == "Zero-shot (base model)"
+    assert fa_data.display_label("distilled-all") == "SFT, all 400 tasks (reference)"
+    assert fa_data.display_label("oracle") == "Oracle (scripted)"
+    assert fa_data.display_label("my-new-run") == "my-new-run"  # unknown labels stay as they are
+    assert fa_data.choice_label("grpo") == "SFT + GRPO (final) [grpo]" and fa_data.choice_label("x-1") == "x-1"
+    for label in ("zero-shot", "distilled", "grpo", "grpo-ungated", "distilled-mixed", "grpo-mixed", "zero-shot-stop",
+                  "distilled-all", "oracle", "naive"):
+        assert fa_data.run_note(label), label
+        assert "—" not in fa_data.run_note(label) + fa_data.display_label(label)
+    order = sorted(["naive", "zero-shot-stop", "grpo", "distilled-all", "zero-shot", "unknown", "distilled"],
+                   key=fa_data.label_sort_key)
+    assert order == ["zero-shot", "distilled", "grpo", "zero-shot-stop", "distilled-all", "unknown", "naive"]
+    legend = render.runs_legend_html([(fa_data.display_label(l), l, fa_data.run_note(l)) for l in ("grpo", EVIL)])
+    tags_are_own(legend, {"div", "details", "summary", "dl", "dt", "dd", "span"})
+    assert "What are these runs" in legend and "The final model." in legend
+
+
+def test_wrong_answer_shows_efficiency_not_applicable(trace_dir):
+    # zero-shot is wrong on retail-L1-0001 and its trace says efficiency 0.5
+    html = logic.replay_view("test_id", "zero-shot", "grpo", "retail-L1-0001", trace_dir)
+    assert html.count('class="fa-cell fa-cell-na"') == 1 and "counts only for a correct answer" in html
+    right = fa_data.clean_trace(make_trace(correct=True))
+    wrong = fa_data.clean_trace(make_trace(correct=False))
+    assert "n/a" not in render.summary_html(right) and "0.50" in render.summary_html(right)
+    assert "n/a" in render.summary_html(wrong) and "0.50" not in render.summary_html(wrong).split("Reward")[0]
+    assert "Efficiency" not in render.summary_html(wrong, has_gold=False)  # no gold, no efficiency at all
+    # A cheap wrong run: the meters do not show it as a neutral "at optimal" bar, and the story says it earns nothing.
+    cheap_wrong = fa_data.clean_trace(make_trace(rows=1, vm=100, calls=2, correct=False))
+    costly_right = fa_data.clean_trace(make_trace(rows=500, vm=9000, calls=6, correct=True))
+    meters = render.meters_html(cheap_wrong, "zero-shot-stop", costly_right, "grpo")
+    assert "fa-bar-na" in meters and "no correct answer" in meters and "cost does not count" in meters
+    story = re.sub(r"<[^>]+>", "", render.story_html(costly_right, "grpo", cheap_wrong, "zero-shot-stop"))
+    assert "3.0x the tool calls" in story and "gave no correct answer, so the lower cost earns nothing" in story
+    both_wrong = re.sub(r"<[^>]+>", "", render.story_html(cheap_wrong, "a", fa_data.clean_trace(
+        make_trace(rows=9, correct=False)), "b"))
+    assert "Neither run gave a correct answer, so neither cost counts." in both_wrong
+    both_right = render.meters_html(costly_right, "naive", fa_data.clean_trace(make_trace()), "oracle")
+    assert "fa-bar-na" not in both_right and "cost does not count" not in both_right
+
+
+def _results_doc():
+    def entry(acc, eff, eff_ok, calls, groups):
+        m = {"accuracy": acc, "efficiency": eff, "tool_calls": calls, "latency_s": 7.0, "correct_and_optimal_rate": acc / 2,
+             "reward": acc}
+        if eff_ok is not None:
+            m["efficiency_when_correct"] = eff_ok
+        return {"n": 40, "metrics": m, "by_template_group": groups}
+    g = {"rl_only": {"n": 10, "accuracy": 0.1}, "sft_seen": {"n": 30, "accuracy": 0.2}}
+    return {
+        "bootstrap": 2000,
+        "metric_info": {"efficiency_when_correct": {"label": "efficiency (correct only)"}},
+        "splits": {"test_id": {"models": {
+            "zero-shot": entry(0.1, 0.8, 0.7, 2.6, g),
+            "zero-shot-stop": entry(0.0, 1.0, None, 1.0, g),  # does nothing: raw efficiency 1.0, no correct answer
+            "grpo": entry(0.8, 0.95, 0.99, 2.3, {"rl_only": {"n": 10, "accuracy": 0.5}, "sft_seen": {"n": 30, "accuracy": 0.9}}),
+        }}},
+        "comparisons": {"test_id": {"baseline": "zero-shot", "pairs": [{"model": "grpo", "n_paired": 40, "metrics": {
+            "accuracy": {"baseline_mean": 0.1, "candidate_mean": 0.8, "ci_low": 0.6, "ci_high": 0.8, "verdict": "better",
+                         "auditkit_p_value": 0.001},
+            "tool_calls": {"baseline_mean": 2.6, "candidate_mean": 2.3, "ci_low": -0.5, "ci_high": 0.0,
+                           "verdict": "no clear change", "auditkit_p_value": 0.06}}}]}},
+    }
+
+
+def test_results_chart_defaults_to_task_success_and_orders_honest_metrics(tmp_path):
+    f = tmp_path / "results.json"
+    f.write_text(json.dumps(_results_doc()))
+    v = logic.results_view("all", tmp_path / "no-traces", f)
+    assert logic.default_metric(v) == "Task success"
+    assert v["metrics"][:4] == ["Task success", "Correct and optimal", "Tool calls", "Latency (s)"]
+    assert "Efficiency, correct answers only" in v["metrics"]
+    assert v["metrics"][-1] == "Efficiency, all runs (wrong ones too)"  # raw mean efficiency goes last
+    assert "Efficiency, all runs (wrong ones too)" not in [h for _, h in v["headers"]]
+    chart = logic.chart_html(v, "Efficiency, correct answers only")
+    assert "n/a" in chart and "A run with no correct answer has no value." in chart  # zero-shot-stop has no value
+    raw = logic.chart_html(v, "Efficiency, all runs (wrong ones too)")
+    assert "read it next to task success" in raw
+
+
+def test_results_headline_says_no_clear_change_and_shows_groups(tmp_path):
+    f = tmp_path / "results.json"
+    f.write_text(json.dumps(_results_doc()))
+    v = logic.results_view("all", tmp_path / "no-traces", f)
+    head = v["headline"]
+    assert "Seen domains: Zero-shot (base model) to SFT + GRPO (final)" in head and "40 paired tasks" in head
+    assert '<span class="fa-judge fa-judge-good">better</span>' in head
+    assert '<span class="fa-judge fa-judge-none">no clear change</span>' in head
+    assert "+0.600 to +0.800" in head and "AuditKit p = 0.001" in head
+    assert "Latency (s)" in head and "No interval was computed" in head  # mean from the file, no interval claimed
+    detail = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", v["detail"]))
+    assert "Task success by template group" in detail and "RL-only templates (10 tasks)" in detail
+    assert "SFT + GRPO (final) 0.500 0.900" in detail
+    assert "Key comparisons" in detail and "2,000 resamples" in detail and "+0.600 to +0.800" in detail
+    # an extra comparison file (GRPO against SFT) adds its rows; a file with another baseline is not mixed in
+    extra = {"comparisons": {"test_id": {"baseline": "distilled", "pairs": [{"model": "grpo", "metrics": {"accuracy": {
+        "baseline_mean": 0.78, "candidate_mean": 0.8, "ci_low": -0.01, "ci_high": 0.05, "verdict": "no clear change"}}}]}}}
+    e = tmp_path / "vs_sft.json"
+    e.write_text(json.dumps(extra))
+    v2 = logic.results_view("all", tmp_path / "no-traces", f, {"vs_sft": e, "mixed": tmp_path / "missing.json"})
+    assert "What GRPO adds on top of SFT (distilled to grpo)" in v2["detail"]
+    tags_are_own(v2["detail"], {"div", "h3", "p", "table", "thead", "tbody", "tr", "th", "td"})
+
+
+def test_findings_line_comes_from_the_results_files(tmp_path):
+    doc = _results_doc()
+    doc["splits"]["test_ood"] = {"models": {"distilled": {"metrics": {"accuracy": 0.46}}}}
+    doc["comparisons"]["test_ood"] = {"baseline": "zero-shot", "pairs": [{"model": "grpo", "n_paired": 100, "metrics": {
+        "accuracy": {"baseline_mean": 0.08, "candidate_mean": 0.47}}}]}
+    f = tmp_path / "results.json"
+    f.write_text(json.dumps(doc))
+    text = logic.findings_text(f, {})
+    assert text.startswith("Result on the held-out database domain (100 tasks)") and "0.080" in text and "0.460" in text
+    assert logic.findings_text(tmp_path / "missing.json", {}) == ""
+    assert "<script" not in render.hero_html(EVIL).lower()
+
+
+def test_footer_links_fall_back_to_links_file(tmp_path):
+    import app as app_module
+    f = tmp_path / "links.json"
+    f.write_text(json.dumps({"FRUGAL_LINK_GITHUB": "https://github.com/org/repo", "OTHER": "https://x.org", "FRUGAL_LINK_MODELS": 5}))
+    links = dict(app_module.footer_links({}, f))
+    assert links["GitHub repository"] == "https://github.com/org/repo" and links["Model collection"] == ""
+    env_wins = dict(app_module.footer_links({"FRUGAL_LINK_GITHUB": "https://example.org/a"}, f))
+    assert env_wins["GitHub repository"] == "https://example.org/a"
+    (tmp_path / "bad.json").write_text("not json")
+    assert all(u == "" for _, u in app_module.footer_links({}, tmp_path / "bad.json"))
+
+
+# ---------------------------------------------------------------------------
+# Hugging Face Space build
+# ---------------------------------------------------------------------------
+
+
+def _load_build_space():
+    import importlib.util
+    spec = importlib.util.spec_from_file_location("build_space", ROOT / "space" / "build_space.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+def _fake_repo(root: Path) -> Path:
+    import shutil
+    for name in ("app.py", "fa_backend.py", "fa_data.py", "fa_logic.py", "fa_render.py", "requirements.txt"):
+        (root / "app").mkdir(parents=True, exist_ok=True)
+        shutil.copy2(ROOT / "app" / name, root / "app" / name)
+    shutil.copytree(ROOT / "frugal_analyst", root / "frugal_analyst", ignore=shutil.ignore_patterns("__pycache__"))
+    (root / "data" / "tasks").mkdir(parents=True)
+    for name in ("val.jsonl", "test_id.jsonl", "test_ood.jsonl"):
+        shutil.copy2(ROOT / "data" / "tasks" / name, root / "data" / "tasks" / name)
+    (root / "outputs" / "traces").mkdir(parents=True)
+    write_traces(root / "outputs" / "traces" / "grpo_test_id.jsonl", [make_trace()])
+    write_traces(root / "outputs" / "traces" / "zero-shot_test_id.jsonl", [make_trace(correct=False)])
+    (root / "outputs" / "traces" / "grpo_test_id.run.json").write_text("{}")  # not a trace file: left out
+    (root / "outputs" / "traces" / "Bad Name_test_id.jsonl").write_text("")
+    (root / "outputs" / "eval").mkdir(parents=True)
+    (root / "outputs" / "eval" / "results.json").write_text(json.dumps(_results_doc()))
+    (root / "data" / "dbs").mkdir()
+    (root / "data" / "dbs" / "retail.sqlite").write_text("x")  # databases are never copied
+    return root
+
+
+def _front_matter(text: str) -> dict:
+    assert text.startswith("---\n")
+    block = text.split("---\n")[1]
+    out = {}
+    for line in block.strip().splitlines():
+        key, _, value = line.partition(":")
+        out[key.strip()] = value.strip().strip('"')
+    return out
+
+
+def test_build_space_writes_an_uploadable_folder(tmp_path):
+    import gradio
+    bs = _load_build_space()
+    repo = _fake_repo(tmp_path / "repo")
+    out = tmp_path / "build"
+    files = bs.build(out, {"FRUGAL_LINK_GITHUB": "https://github.com/org/repo"}, repo=repo)
+    expected = {
+        "README.md", "requirements.txt", "app/links.json", bs.MARKER,
+        "app/app.py", "app/fa_backend.py", "app/fa_data.py", "app/fa_logic.py", "app/fa_render.py",
+        "frugal_analyst/__init__.py", "frugal_analyst/db.py", "frugal_analyst/env.py",
+        "data/tasks/val.jsonl", "data/tasks/test_id.jsonl", "data/tasks/test_ood.jsonl",
+        "outputs/traces/grpo_test_id.jsonl", "outputs/traces/zero-shot_test_id.jsonl", "outputs/eval/results.json",
+    }
+    assert expected <= set(files)
+    on_disk = {p.relative_to(out).as_posix() for p in out.rglob("*") if p.is_file()}
+    assert on_disk == set(files)
+    assert not any(f.endswith(".sqlite") or "dbs/" in f or f.endswith(".run.json") or "Bad Name" in f for f in on_disk)
+    fm = _front_matter((out / "README.md").read_text(encoding="utf-8"))
+    assert fm["sdk"] == "gradio" and fm["sdk_version"] == gradio.__version__
+    assert fm["app_file"] == "app/app.py" and (out / fm["app_file"]).is_file()
+    assert fm["pinned"] == "false" and fm["title"] and 0 < len(fm["short_description"]) <= 60
+    assert "license" not in fm
+    reqs = (out / "requirements.txt").read_text(encoding="utf-8")
+    assert "gradio" not in [l.split("=")[0] for l in reqs.splitlines() if l and not l.startswith("#")]
+    assert json.loads((out / "app" / "links.json").read_text()) == {"FRUGAL_LINK_GITHUB": "https://github.com/org/repo"}
+    assert "—" not in (out / "README.md").read_text(encoding="utf-8")
+    # a second build replaces the old one; a folder that is not a build is never deleted
+    assert bs.build(out, {}, repo=repo) and json.loads((out / "app" / "links.json").read_text()) == {}
+    other = tmp_path / "other"
+    other.mkdir()
+    (other / "keep.txt").write_text("x")
+    with pytest.raises(bs.BuildError):
+        bs.build(other, {}, repo=repo)
+    assert (other / "keep.txt").is_file()
+    with pytest.raises(bs.BuildError):
+        bs.build(tmp_path / "b2", {"FRUGAL_LINK_WRITEUP": "javascript:alert(1)"}, repo=repo)
+    with pytest.raises(bs.BuildError):
+        bs.build(repo, {}, repo=repo)
+
+
+def test_build_space_cli_reports_missing_inputs(tmp_path, capsys):
+    bs = _load_build_space()
+    repo = _fake_repo(tmp_path / "repo")
+    (repo / "outputs" / "eval" / "results.json").unlink()
+    with pytest.raises(bs.BuildError):
+        bs.build(tmp_path / "out", {}, repo=repo)
+    assert bs.main(["--out", str(tmp_path / "out2"), "--github", "http://not-https.org"]) == 2
+    assert "not a plain https URL" in capsys.readouterr().err

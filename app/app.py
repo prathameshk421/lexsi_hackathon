@@ -11,6 +11,7 @@ the theme and the event wiring. Design notes are in DESIGN.md.
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
 from pathlib import Path
@@ -32,18 +33,35 @@ render = logic.render
 TITLE = "Frugal Analyst"
 EVENT = "Lexsi Labs hackathon, Agentic Fine-tuning track"
 
-# Footer links. Each one is read from an environment variable and is hidden when unset or not a plain https URL.
+# Footer links. Each one is read from an environment variable, else from links.json next to this file
+# (space/build_space.py writes it for a Space). A link is hidden when unset or not a plain https URL.
 LINK_ENV = {
     "GitHub repository": "FRUGAL_LINK_GITHUB",
     "Model collection": "FRUGAL_LINK_MODELS",
     "Dataset collection": "FRUGAL_LINK_DATASETS",
     "Write-up": "FRUGAL_LINK_WRITEUP",
 }
+LINKS_FILE = APP_DIR / "links.json"
 
 
-def footer_links(env=None) -> list[tuple[str, str]]:
+def read_links_file(path: Path | None = None) -> dict[str, str]:
+    """Variable name -> URL from a small JSON file. A missing or bad file gives no links."""
+    p = Path(path) if path is not None else LINKS_FILE
+    try:
+        if not p.is_file() or p.stat().st_size > 8192:
+            return {}
+        obj = json.loads(p.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return {}
+    if not isinstance(obj, dict):
+        return {}
+    return {k: v for k, v in obj.items() if k in LINK_ENV.values() and isinstance(v, str)}
+
+
+def footer_links(env=None, links_file: Path | None = None) -> list[tuple[str, str]]:
     env = os.environ if env is None else env
-    return [(text, env.get(var, "")) for text, var in LINK_ENV.items()]
+    baked = read_links_file(links_file)
+    return [(text, env.get(var) or baked.get(var, "")) for text, var in LINK_ENV.items()]
 
 
 def base_model_name(env=None) -> str:
@@ -274,8 +292,9 @@ def build_demo(backend: fa_backend.ModelBackend | None = None) -> gr.Blocks:
     backend = backend if backend is not None else fa_backend.default_backend()
     st = logic.initial_compare_state()
 
+    legend = logic.runs_legend()
     with gr.Blocks(title=TITLE, fill_width=False) as demo:
-        gr.HTML(HERO, padding=False)
+        gr.HTML(render.header_html(EVENT) + render.hero_html(logic.findings_text()), padding=False)
 
         with gr.Tabs(elem_classes="fa-tabs"):
             # ------------------------------------------------------------ Compare
@@ -294,12 +313,18 @@ def build_demo(backend: fa_backend.ModelBackend | None = None) -> gr.Blocks:
                     with gr.Row(elem_classes="fa-actions"):
                         btn_diff = gr.Button("Largest difference", variant="primary", size="md", scale=0)
                         btn_random = gr.Button("Random task", variant="secondary", size="md", scale=0)
+                gr.HTML(legend, padding=False)
                 replay_out = gr.HTML(logic.replay_view(st["split"], st["a"], st["b"], st["task"]), padding=False,
                                      elem_classes="fa-out-area")
 
             # ---------------------------------------------------------------- Ask
             with gr.Tab("Ask"):
                 examples0 = logic.example_choices("retail")
+                live = backend is not None and backend.available()
+                if not live:  # said once, at the top, so nobody waits for a model that is not there
+                    gr.HTML(render.notice_html(logic.backend_note(backend), "info", "Live model inference is off"),
+                            padding=False)
+                    gr.HTML('<div class="fa-gap"></div>', padding=False)
                 with gr.Row(elem_classes="fa-split", equal_height=False):
                     with gr.Column(scale=4, min_width=300, elem_classes="fa-toolbar"):
                         ask_db = gr.Dropdown(logic.DOMAINS, value="retail", label="Database")
@@ -312,7 +337,8 @@ def build_demo(backend: fa_backend.ModelBackend | None = None) -> gr.Blocks:
                         )
                         ask_policy = gr.Radio(logic.policy_choices(backend), value="oracle", label="Policy",
                                               elem_classes="fa-options")
-                        gr.HTML(f'<div class="fa fa-muted">{render.esc(logic.backend_note(backend))}</div>', padding=False)
+                        if live:
+                            gr.HTML(f'<div class="fa fa-muted">{render.esc(logic.backend_note(backend))}</div>', padding=False)
                         ask_run = gr.Button("Run", variant="primary", size="md")
                         ask_schema = gr.HTML(logic.schema_view("retail"), padding=False)
                     with gr.Column(scale=7, min_width=320):
@@ -348,11 +374,13 @@ def build_demo(backend: fa_backend.ModelBackend | None = None) -> gr.Blocks:
                                              scale=3, min_width=280, elem_classes="fa-seg")
                         res_metric = gr.Dropdown(rv["metrics"], value=metric0, label="Chart metric", scale=2, min_width=200)
                     res_note = gr.HTML(render.notice_html(rv["note"], "info"), padding=False)
+                gr.HTML(legend, padding=False)
                 res_head = gr.HTML(rv["headline"], padding=False)
                 res_plot = gr.HTML(logic.chart_html(rv, metric0), padding=False)
                 gr.HTML('<div class="fa"><h3 class="fa-section-title" style="margin-top:24px">Key metrics</h3></div>', padding=False)
                 res_table = gr.HTML(make_table(rv, False), padding=False)
                 res_table_full = gr.HTML(make_table(rv, True), padding=False)
+                res_detail = gr.HTML(rv["detail"], padding=False)
 
         gr.HTML(render.footer_html(EVENT, base_model_name(), footer_links()), padding=False)
 
@@ -434,9 +462,10 @@ def build_demo(backend: fa_backend.ModelBackend | None = None) -> gr.Blocks:
                 make_plot(v, m),
                 make_table(v, False),
                 make_table(v, True),
+                v["detail"],
             )
 
-        res_outputs = [res_note, res_head, res_metric, res_plot, res_table, res_table_full]
+        res_outputs = [res_note, res_head, res_metric, res_plot, res_table, res_table_full, res_detail]
         res_split.input(cb_results, [res_split, res_metric], res_outputs, api_name="results", concurrency_limit=4, **quiet)
         # Read the results again when the tab opens, so a new results.json shows without a restart.
         res_tab.select(cb_results, [res_split, res_metric], res_outputs, api_name=False, concurrency_limit=4,

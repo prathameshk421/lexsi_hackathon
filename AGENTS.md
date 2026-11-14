@@ -57,6 +57,8 @@ scripts/
 app/
   app.py                  Gradio demo, also the HF Space entry point
   fa_*.py, README.md, requirements.txt   demo helpers, docs, deps
+space/
+  build_space.py          build a ready-to-upload HF Space folder in outputs/space_build/
 tests/                    pytest files, one per module group
 data/tasks/, data/teacher/ task and teacher jsonl (committed)
 data/dbs/                 SQLite files, git-ignored, rebuilt by gen_data.py

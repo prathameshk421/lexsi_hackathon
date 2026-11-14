@@ -69,8 +69,17 @@ def task_info(n: int) -> str:
 
 
 def model_choices(split, trace_dir: Path | None = None) -> list[tuple[str, str]]:
-    """(shown name, label). Scripted reference policies are marked so they are not mistaken for models."""
-    return [(data.display_label(l), l) for l in data.labels_available(split, trace_dir)]
+    """(shown name, label) in display order. Scripted reference policies are marked so they are not mistaken for models."""
+    return [(data.choice_label(l), l) for l in data.labels_available(split, trace_dir)]
+
+
+def runs_legend(trace_dir=None) -> str:
+    """The collapsible 'What are these runs' list, for the labels that have trace files."""
+    found = set()
+    for sp in data.splits_available(trace_dir):
+        found.update(data.labels_available(sp, trace_dir))
+    labels = sorted(found, key=data.label_sort_key)
+    return render.runs_legend_html([(data.display_label(l), l, data.run_note(l)) for l in labels])
 
 
 def _pair_for(split: str, trace_dir: Path | None = None) -> tuple[str | None, str | None]:
@@ -283,8 +292,8 @@ def backend_note(backend) -> str:
     if backend is not None and backend.available():
         return "Live model inference is on. Scripted policies only work for the example questions."
     return (
-        "Live model inference is off on this deployment, and replay is on. Oracle and naive run only "
-        "on the example questions, because they need the gold path."
+        "Live model inference is off in this demo, so no model runs here. This tab runs the two scripted "
+        "policies on the example questions. To see the trained models, open the Compare tab: it replays their saved runs."
     )
 
 
@@ -523,9 +532,10 @@ def run_pair(index) -> str:
 # Results
 # ---------------------------------------------------------------------------
 
+# Mean efficiency is left out on purpose: it counts wrong answers, so a run that does nothing looks perfect.
 HEADLINE_KEYS = [
-    "accuracy", "mean_reward", "mean_efficiency", "mean_tool_calls", "mean_rows", "mean_rows_returned",
-    "mean_vm_steps", "grounded_rate", "answered_rate", "correct_and_optimal_rate", "vm_step_ratio",
+    "accuracy", "correct_and_optimal_rate", "mean_tool_calls", "mean_rows", "mean_rows_returned",
+    "mean_vm_steps", "mean_reward", "grounded_rate", "answered_rate", "vm_step_ratio",
 ]
 
 
@@ -598,21 +608,38 @@ def headline_from_rows(rows: list[dict]):
     return None
 
 
-EVAL_HEADLINE = ["accuracy", "reward", "efficiency", "tool_calls", "rows_returned", "vm_steps"]
-KEY_KEYS = ["accuracy", "tool_call_validity", "reward", "efficiency", "tool_calls", "rows_returned", "vm_steps", "latency_s"]
-SHORT_HEADERS = {
-    "model": "Model", "split": "Split", "n": "Tasks", "accuracy": "Accuracy", "tool_call_validity": "Tool-call validity",
-    "reward": "Reward", "efficiency": "Efficiency", "tool_calls": "Tool calls", "rows_returned": "Rows",
-    "vm_steps": "VM steps", "latency_s": "Latency (s)",
+# Names for the metrics this page knows. The order of KEY_KEYS is the order of the chart choices:
+# the honest measures first (task success, correct and optimal, tool calls, latency).
+METRIC_NAMES = {
+    "accuracy": "Task success",
+    "correct_and_optimal_rate": "Correct and optimal",
+    "tool_calls": "Tool calls",
+    "latency_s": "Latency (s)",
+    "tool_call_validity": "Tool-call validity",
+    "efficiency_when_correct": "Efficiency, correct answers only",
+    "reward": "Reward",
+    "rows_returned": "Rows",
+    "vm_steps": "VM steps",
+    "efficiency": "Efficiency, all runs (wrong ones too)",
 }
-PREFIX_KEYS = ("model", "split", "n")
-NON_METRIC = {"model", "split", "n", "name", "raw", "kind"}
-DEFAULT_CHART_KEYS = ["efficiency", "tool_calls"]
-SCRIPTED_NOTE = "naive and oracle are scripted reference policies, not models."
+KEY_KEYS = ["accuracy", "correct_and_optimal_rate", "tool_calls", "latency_s", "tool_call_validity",
+            "efficiency_when_correct", "reward", "rows_returned", "vm_steps"]
+SHORT_HEADERS = {"model": "Model", "label": "Label", "split": "Split", "n": "Tasks", **METRIC_NAMES}
+PREFIX_KEYS = ("model", "label", "split", "n")
+NON_METRIC = {"model", "label", "split", "n", "name", "raw", "kind"}
+DEFAULT_CHART_KEYS = ["accuracy", "correct_and_optimal_rate", "tool_calls"]
+SCRIPTED_NOTE = "Oracle and naive are scripted reference policies, not models."
+METRIC_CAPTIONS = {
+    "accuracy": "Share of tasks with a correct answer. A correct answer needs a query that read a data table.",
+    "correct_and_optimal_rate": "Share of tasks with a correct answer and no more tool calls than the oracle.",
+    "tool_calls": "Mean tool calls per task, for right and wrong answers. Few calls with no answer are not a good result.",
+    "efficiency_when_correct": "Mean efficiency over the correct answers only, as in the reward. "
+                               "A run with no correct answer has no value.",
+    "efficiency": "This mean counts wrong answers too. A run that does almost nothing scores near 1 here, "
+                  "so read it next to task success.",
+}
 
-
-def display_label(label: str) -> str:
-    return f"{label} (scripted)" if label in data.SCRIPTED_LABELS else label
+display_label = data.display_label
 
 
 def _trace_rows(split: str, trace_dir=None) -> list[dict]:
@@ -621,10 +648,12 @@ def _trace_rows(split: str, trace_dir=None) -> list[dict]:
     for label, a in aggs.items():
         if not a.get("tasks"):
             continue
-        row = {"model": display_label(label), "raw": label, "n": a["tasks"], "name": display_label(label),
+        row = {"model": display_label(label), "label": label, "raw": label, "n": a["tasks"], "name": display_label(label),
                "kind": "scripted reference" if label in data.SCRIPTED_LABELS else "model"}
-        for key, src in (("accuracy", "accuracy"), ("tool_call_validity", "tool_call_validity"), ("reward", "mean_reward"),
-                         ("efficiency", "mean_efficiency"), ("tool_calls", "mean_tool_calls"), ("rows_returned", "mean_rows"),
+        for key, src in (("accuracy", "accuracy"), ("correct_and_optimal_rate", "correct_and_optimal_rate"),
+                         ("tool_call_validity", "tool_call_validity"), ("reward", "mean_reward"),
+                         ("efficiency_when_correct", "mean_efficiency_correct"), ("efficiency", "mean_efficiency"),
+                         ("tool_calls", "mean_tool_calls"), ("rows_returned", "mean_rows"),
                          ("vm_steps", "mean_vm_steps"), ("latency_s", "mean_latency_s")):
             if _is_num(a.get(src)):
                 row[key] = round(a[src], 3)
@@ -636,7 +665,10 @@ def _build_view(rows: list[dict], source: str, note: str, headline: str, metric_
     """Common shape for both sources: a short table, a full table and the chart metrics."""
     present = {k for r in rows for k in r if k not in NON_METRIC and _is_num(r.get(k))}
     keys = [k for k in KEY_KEYS if k in present]
-    others = sorted(present - set(KEY_KEYS))
+    if "efficiency_when_correct" not in present and "efficiency" in present:
+        keys.append("efficiency")  # the only efficiency there is; its caption says what it counts
+    # Raw mean efficiency goes last when the correct-only one exists.
+    others = sorted(present - set(keys) - {"efficiency"}) + (["efficiency"] if "efficiency" in present - set(keys) else [])
 
     def header(k: str) -> str:
         if k in SHORT_HEADERS:
@@ -651,11 +683,12 @@ def _build_view(rows: list[dict], source: str, note: str, headline: str, metric_
     return {
         "source": source, "note": note, "headers": short, "all_headers": full, "rows": rows, "headline": headline,
         "metrics": [header(k) for k in keys + others], "metric_keys": {header(k): k for k in keys + others}, "x": "name",
+        "detail": "",
     }
 
 
 def default_metric(view: dict) -> str | None:
-    """A telling default: mean efficiency, else mean tool calls, else the first metric."""
+    """Task success first. Mean efficiency is never the default: a run that does nothing looks perfect on it."""
     for key in DEFAULT_CHART_KEYS:
         for header, k in view["metric_keys"].items():
             if k == key:
@@ -663,9 +696,10 @@ def default_metric(view: dict) -> str | None:
     return view["metrics"][0] if view["metrics"] else None
 
 
-def parse_eval(obj, split: str = "all") -> dict | None:
+def parse_eval(obj, split: str = "all", extras: dict | None = None) -> dict | None:
     """Read the shape written by scripts/eval_auditkit.py: splits -> split -> models -> label -> metrics.
 
+    `extras` maps a name in COMPARISONS to another parsed results file of the same shape.
     Returns a results view, or None if the object does not have that shape.
     """
     if not isinstance(obj, dict) or not isinstance(obj.get("splits"), dict):
@@ -689,47 +723,188 @@ def parse_eval(obj, split: str = "all") -> dict | None:
             metrics = entry.get("metrics") if isinstance(entry, dict) else None
             if not isinstance(metrics, dict):
                 continue
-            row = {"model": display_label(label), "raw": label, "split": sp, "n": entry.get("n") if _is_num(entry.get("n")) else ""}
+            row = {"model": display_label(label), "label": label, "raw": label, "split": sp,
+                   "n": entry.get("n") if _is_num(entry.get("n")) else ""}
             row.update({str(k): (round(v, 3) if isinstance(v, float) else v) for k, v in metrics.items() if _is_num(v)})
             rows.append(row)
     if not rows:
         return None
     rows.sort(key=lambda r: (data.label_sort_key(r["raw"]), r["split"]))
     for r in rows:
-        r["name"] = r["model"] if len(chosen) == 1 else f'{r["model"]} / {r["split"]}'
+        # With two splits the split is part of the bar name, so the chart never relies on colour alone.
+        r["name"] = r["model"] if len(chosen) == 1 else f'{data.short_label(r["raw"])} / {split_label(r["split"])}'
         r["kind"] = "scripted reference" if r["raw"] in data.SCRIPTED_LABELS else "model"
-    note = "Numbers from outputs/eval/results.json." + (f" Split: {chosen[0]}." if len(chosen) == 1 else "")
-    return _build_view(rows, "results", note, _eval_headline(obj, chosen, metric_label), metric_label)
+    note = "Numbers from outputs/eval/results.json (AuditKit)." + (
+        f" Test set: {split_label(chosen[0])}." if len(chosen) == 1 else "")
+    view = _build_view(rows, "results", note, _eval_headline(obj, chosen), metric_label)
+    view["detail"] = _groups_html(obj, chosen) + _comparisons_html(obj, extras or {}, chosen)
+    return view
 
 
-def _eval_headline(obj: dict, chosen: list[str], metric_label) -> str:
-    """Before and after cards from the `comparisons` block, with its bootstrap interval."""
-    comps = obj.get("comparisons")
-    if not isinstance(comps, dict):
-        return ""
-    sp = "test_id" if "test_id" in chosen and "test_id" in comps else next((s for s in chosen if s in comps), None)
-    block = comps.get(sp) if sp else None
-    pairs = block.get("pairs") if isinstance(block, dict) else None
-    if not isinstance(pairs, list) or not pairs:
-        return ""
-    pair = next((p for p in pairs if isinstance(p, dict) and p.get("model") == "grpo"), None) or next(
-        (p for p in pairs if isinstance(p, dict) and isinstance(p.get("metrics"), dict)), None)
-    if pair is None or not isinstance(pair.get("metrics"), dict):
-        return ""
-    cards = []
-    for key in EVAL_HEADLINE:
-        m = pair["metrics"].get(key)
-        if not isinstance(m, dict) or not _is_num(m.get("baseline_mean")) or not _is_num(m.get("candidate_mean")):
+# ---------------------------------------------------------------------------
+# Results: headline, template groups and the comparison table. Every number is read from a results file.
+# ---------------------------------------------------------------------------
+
+HEADLINE_METRICS = ["accuracy", "tool_calls", "latency_s", "reward"]
+SPLIT_ORDER = ("test_id", "test_ood")
+
+
+def _dig(obj, *keys):
+    for k in keys:
+        if not isinstance(obj, dict):
+            return None
+        obj = obj.get(k)
+    return obj
+
+
+def _ordered_splits(chosen: list[str]) -> list[str]:
+    return [s for s in SPLIT_ORDER if s in chosen] + [s for s in chosen if s not in SPLIT_ORDER]
+
+
+def _pair_entry(obj, sp: str, model: str, baseline: str | None = None):
+    """(baseline label, pair dict) for one candidate in the `comparisons` block, or (None, None)."""
+    block = _dig(obj, "comparisons", sp)
+    pairs = _dig(block, "pairs")
+    base = _dig(block, "baseline")
+    if not isinstance(pairs, list) or not isinstance(base, str) or (baseline is not None and base != baseline):
+        return None, None
+    for p in pairs:
+        if isinstance(p, dict) and p.get("model") == model and isinstance(p.get("metrics"), dict):
+            return base, p
+    return None, None
+
+
+def _interval_text(m: dict) -> str:
+    parts = []
+    if _is_num(m.get("ci_low")) and _is_num(m.get("ci_high")):
+        parts.append(f'95% interval of the change {m["ci_low"]:+.3f} to {m["ci_high"]:+.3f}')
+    if _is_num(m.get("auditkit_p_value")):
+        parts.append(f'AuditKit p = {m["auditkit_p_value"]:.3f}')
+    return ". ".join(parts)
+
+
+def _verdict_of(m: dict) -> str | None:
+    v = m.get("verdict")
+    return render.clip(v, 24) if isinstance(v, str) and v else None
+
+
+def _eval_headline(obj: dict, chosen: list[str]) -> str:
+    """Baseline against the final model (else SFT), one block per split, with the bootstrap interval."""
+    blocks = []
+    for sp in _ordered_splits(chosen):
+        after, base, pair = None, None, None
+        for cand in data.PREFERRED_AFTER:
+            base, pair = _pair_entry(obj, sp, cand)
+            if pair is not None:
+                after = cand
+                break
+        if after is None:
             continue
-        extra = ""
-        if _is_num(m.get("ci_low")) and _is_num(m.get("ci_high")):
-            extra = f'95% interval of the change: {m["ci_low"]:.3g} to {m["ci_high"]:.3g}'
-        if isinstance(m.get("verdict"), str):
-            extra = (extra + f' ({render.clip(m["verdict"], 20)})').strip()
-        cards.append((metric_label(key), m["baseline_mean"], m["candidate_mean"], extra))
-    base = block.get("baseline") if isinstance(block.get("baseline"), str) else "baseline"
-    return render.headline_html(display_label(base), display_label(str(pair.get("model", "candidate"))), cards,
-                                f"split {sp}, from results.json")
+        cards = []
+        for key in HEADLINE_METRICS:
+            m = pair["metrics"].get(key)
+            name = METRIC_NAMES.get(key, render.pretty_key(key))
+            if isinstance(m, dict) and _is_num(m.get("baseline_mean")) and _is_num(m.get("candidate_mean")):
+                cards.append((name, m["baseline_mean"], m["candidate_mean"], _interval_text(m), _verdict_of(m)))
+                continue
+            b = _dig(obj, "splits", sp, "models", base, "metrics", key)
+            a = _dig(obj, "splits", sp, "models", after, "metrics", key)
+            if _is_num(b) and _is_num(a):
+                cards.append((name, b, a, "No interval was computed for this metric.", ""))
+        if not cards:
+            continue
+        n = pair.get("n_paired")
+        source = f"{int(n)} paired tasks" if _is_num(n) else "paired tasks"
+        note = ""
+        sft = _dig(obj, "splits", sp, "models", "distilled", "metrics", "accuracy")
+        if after == "grpo" and _is_num(sft):
+            note = f"For reference, SFT alone [distilled] reaches task success {sft:.3f} on the same tasks."
+        title = f"{split_label(sp)}: {display_label(base)} to {display_label(after)}"
+        blocks.append(render.headline_html(display_label(base), display_label(after), cards, source, title=title, note=note))
+    return "".join(blocks)
+
+
+GROUP_NAMES = {"rl_only": "RL-only templates", "sft_seen": "SFT-seen templates", "unseen_domain": "Held-out domain"}
+GROUP_NOTE = (
+    "RL-only templates are in-domain questions that SFT never saw, so they give the fair in-domain number. "
+    "SFT-seen templates are in the SFT data, so they mostly show recall. "
+    "No interval was computed for these subsets."
+)
+
+
+def _groups_html(obj: dict, chosen: list[str]) -> str:
+    """Task success by template group (`by_template_group` in results.json), as one table."""
+    cols: list[tuple[str, str, object]] = []
+    labels: list[str] = []
+    for sp in _ordered_splits(chosen):
+        models = _dig(obj, "splits", sp, "models")
+        for label, entry in (models.items() if isinstance(models, dict) else []):
+            groups = _dig(entry, "by_template_group")
+            if not isinstance(label, str) or not isinstance(groups, dict):
+                continue
+            if label not in labels:
+                labels.append(label)
+            for gk, gv in groups.items():
+                if isinstance(gk, str) and isinstance(gv, dict) and all(c[:2] != (sp, gk) for c in cols):
+                    cols.append((sp, gk, gv.get("n")))
+    if not cols:
+        return ""
+    order = list(GROUP_NAMES)
+    cols.sort(key=lambda c: (order.index(c[1]) if c[1] in order else len(order), c[1]))
+    labels.sort(key=data.label_sort_key)
+    headers = ["Model"] + [
+        GROUP_NAMES.get(gk, render.pretty_key(gk)) + (f" ({int(n)} tasks)" if _is_num(n) else "") for _, gk, n in cols
+    ]
+    rows, classes = [], []
+    for label in labels:
+        row = [display_label(label)]
+        for sp, gk, _ in cols:
+            v = _dig(obj, "splits", sp, "models", label, "by_template_group", gk, "accuracy")
+            row.append(round(v, 3) if _is_num(v) else "")
+        rows.append(row)
+        classes.append("fa-row-scripted" if label in data.SCRIPTED_LABELS else "")
+    return render.section_html("Task success by template group", GROUP_NOTE,
+                               render.table_html(headers, rows, classes, label="Task success by template group"))
+
+
+# (results file, baseline, candidate, metrics, what the comparison asks). "main" is results.json.
+COMPARISONS = [
+    ("main", "zero-shot", "distilled", ("accuracy",), "SFT against the base model"),
+    ("main", "zero-shot", "grpo", ("accuracy",), "Final model against the base model"),
+    ("vs_sft", "distilled", "grpo", ("accuracy", "tool_calls"), "What GRPO adds on top of SFT"),
+    ("mixed", "distilled-mixed", "grpo-mixed", ("accuracy", "tool_calls"), "GRPO on the mixed-teacher SFT model"),
+]
+COMPARISON_NOTE = (
+    "Paired bootstrap over tasks, 95% interval{resamples}. "
+    "\"No clear change\" means the interval includes zero. p is AuditKit's own paired bootstrap p-value."
+)
+
+
+def _comparisons_html(obj: dict, extras: dict, chosen: list[str]) -> str:
+    sources = {"main": obj, **{k: v for k, v in extras.items() if isinstance(v, dict)}}
+    headers = ["Comparison", "Test set", "Metric", "Before", "After", "Change", "95% interval", "AuditKit p", "Verdict"]
+    rows = []
+    for sp in _ordered_splits(chosen):
+        for src, base, cand, keys, what in COMPARISONS:
+            _, pair = _pair_entry(sources.get(src), sp, cand, baseline=base)
+            if pair is None:
+                continue
+            for key in keys:
+                m = pair["metrics"].get(key)
+                if not isinstance(m, dict) or not (_is_num(m.get("baseline_mean")) and _is_num(m.get("candidate_mean"))):
+                    continue
+                delta = m["candidate_mean"] - m["baseline_mean"]
+                ci = (f'{m["ci_low"]:+.3f} to {m["ci_high"]:+.3f}'
+                      if _is_num(m.get("ci_low")) and _is_num(m.get("ci_high")) else "")
+                p = f'{m["auditkit_p_value"]:.3f}' if _is_num(m.get("auditkit_p_value")) else ""
+                rows.append([f"{what} ({base} to {cand})", split_label(sp), METRIC_NAMES.get(key, key),
+                             float(m["baseline_mean"]), float(m["candidate_mean"]), f"{delta:+.3f}", ci, p,
+                             _verdict_of(m) or ""])
+    if not rows:
+        return ""
+    n_boot = obj.get("bootstrap") if isinstance(obj, dict) else None
+    note = COMPARISON_NOTE.format(resamples=f", {int(n_boot):,} resamples" if _is_num(n_boot) else "")
+    return render.section_html("Key comparisons", note, render.table_html(headers, rows, label="Key comparisons"))
 
 
 def results_split_choices(trace_dir=None) -> list[str]:
@@ -738,14 +913,56 @@ def results_split_choices(trace_dir=None) -> list[str]:
 
 def _empty_view(note: str) -> dict:
     return {"source": "none", "note": note, "headers": [], "all_headers": [], "rows": [], "headline": "",
-            "metrics": [], "metric_keys": {}, "x": "name"}
+            "metrics": [], "metric_keys": {}, "x": "name", "detail": ""}
 
 
-def results_view(split="all", trace_dir=None, results_path=None) -> dict:
-    """Everything the Results tab needs. `source` says where the numbers come from."""
+def findings_text(results_path=None, extra_paths=None) -> str:
+    """One plain result line for the top of the page, built from the results files. Empty if they are missing."""
+    try:
+        obj = read_results(results_path)
+        _, pair = _pair_entry(obj, "test_ood", "grpo", baseline=data.BASELINE_LABEL)
+        m = _dig(pair, "metrics", "accuracy")
+        sft = _dig(obj, "splits", "test_ood", "models", "distilled", "metrics", "accuracy")
+        n = _dig(pair, "n_paired")
+        if not isinstance(m, dict) or not (_is_num(m.get("baseline_mean")) and _is_num(m.get("candidate_mean"))):
+            return ""
+        size = f" ({int(n)} tasks)" if _is_num(n) else ""
+        text = f"Result on the held-out database domain{size}: task success goes from {m['baseline_mean']:.3f} for the base model"
+        text += f" to {sft:.3f} after SFT and {m['candidate_mean']:.3f} after SFT + GRPO." if _is_num(sft) else \
+            f" to {m['candidate_mean']:.3f} after SFT + GRPO."
+        extras = read_extras(extra_paths if extra_paths is not None else (data.EXTRA_RESULTS if results_path is None else {}))
+        _, extra = _pair_entry(extras.get("vs_sft"), "test_ood", "grpo", baseline="distilled")
+        g = _dig(extra, "metrics", "accuracy")
+        if isinstance(g, dict) and _verdict_of(g):
+            ci = (f" (95% interval {g['ci_low']:+.3f} to {g['ci_high']:+.3f})"
+                  if _is_num(g.get("ci_low")) and _is_num(g.get("ci_high")) else "")
+            text += f" GRPO on top of SFT: {_verdict_of(g)}{ci}."
+        return text
+    except Exception as exc:
+        _log(exc)
+        return ""
+
+
+def read_extras(paths: dict | None) -> dict:
+    """Parsed extra results files (GRPO against SFT, the mixed teacher). A missing file is left out."""
+    out = {}
+    for name, path in (paths or {}).items():
+        obj = read_results(path)
+        if isinstance(obj, dict):
+            out[name] = obj
+    return out
+
+
+def results_view(split="all", trace_dir=None, results_path=None, extra_paths=None) -> dict:
+    """Everything the Results tab needs. `source` says where the numbers come from.
+
+    The extra comparison files are read only with the default results file, so a test file is never
+    mixed with the real ones.
+    """
     try:
         raw = read_results(results_path)
-        parsed = parse_eval(raw, split) if raw is not None else None
+        extras = read_extras(extra_paths if extra_paths is not None else (data.EXTRA_RESULTS if results_path is None else {}))
+        parsed = parse_eval(raw, split, extras) if raw is not None else None
         if parsed is not None:
             return parsed
         rows = normalize_results(raw) if raw is not None else []
@@ -771,10 +988,12 @@ def results_view(split="all", trace_dir=None, results_path=None) -> dict:
         a, b = data.default_pair(aggs)
         cards = []
         if a and b and a != b:
-            cards = [(k, aggs[a][k], aggs[b][k]) for k in
-                     ("accuracy", "mean_tool_calls", "mean_rows", "mean_vm_steps", "mean_efficiency", "mean_reward")]
+            cards = [(name, aggs[a][k], aggs[b][k], "No interval: computed from the traces.") for name, k in
+                     (("Task success", "accuracy"), ("Correct and optimal", "correct_and_optimal_rate"),
+                      ("Tool calls", "mean_tool_calls"), ("Rows", "mean_rows"), ("VM steps", "mean_vm_steps"),
+                      ("Reward", "mean_reward")) if _is_num(aggs[a].get(k)) and _is_num(aggs[b].get(k))]
         headline = render.headline_html(display_label(a), display_label(b), cards, "computed from traces") if cards else ""
-        return _build_view(rows, "traces", f"{note} Split: {split}.", headline)
+        return _build_view(rows, "traces", f"{note} Test set: {split_label(split)}.", headline)
     except Exception as exc:
         _log(exc)
         return _empty_view("The results could not be read.")
@@ -824,12 +1043,16 @@ def results_chart(view: dict, metric):
     if not view["rows"] or key is None:
         return empty
     rows = [r for r in view["rows"] if _is_num(r.get(key))]
-    multi = len({r.get("split") for r in rows if r.get("split")}) > 1
     return pd.DataFrame({
         "name": [str(r.get("name", "")) for r in rows],
         "value": [r[key] for r in rows],
-        "group": [(r.get("split") if multi else r.get("kind", "model")) or "all" for r in rows],
+        "group": [_chart_group(view, r) for r in rows],
     })
+
+
+def _chart_group(view: dict, row: dict) -> str:
+    multi = len({r.get("split") for r in view["rows"] if r.get("split")}) > 1
+    return (split_label(row["split"]) if multi and row.get("split") else row.get("kind", "model")) or "all"
 
 
 def axis_upper(df) -> float:
@@ -843,6 +1066,11 @@ def chart_html(view: dict, metric) -> str:
     df = results_chart(view, metric)
     if not len(df):
         return render.notice_html("No chart yet. It appears when there are results.", "info")
-    scripted = {str(r.get("name", "")): r.get("raw") in data.SCRIPTED_LABELS for r in view["rows"]}
-    items = [(n, v, g, scripted.get(n, False)) for n, v, g in zip(df["name"], df["value"], df["group"])]
-    return render.chart_html(metric or "", items, axis_upper(df))
+    key = view["metric_keys"].get(metric)
+    # One bar per row, in table order. A row with no value (for example no correct answer) shows "n/a".
+    items = []
+    for r in view["rows"]:
+        v = r.get(key)
+        items.append((str(r.get("name", "")), float(v) if _is_num(v) else None, _chart_group(view, r),
+                      r.get("raw") in data.SCRIPTED_LABELS))
+    return render.chart_html(metric or "", items, axis_upper(df), METRIC_CAPTIONS.get(key, ""))

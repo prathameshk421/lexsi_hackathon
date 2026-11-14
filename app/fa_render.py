@@ -11,9 +11,9 @@ import html
 import re
 
 try:
-    from fa_data import LEVEL_TEXT, SCRIPTED_LABELS, display_label
+    from fa_data import LEVEL_TEXT, SCRIPTED_LABELS, display_label, short_label
 except ImportError:  # pragma: no cover
-    from .fa_data import LEVEL_TEXT, SCRIPTED_LABELS, display_label
+    from .fa_data import LEVEL_TEXT, SCRIPTED_LABELS, display_label, short_label
 
 MAX_SQL_SHOWN = 1500
 MAX_OUTPUT_LINES = 6
@@ -224,10 +224,13 @@ def summary_html(trace: dict, has_gold: bool = True) -> str:
         cell("VM steps", num(cost["vm_steps"]), opt["vm_steps"], over(cost["vm_steps"], opt["vm_steps"])),
     ]
     if has_gold:
-        cells += [
-            cell("Efficiency", flt(trace["efficiency"]), None),
-            cell("Reward", flt(trace["reward"]), None),
-        ]
+        if trace["correct"]:
+            cells.append(cell("Efficiency", flt(trace["efficiency"]), None))
+        else:
+            # The reward counts efficiency only for a correct answer. A cheap wrong run must not look good.
+            cells.append('<div class="fa-cell fa-cell-na"><div class="fa-cell-name">Efficiency</div>'
+                         '<div class="fa-cell-val">n/a</div><div class="fa-cell-ref">counts only for a correct answer</div></div>')
+        cells.append(cell("Reward", flt(trace["reward"]), None))
     else:
         cells.append(cell("Failed calls", num(cost["failed_calls"]), None))
     return f'<div class="fa-summary">{"".join(cells)}</div>'
@@ -254,10 +257,13 @@ def trajectory_html(trace: dict, label: str, side: str = "a", upto: int | None =
     end = final_html(trace, has_gold) + summary_html(trace, has_gold) if show_end else ""
     verdict = _verdict(trace, has_gold) if show_end else ""
     scripted = " fa-card-scripted" if label in SCRIPTED_LABELS else ""
+    name = display_label(label)
+    show_raw = name != str(label) and label not in SCRIPTED_LABELS  # scripted cards already carry a tag
+    raw = f'<span class="fa-run-label fa-mono">{esc(clip(label, 40))}</span>' if show_raw else ""
     return (
         f'<section class="fa-card fa-side-{esc(side)}{scripted}">'
-        f'<header class="fa-card-head"><div class="fa-card-title"><span class="fa-model">{esc(clip(label, 40))}</span>'
-        f"{kind_tag(label)}</div>{verdict}</header>"
+        f'<header class="fa-card-head"><div class="fa-card-title"><span class="fa-model">{esc(clip(name, 48))}</span>'
+        f"{raw}{kind_tag(label)}</div>{verdict}</header>"
         f'<div class="fa-card-body">{steps}{end}</div></section>'
     )
 
@@ -288,7 +294,8 @@ METER_SPEC = [
 GLOSSARY_HTML = (
     '<details class="fa-glossary"><summary>How the score works</summary><dl>'
     "<dt>Optimal</dt><dd>The cost of the efficient scripted path (the oracle) for the same task.</dd>"
-    "<dt>Efficiency</dt><dd>From 0 to 1. The mean of three ratios against optimal: calls, rows and VM steps.</dd>"
+    "<dt>Efficiency</dt><dd>From 0 to 1. The mean of three ratios against optimal: calls, rows and VM steps. "
+    "It counts only for a correct answer, so a wrong run shows n/a.</dd>"
     "<dt>Reward</dt><dd>A correct answer earns 0.5 plus half of its efficiency. A wrong answer earns little. "
     "A correct answer needs at least one successful query, so a guess without a query does not pay.</dd>"
     "<dt>VM steps</dt><dd>SQLite counts the virtual machine instructions a query uses. The count does not change "
@@ -296,21 +303,34 @@ GLOSSARY_HTML = (
 )
 
 
+def _meter_style(value: int, ref: int | None, correct: bool) -> tuple[str, str]:
+    """(bar class, ratio text). A low cost with a wrong answer gets an outline bar, not the neutral one."""
+    cls, ratio = _bar_class(value, ref), _ratio_text(value, ref)
+    if correct:
+        return cls, ratio
+    if cls == "fa-bar-ok":
+        cls = "fa-bar-na"
+    return cls, (ratio + ", " if ratio else "") + "no correct answer"
+
+
 def meters_html(ta: dict, la: str, tb: dict, lb: str) -> str:
     rows = []
+    any_wrong = not (ta["correct"] and tb["correct"])
     for title, ck, ok_, caption in METER_SPEC:
         va, vb = ta["cost"][ck], tb["cost"][ck]
         ref = ta["optimal"].get(ok_)
         scale = max(va, vb, ref or 0, 1)
         lines = []
-        for side, label, v in (("a", la, va), ("b", lb, vb)):
+        for t, label, v in ((ta, la, va), (tb, lb, vb)):
             width = max(v / scale * 100, 1.5 if v else 0)
+            cls, ratio = _meter_style(v, ref, t["correct"])
             lines.append(
-                f'<div class="fa-line"><span class="fa-line-label" title="{esc(label)}">{esc(clip(label, 24))}</span>'
-                f'<div class="fa-track"><div class="fa-bar {_bar_class(v, ref)}" style="width:{width:.1f}%"></div>'
+                f'<div class="fa-line"><span class="fa-line-label" title="{esc(display_label(label))}">'
+                f'{esc(clip(short_label(label), 24))}</span>'
+                f'<div class="fa-track"><div class="fa-bar {cls}" style="width:{width:.1f}%"></div>'
                 + (f'<span class="fa-tick" style="left:{ref / scale * 100:.1f}%"></span>' if ref else "")
                 + f'</div><span class="fa-line-val">{num(v)}</span>'
-                f'<span class="fa-line-ratio">{esc(_ratio_text(v, ref))}</span></div>'
+                f'<span class="fa-line-ratio">{esc(ratio)}</span></div>'
             )
         ref_txt = f"optimal {num(ref)}" if ref is not None else ""
         rows.append(
@@ -320,7 +340,9 @@ def meters_html(ta: dict, la: str, tb: dict, lb: str) -> str:
     legend = (
         '<div class="fa-legend"><span class="fa-legend-item"><span class="fa-swatch fa-sw-ok"></span>at optimal</span>'
         '<span class="fa-legend-item"><span class="fa-swatch fa-sw-warn"></span>above optimal</span>'
-        '<span class="fa-legend-item"><span class="fa-swatch-tick"></span>optimal cost</span></div>'
+        + ('<span class="fa-legend-item"><span class="fa-swatch fa-sw-na"></span>no correct answer, cost does not count</span>'
+           if any_wrong else "")
+        + '<span class="fa-legend-item"><span class="fa-swatch-tick"></span>optimal cost</span></div>'
     )
     return (
         '<div class="fa-panel fa-meters-panel"><div class="fa-panel-head"><h3 class="fa-panel-title">Cost at a glance</h3>'
@@ -343,6 +365,7 @@ def story_html(ta: dict, la: str, tb: dict, lb: str) -> str:
     def key(t: dict) -> tuple:
         return (t["cost"]["vm_steps"], t["cost"]["rows_returned"], t["cost"]["tool_calls"])
 
+    lo = None
     if key(ta) == key(tb):
         cost = "Both runs cost the same."
     else:
@@ -358,6 +381,11 @@ def story_html(ta: dict, la: str, tb: dict, lb: str) -> str:
         cost = f"{nhi} used {join_words(more)} of {nlo}." if more else "Both runs cost about the same."
         if less:
             cost += f" {nlo} used more {join_words(less)}."
+    # Cost only counts for a correct answer, so a cheap wrong run is not a saving.
+    if not ca and not cb:
+        cost += " Neither run gave a correct answer, so neither cost counts."
+    elif lo is not None and not lo["correct"]:
+        cost += f" {nlo} spent less, but gave no correct answer, so the lower cost earns nothing."
     return f'<div class="fa-story"><p class="fa-story-verdict">{verdict}</p><p class="fa-story-cost">{cost}</p></div>'
 
 
@@ -572,7 +600,22 @@ def better_direction(name: str) -> str | None:
     return None
 
 
-def headline_html(before_label: str, after_label: str, cards: list[tuple[str, float, float]], source: str) -> str:
+def _judge(name: str, delta: float, verdict) -> str:
+    """The word after the change. A verdict from the results file wins. None falls back to the metric direction."""
+    if verdict is None:
+        way = better_direction(name)
+        if not way or delta == 0:
+            return ""
+        verdict = "better" if (delta > 0) == (way == "up") else "worse"
+    if not verdict:
+        return ""
+    cls = {"better": "fa-judge-good", "worse": "fa-judge-bad"}.get(verdict, "fa-judge-none")
+    return f'<span class="fa-judge {cls}">{esc(verdict)}</span>'
+
+
+def headline_html(before_label: str, after_label: str, cards: list[tuple], source: str,
+                  title: str | None = None, note: str = "") -> str:
+    """cards: (name, before, after[, extra text[, verdict]]). An empty verdict shows no judgement word."""
     if not cards:
         return ""
     out = []
@@ -581,11 +624,7 @@ def headline_html(before_label: str, after_label: str, cards: list[tuple[str, fl
         extra = card[3] if len(card) > 3 else ""
         delta = a - b
         sign = "+" if delta > 0 else ""
-        way = better_direction(name)
-        judge = ""
-        if way and delta != 0:
-            good = (delta > 0) == (way == "up")
-            judge = f'<span class="fa-judge {"fa-judge-good" if good else "fa-judge-bad"}">{"better" if good else "worse"}</span>'
+        judge = _judge(name, delta, card[4] if len(card) > 4 else None)
         extra_html = f'<div class="fa-cell-ref">{esc(extra)}</div>' if extra else ""
         out.append(
             f'<div class="fa-stat"><div class="fa-cell-name">{esc(pretty_key(name))}</div>'
@@ -593,9 +632,32 @@ def headline_html(before_label: str, after_label: str, cards: list[tuple[str, fl
             f'<span class="fa-stat-before"><span class="fa-arrow">from</span> {esc(_fmt_value(b))}</span></div>'
             f'<div class="fa-stat-change">change {esc(sign + _fmt_value(round(delta, 4)))} {judge}</div>{extra_html}</div>'
         )
+    head = title if title else f"{before_label} to {after_label}"
+    note_html = f'<p class="fa-headline-note">{esc(note)}</p>' if note else ""
     return (
-        f'<div class="fa fa-headline"><div class="fa-panel-head"><h3 class="fa-panel-title">{esc(before_label)} to {esc(after_label)}</h3>'
-        f'<span class="fa-muted">{esc(source)}</span></div><div class="fa-stats">{"".join(out)}</div></div>'
+        f'<div class="fa fa-headline"><div class="fa-panel-head"><h3 class="fa-panel-title">{esc(head)}</h3>'
+        f'<span class="fa-muted">{esc(source)}</span></div><div class="fa-stats">{"".join(out)}</div>{note_html}</div>'
+    )
+
+
+def section_html(title: str, note: str, body: str) -> str:
+    """A titled block with a short note. `body` must be HTML built by this module."""
+    note_html = f'<p class="fa-muted fa-section-note">{esc(note)}</p>' if note else ""
+    return f'<div class="fa fa-section"><h3 class="fa-section-title">{esc(title)}</h3>{note_html}{body}</div>'
+
+
+def runs_legend_html(items: list[tuple[str, str, str]]) -> str:
+    """items: (display name, label, one-line note). A native disclosure, so the page needs no script."""
+    if not items:
+        return ""
+    parts = []
+    for name, label, note in items:
+        tag = "" if name == label else f' <span class="fa-run-label fa-mono">{esc(label)}</span>'
+        parts.append(f"<dt>{esc(name)}{tag}</dt><dd>{esc(note or 'A run label from a trace file. No description.')}</dd>")
+    rows = "".join(parts)
+    return (
+        '<div class="fa"><details class="fa-runs"><summary>What are these runs</summary>'
+        f'<dl>{rows}</dl></details></div>'
     )
 
 
@@ -603,8 +665,8 @@ def _tick(x: float) -> str:
     return f"{x:,.0f}" if abs(x) >= 100 else f"{x:.2f}".rstrip("0").rstrip(".")
 
 
-def chart_html(metric: str, items: list[tuple[str, float, str, bool]], upper: float) -> str:
-    """Horizontal bars on an axis that starts at 0. items: (name, value, group, is_scripted)."""
+def chart_html(metric: str, items: list[tuple], upper: float, caption: str = "") -> str:
+    """Horizontal bars on an axis that starts at 0. items: (name, value or None, group, is_scripted)."""
     groups: list[str] = []
     for _, _, g, _ in items:
         if g not in groups:
@@ -614,12 +676,15 @@ def chart_html(metric: str, items: list[tuple[str, float, str, bool]], upper: fl
     )
     rows = []
     for name, value, group, scripted in items:
-        width = max(value / upper * 100, 1.0 if value > 0 else 0.0)
+        if value is None:  # no value for this run, for example no correct answer to measure
+            width, text = 0.0, "n/a"
+        else:
+            width, text = max(value / upper * 100, 1.0 if value > 0 else 0.0), _tick(value)
         cls = f"fa-g{groups.index(group) % 4}" + (" fa-hatch" if scripted else "")
         rows.append(
             f'<div class="fa-crow"><span class="fa-crow-label" title="{esc(name)}">{esc(clip(name, 40))}</span>'
             f'<div class="fa-track"><div class="fa-bar {cls}" style="width:{width:.1f}%"></div></div>'
-            f'<span class="fa-line-val">{esc(_tick(value))}</span></div>'
+            f'<span class="fa-line-val">{esc(text)}</span></div>'
         )
     axis = (
         '<div class="fa-crow fa-axis"><span></span><div class="fa-axis-ticks">'
@@ -628,7 +693,9 @@ def chart_html(metric: str, items: list[tuple[str, float, str, bool]], upper: fl
     return (
         f'<div class="fa fa-panel fa-chart"><div class="fa-panel-head"><h3 class="fa-panel-title">{esc(metric)}</h3>'
         f'<div class="fa-legend">{legend}<span class="fa-legend-item"><span class="fa-swatch fa-hatch fa-g-none"></span>'
-        f"hatched: scripted reference policy</span></div></div>{''.join(rows)}{axis}</div>"
+        f"hatched: scripted reference policy</span></div></div>"
+        + (f'<p class="fa-chart-cap">{esc(caption)}</p>' if caption else "")
+        + f"{''.join(rows)}{axis}</div>"
     )
 
 
@@ -661,12 +728,14 @@ def header_html(event: str) -> str:
     )
 
 
-def hero_html() -> str:
+def hero_html(findings: str = "") -> str:
+    """`findings` is one plain result line built from the results files, or empty."""
+    extra = f'<p class="fa-findings">{esc(findings)}</p>' if findings else ""
     return (
         '<div class="fa fa-hero"><h1>Same question. Same right answer. <span>Very different cost.</span></h1>'
         "<p>Frugal Analyst trains Tiny Aya, a small open model, to answer data questions over SQLite with two tools. "
         "The reward pays for a correct answer, and for few tool calls, few rows pulled into context and little "
-        "database work.</p></div>"
+        f"database work.</p>{extra}</div>"
     )
 
 
@@ -760,6 +829,7 @@ CSS = """
 .fa-bar-ok,.fa-sw-ok{background:var(--fa-ok)}
 .fa-bar-warn,.fa-sw-warn{background:repeating-linear-gradient(135deg,var(--fa-over) 0 4px,transparent 4px 6px),var(--fa-over-soft);
   box-shadow:inset 0 0 0 1px var(--fa-over)}
+.fa-bar-na,.fa-sw-na{background:var(--fa-surface);box-shadow:inset 0 0 0 1px var(--fa-text-3)}
 .fa-tick{position:absolute;top:-4px;bottom:-4px;width:2px;margin-left:-1px;background:var(--fa-text);border-radius:1px}
 .fa-line-val{font-family:var(--fa-mono);font-variant-numeric:tabular-nums;font-weight:500;font-size:13px;text-align:right;min-width:3ch}
 .fa-line-ratio{grid-column:2 / 4;font-size:11px;color:var(--fa-text-2);text-align:right;margin-top:2px;font-variant-numeric:tabular-nums}
@@ -826,6 +896,21 @@ CSS = """
 .fa-cell-name{font-size:12px;color:var(--fa-text-2)}
 .fa-cell-val{font-size:20px;font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.01em;margin-top:2px}
 .fa-cell-over .fa-cell-val{color:var(--fa-over)}
+.fa-cell-na .fa-cell-val{color:var(--fa-text-2)}
+.fa-run-label{font-size:12px;font-weight:400;color:var(--fa-text-2);overflow-wrap:anywhere}
+
+/* run legend, findings line, sections */
+.fa-runs{margin:0 0 24px}
+.fa-runs dl{display:grid;grid-template-columns:max-content minmax(0,1fr);gap:8px 16px;margin-top:12px;font-size:13px;max-width:110ch}
+.fa-runs dt{font-weight:600}
+.fa-runs dd{color:var(--fa-text-2)}
+.fa-findings{margin-top:16px !important;font-size:15px !important;color:var(--fa-text) !important;border-left:2px solid var(--fa-accent);
+  padding-left:12px}
+.fa-headline-note{margin-top:8px;font-size:13px;color:var(--fa-text-2)}
+.fa-section{margin:32px 0 0}
+.fa-section-note{margin:0 0 12px;max-width:90ch}
+.fa-chart-cap{font-size:12px;color:var(--fa-text-2);margin:-4px 0 12px;max-width:80ch}
+.fa-judge-none{color:var(--fa-text-2)}
 .fa-cell-ref{font-size:12px;color:var(--fa-text-2);font-variant-numeric:tabular-nums}
 
 /* notices, hints, live */
@@ -897,6 +982,7 @@ CSS = """
   .fa-hero{padding:32px 0 24px}.fa-hero h1{font-size:30px}.fa-hero p{font-size:16px}
   .fa-q{font-size:19px}.fa-panel{padding:16px}.fa-card-head{padding:12px 16px}.fa-card-body{padding:14px 16px 16px}
   .fa-glossary dl{grid-template-columns:1fr;gap:2px 0}.fa-glossary dd{margin-bottom:8px}
+  .fa-runs dl{grid-template-columns:1fr;gap:2px 0}.fa-runs dd{margin-bottom:8px}
 }
 @media (max-width:480px){
   .fa-hero h1{font-size:26px}.fa-top-meta{display:none}

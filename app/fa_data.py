@@ -15,12 +15,46 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 TRACE_DIR = REPO_ROOT / "outputs" / "traces"
 TASK_DIR = REPO_ROOT / "data" / "tasks"
 RESULTS_PATH = REPO_ROOT / "outputs" / "eval" / "results.json"
+# Optional comparison files of the same shape, with another baseline. The Results tab reads them if they exist.
+EXTRA_RESULTS = {
+    "vs_sft": REPO_ROOT / "outputs" / "eval_vs_sft" / "results.json",
+    "mixed": REPO_ROOT / "outputs" / "eval_mixed" / "results.json",
+}
 
 SPLITS = ("test_id", "test_ood", "val", "train")
 EXAMPLE_SPLITS = ("val", "test_id", "test_ood")  # task files used for the Ask examples
 SCRIPTED_LABELS = ("oracle", "naive", "guess")
-# Display order only. It is not a quality ranking.
-LABEL_ORDER = ["zero-shot", "distilled", "grpo", "grpo-ungated", "naive", "oracle", "guess"]
+
+# Every run name the app shows comes from this one table: label -> (display name, short name, one-line note).
+# The order is the display order: baseline, SFT, GRPO, experiments, references. It is not a quality ranking.
+# The notes follow the run table in the top-level README.md.
+RUN_INFO = {
+    "zero-shot": ("Zero-shot (base model)", "Zero-shot",
+                  "Tiny Aya with the two tools and no training. The baseline for every headline number."),
+    "distilled": ("SFT, 274 tasks", "SFT",
+                  "LoRA SFT on scripted oracle traces of 274 train tasks. 12 templates are held back for RL."),
+    "grpo": ("SFT + GRPO (final)", "SFT + GRPO",
+             "The SFT model plus 50 GRPO steps with the evidence-gated cost reward. The final model."),
+    "grpo-ungated": ("SFT + GRPO, ungated reward (ablation)", "GRPO ungated",
+                     "Like the final model, but 30 GRPO steps with no evidence gate in the reward."),
+    "distilled-mixed": ("SFT, mixed teacher", "SFT mixed",
+                        "SFT on a teacher that adds one needless preview query to half of the traces, on purpose."),
+    "grpo-mixed": ("SFT + GRPO, mixed teacher", "GRPO mixed",
+                   "The mixed-teacher SFT model plus 30 GRPO steps. It tests if GRPO removes the copied waste."),
+    "zero-shot-stop": ("Zero-shot, stop-after-call harness", "Zero-shot stop",
+                       "The base model with each turn cut after a tool call. It often never answers. A negative result."),
+    "distilled-all": ("SFT, all 400 tasks (reference)", "SFT all 400",
+                      "SFT on all 400 train tasks, the first design. A reference, not part of the main pipeline."),
+    "oracle": ("Oracle (scripted)", "Oracle",
+               "A fixed script that replays the efficient gold path. Not a model. It sets the optimal cost."),
+    "naive": ("Naive (scripted)", "Naive",
+              "A fixed script that gets the right answer the wasteful way. Not a model."),
+    "guess": ("Guess (scripted)", "Guess", "A fixed script that answers with no query. Not a model."),
+}
+LABEL_ORDER = list(RUN_INFO)
+BASELINE_LABEL = "zero-shot"
+# The run that the first screen compares with the baseline: the final model, else SFT.
+PREFERRED_AFTER = ("grpo", "distilled")
 
 MAX_FILE_BYTES = 80 * 1024 * 1024
 _FILE_RE = re.compile(r"^([a-z0-9][a-z0-9-]{0,30})_(test_id|test_ood|val|train)\.jsonl$")
@@ -33,14 +67,33 @@ LEVEL_TEXT = {
 
 
 def label_sort_key(label: str) -> tuple[int, int, str]:
-    """Models first (zero-shot, distilled, grpo, then others), scripted reference policies last."""
+    """Models in RUN_INFO order, then unknown labels, scripted reference policies last."""
     scripted = 1 if label in SCRIPTED_LABELS else 0
     rank = LABEL_ORDER.index(label) if label in LABEL_ORDER else len(LABEL_ORDER)
     return (scripted, rank, label)
 
 
-def display_label(label: str) -> str:
-    return f"{label} (scripted)" if label in SCRIPTED_LABELS else label
+def display_label(label) -> str:
+    """Plain name for a run label. An unknown label is shown as it is."""
+    info = RUN_INFO.get(label)
+    return info[0] if info else str(label)
+
+
+def short_label(label) -> str:
+    """A short name for narrow places such as the cost meters."""
+    info = RUN_INFO.get(label)
+    return info[1] if info else str(label)
+
+
+def run_note(label) -> str:
+    info = RUN_INFO.get(label)
+    return info[2] if info else ""
+
+
+def choice_label(label) -> str:
+    """Dropdown text: the plain name, then the label that the write-up uses."""
+    name = display_label(label)
+    return name if name == str(label) else f"{name} [{label}]"
 
 
 # ---------------------------------------------------------------------------
@@ -211,7 +264,13 @@ def aggregate(traces: list[dict]) -> dict:
     calls = sum(t["cost"]["tool_calls"] for t in traces)
     failed = sum(t["cost"]["failed_calls"] for t in traces)
     lat = [t["latency_s"] for t in traces if t["latency_s"] is not None]
+    # The reward counts efficiency only for a correct answer, so this mean leaves the wrong ones out.
+    eff_ok = [t["efficiency"] for t in traces if t["correct"]]
     return {
+        "mean_efficiency_correct": (sum(eff_ok) / len(eff_ok)) if eff_ok else None,
+        # same definition as frugal_analyst.metrics: correct, with no more calls than the oracle
+        "correct_and_optimal_rate": mean(lambda t: 1.0 if t["correct"] and t["optimal"]["tool_calls"] is not None
+                                         and t["cost"]["tool_calls"] <= t["optimal"]["tool_calls"] else 0.0),
         "tasks": n,
         # share of tool calls that did not fail, the same definition as the eval script's tool_call_validity
         "tool_call_validity": (1.0 - failed / calls) if calls else None,
@@ -235,18 +294,22 @@ def aggregates_by_label(split: str, trace_dir: Path | None = None) -> dict[str, 
 
 
 def default_pair(aggs: dict[str, dict]) -> tuple[str | None, str | None]:
-    """Pick (before, after) labels. Uses mean reward from the traces, not a fixed ranking.
+    """Pick (before, after) labels for the first screen.
 
-    zero-shot vs grpo when both exist. Else the worst and best real model. Else the
-    worst and best label overall (scripted baselines).
+    zero-shot vs grpo, else zero-shot vs distilled. Else the worst and best main model by mean
+    reward in the traces, else the worst and best label overall (scripted baselines).
     """
     labels = [l for l in aggs if aggs[l].get("tasks")]
     if not labels:
         return None, None
-    if "zero-shot" in labels and "grpo" in labels:
-        return "zero-shot", "grpo"
-    real = [l for l in labels if l not in SCRIPTED_LABELS and l != "grpo-ungated"]
-    pool = real if len(real) >= 2 else labels
+    if BASELINE_LABEL in labels:
+        for after in PREFERRED_AFTER:
+            if after in labels:
+                return BASELINE_LABEL, after
+    experiments = {"grpo-ungated", "zero-shot-stop", "distilled-mixed", "grpo-mixed", "distilled-all"}
+    models = [l for l in labels if l not in SCRIPTED_LABELS]
+    main = [l for l in models if l not in experiments]
+    pool = main if len(main) >= 2 else models if len(models) >= 2 else labels
     ranked = sorted(pool, key=lambda l: (aggs[l]["mean_reward"], label_sort_key(l)))
     if len(ranked) == 1:
         return ranked[0], ranked[0]
