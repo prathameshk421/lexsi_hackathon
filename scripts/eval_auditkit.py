@@ -169,11 +169,39 @@ def auditkit_metrics(run, n_samples: int) -> tuple[dict, dict]:
     return metrics, counts
 
 
-def group_means(values: dict[str, dict[str, float]], traces: list[dict], field: str) -> dict:
-    """Break AuditKit's per-episode values down by level or domain."""
+_TEMPLATE_OF: dict[str, tuple[str, str]] = {}
+
+
+def template_group(trace: dict) -> str:
+    """`rl_only`, `sft_seen` or `unseen_domain` for a trace, from the task files.
+
+    SFT never sees RL-only templates, so in-domain accuracy on them is the fair
+    number. Traces have no template field, so it comes from data/tasks/*.jsonl.
+    """
+    from frugal_analyst.tasks import RL_ONLY_TEMPLATES, TRAIN_DOMAINS
+
+    if not _TEMPLATE_OF:
+        for path in sorted((ROOT / "data" / "tasks").glob("*.jsonl")):
+            for line in path.read_text(encoding="utf-8").splitlines():
+                task = json.loads(line)
+                _TEMPLATE_OF[task["id"]] = (task["domain"], task["template"])
+    if trace["domain"] not in TRAIN_DOMAINS:
+        return "unseen_domain"
+    domain, template = _TEMPLATE_OF.get(trace["task_id"], (trace["domain"], None))
+    if template is None:
+        return "unknown"
+    return "rl_only" if template in RL_ONLY_TEMPLATES.get(domain, ()) else "sft_seen"
+
+
+def group_means(values: dict[str, dict[str, float]], traces: list[dict], field) -> dict:
+    """Break AuditKit's per-episode values down by level, domain or template group.
+
+    `field` is a trace key, or a function from a trace to a group name.
+    """
     by_group: dict[str, list[str]] = {}
     for t in traces:
-        by_group.setdefault(str(t[field]), []).append(t["task_id"])
+        group = field(t) if callable(field) else t[field]
+        by_group.setdefault(str(group), []).append(t["task_id"])
     out = {}
     for group in sorted(by_group):
         row = {"n": len(by_group[group])}
@@ -219,6 +247,7 @@ def evaluate_group(label: str, split: str, traces: list[dict]) -> dict:
             "auditkit_unscored": run.unscored,
             "by_level": group_means(values, traces, "level"),
             "by_domain": group_means(values, traces, "domain"),
+            "by_template_group": group_means(values, traces, template_group),
             "crosscheck": {"ok": not mismatches, "mismatches": mismatches},
         },
     }
@@ -347,7 +376,8 @@ def render_markdown(results: dict) -> str:
             rows.append(row)
         L += md_table(header, rows)
         L.append("")
-        for field, title in (("by_level", "level"), ("by_domain", "domain")):
+        for field, title in (("by_level", "level"), ("by_domain", "domain"),
+                             ("by_template_group", "template group (rl_only: never in the SFT data)")):
             L.append(f"Breakdown by {title}: accuracy ↑ / mean reward ↑ / mean tool calls ↓ (n)")
             L.append("")
             groups = sorted({g for m in info["models"].values() for g in m[field]})
