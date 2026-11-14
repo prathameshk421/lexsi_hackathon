@@ -82,6 +82,8 @@ uv pip install --python .venv/bin/python -r requirements-train.txt   # training 
 
 Training and HF Jobs commands: see `scripts/jobs/README.md`. Do not launch a job without a human's go-ahead.
 Pass step arguments to `frugal_job.py` as one `--extra "..."` string. `hf jobs uv run` drops a bare `--`.
+If the string is one flag with no value, write `"--extra=--no-stop-after-tool-call"`. Without the `=`, argparse reads it as a new option and the job fails.
+Use `--trace-label`, not `--label`: `hf jobs uv run` takes `--label` for itself.
 
 ## 6. Toolkit facts
 
