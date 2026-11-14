@@ -1,0 +1,3389 @@
+{
+  "auditkit_version": "1.1.11",
+  "seed": 0,
+  "bootstrap": 2000,
+  "baseline": "zero-shot",
+  "inputs": [
+    {
+      "path": "outputs/traces/distilled-all_test_id.jsonl",
+      "records": 120,
+      "sha256": "b845643a362dc8b8f54ae2ade81f2df28930b8d4730bf4ea58015921339a02af"
+    },
+    {
+      "path": "outputs/traces/distilled-all_test_ood.jsonl",
+      "records": 100,
+      "sha256": "df995a7acb477a21bcc471451cb5a20f8b9efaa8146ce3a52cda4b37e988d67b"
+    },
+    {
+      "path": "outputs/traces/distilled-mixed_test_id.jsonl",
+      "records": 120,
+      "sha256": "868eaeb58cbd6a272bc451ff344c232aa8df2298080bc951bfc859a07a9939ed"
+    },
+    {
+      "path": "outputs/traces/distilled-mixed_test_ood.jsonl",
+      "records": 100,
+      "sha256": "6bd0884722fbf320345ce234ab99af500312710aa0dbb20fdeabd7f8438ff42f"
+    },
+    {
+      "path": "outputs/traces/distilled_test_id.jsonl",
+      "records": 120,
+      "sha256": "a5614b4ef77b3387eef78655e6d27240b9362cb993c704c50c13be5bc2fafafb"
+    },
+    {
+      "path": "outputs/traces/distilled_test_ood.jsonl",
+      "records": 100,
+      "sha256": "8acf8b54b2e3231f9d7efbc0590fbdf13823eab35517d57e20999b5040fe9ce3"
+    },
+    {
+      "path": "outputs/traces/grpo-mixed_test_id.jsonl",
+      "records": 120,
+      "sha256": "e1126077fa48633a99eb9633c71996ea2c8c91ca60bf282208fe037fab2829f4"
+    },
+    {
+      "path": "outputs/traces/grpo-mixed_test_ood.jsonl",
+      "records": 100,
+      "sha256": "6509c00a4df12fe0db048b86d3022102659d87145c367dd329fbac25aee258b9"
+    },
+    {
+      "path": "outputs/traces/grpo-ungated_test_id.jsonl",
+      "records": 120,
+      "sha256": "1dbc08ada9693eadfa529488832b4fbb05665347c8a7e675c7f79404da7c9058"
+    },
+    {
+      "path": "outputs/traces/grpo-ungated_test_ood.jsonl",
+      "records": 100,
+      "sha256": "9a02e35c7f145112a7bcd89b5bf272ce749abc98723335d491ad9814a7e30c1d"
+    },
+    {
+      "path": "outputs/traces/grpo_test_id.jsonl",
+      "records": 120,
+      "sha256": "2c0e869e844e82c426514153bf37976bb7b37d30e7be9ce08b17ec1e477cecf4"
+    },
+    {
+      "path": "outputs/traces/grpo_test_ood.jsonl",
+      "records": 100,
+      "sha256": "cb4e00593f62811852efb1e118d309773bf0040c2ef0d9280260763b13aec196"
+    },
+    {
+      "path": "outputs/traces/naive_test_id.jsonl",
+      "records": 120,
+      "sha256": "bff8f53292d63161666ec942f8f8c64edd78aa462bf4a7255e1a39b6c7e0d94e"
+    },
+    {
+      "path": "outputs/traces/naive_test_ood.jsonl",
+      "records": 100,
+      "sha256": "5782eb777b5c06fef27f34cc2cd0af250d385e96740d98e7a9340266a09491a5"
+    },
+    {
+      "path": "outputs/traces/oracle_test_id.jsonl",
+      "records": 120,
+      "sha256": "bbbdbbfcdffca91cec672088c50ab5396c1a5f279bf8f9db7b148206c1ce0fe0"
+    },
+    {
+      "path": "outputs/traces/oracle_test_ood.jsonl",
+      "records": 100,
+      "sha256": "91c0ee509b3344dfa7019f7c17da396bdee764320be6c927ea164eacc33856b6"
+    },
+    {
+      "path": "outputs/traces/zero-shot-stop_test_id.jsonl",
+      "records": 120,
+      "sha256": "a7375fdc7f1392a1576cbafc904c90732bd3a75b19298b40bd60206377b27652"
+    },
+    {
+      "path": "outputs/traces/zero-shot-stop_test_ood.jsonl",
+      "records": 100,
+      "sha256": "2443b27036e540965e04f03a1550099e3dd11f90f13416dd2f6767f245c651b1"
+    },
+    {
+      "path": "outputs/traces/zero-shot_test_id.jsonl",
+      "records": 120,
+      "sha256": "93ec3c7dd6d50a3584a17c81dc9444802ad852327d71958132333d4bd60004bb"
+    },
+    {
+      "path": "outputs/traces/zero-shot_test_ood.jsonl",
+      "records": 100,
+      "sha256": "be7e5504e9c6c31f887d7c0d70cc02498ba1f8522f523973e2f6fd4fce97c16a"
+    }
+  ],
+  "metric_info": {
+    "accuracy": {
+      "direction": "max",
+      "label": "accuracy"
+    },
+    "answered_rate": {
+      "direction": "max",
+      "label": "answered rate"
+    },
+    "grounded_rate": {
+      "direction": "max",
+      "label": "grounded rate"
+    },
+    "unread_answer_rate": {
+      "direction": "min",
+      "label": "answered with no table read"
+    },
+    "answer_in_sql_literal_rate": {
+      "direction": "min",
+      "label": "answer is a literal in its supporting SQL"
+    },
+    "no_failed_call_rate": {
+      "direction": "max",
+      "label": "episodes with 0 failed calls"
+    },
+    "reward": {
+      "direction": "max",
+      "label": "mean reward"
+    },
+    "efficiency": {
+      "direction": "max",
+      "label": "mean efficiency"
+    },
+    "efficiency_when_correct": {
+      "direction": "max",
+      "label": "efficiency (correct only)"
+    },
+    "correct_and_optimal_rate": {
+      "direction": "max",
+      "label": "correct and optimal"
+    },
+    "tool_calls": {
+      "direction": "min",
+      "label": "mean tool calls"
+    },
+    "failed_calls": {
+      "direction": "min",
+      "label": "mean failed calls"
+    },
+    "rows_returned": {
+      "direction": "min",
+      "label": "mean rows returned"
+    },
+    "vm_steps": {
+      "direction": "min",
+      "label": "mean VM steps"
+    },
+    "call_ratio": {
+      "direction": "min",
+      "label": "call ratio to optimal"
+    },
+    "vm_step_ratio": {
+      "direction": "min",
+      "label": "VM-step ratio to optimal"
+    },
+    "latency_s": {
+      "direction": "min",
+      "label": "mean latency (s)"
+    },
+    "completion_tokens": {
+      "direction": "min",
+      "label": "mean completion tokens"
+    },
+    "tool_call_validity": {
+      "direction": "max",
+      "label": "tool-call validity (1 - failed/all calls)"
+    }
+  },
+  "conditional_metrics": [
+    "efficiency_when_correct",
+    "answer_in_sql_literal_rate",
+    "latency_s",
+    "completion_tokens"
+  ],
+  "splits": {
+    "test_id": {
+      "coverage": {
+        "union": 120,
+        "shared": 120,
+        "complete": true,
+        "missing": {}
+      },
+      "models": {
+        "zero-shot": {
+          "n": 120,
+          "metrics": {
+            "accuracy": 0.08333333333333333,
+            "answered_rate": 0.6833333333333333,
+            "grounded_rate": 0.35,
+            "unread_answer_rate": 0.35833333333333334,
+            "answer_in_sql_literal_rate": 0.0,
+            "no_failed_call_rate": 0.6,
+            "reward": 0.13046891879326206,
+            "efficiency": 0.8891968153253198,
+            "efficiency_when_correct": 0.7412540510382892,
+            "correct_and_optimal_rate": 0.041666666666666664,
+            "tool_calls": 2.6,
+            "failed_calls": 0.975,
+            "rows_returned": 2.308333333333333,
+            "vm_steps": 5183.166666666667,
+            "call_ratio": 1.1430555555555555,
+            "vm_step_ratio": 0.570520773811362,
+            "latency_s": 12.731541666666667,
+            "completion_tokens": 327.84166666666664,
+            "tool_call_validity": 0.625
+          },
+          "counts": {
+            "accuracy": 120,
+            "answered_rate": 120,
+            "grounded_rate": 120,
+            "unread_answer_rate": 120,
+            "answer_in_sql_literal_rate": 120,
+            "no_failed_call_rate": 120,
+            "reward": 120,
+            "efficiency": 120,
+            "efficiency_when_correct": 10,
+            "correct_and_optimal_rate": 120,
+            "tool_calls": 120,
+            "failed_calls": 120,
+            "rows_returned": 120,
+            "vm_steps": 120,
+            "call_ratio": 120,
+            "vm_step_ratio": 120,
+            "latency_s": 120,
+            "completion_tokens": 120,
+            "tool_call_validity": 120
+          },
+          "auditkit_failed_samples": 0,
+          "auditkit_errors": [],
+          "auditkit_unscored": {
+            "efficiency_when_correct": {
+              "unknown": 0,
+              "not_tested": 110
+            }
+          },
+          "by_level": {
+            "1": {
+              "n": 40,
+              "accuracy": 0.225,
+              "reward": 0.24747975356592908,
+              "tool_calls": 2.35
+            },
+            "2": {
+              "n": 38,
+              "accuracy": 0.02631578947368421,
+              "reward": 0.07913368717248115,
+              "tool_calls": 2.763157894736842
+            },
+            "3": {
+              "n": 42,
+              "accuracy": 0.0,
+              "reward": 0.06547619047619048,
+              "tool_calls": 2.6904761904761907
+            }
+          },
+          "by_domain": {
+            "clinic": {
+              "n": 30,
+              "accuracy": 0.16666666666666666,
+              "reward": 0.19215655521150382,
+              "tool_calls": 2.4
+            },
+            "logistics": {
+              "n": 30,
+              "accuracy": 0.0,
+              "reward": 0.060000000000000005,
+              "tool_calls": 2.8
+            },
+            "retail": {
+              "n": 30,
+              "accuracy": 0.16666666666666666,
+              "reward": 0.2080524532948777,
+              "tool_calls": 2.7666666666666666
+            },
+            "school": {
+              "n": 30,
+              "accuracy": 0.0,
+              "reward": 0.06166666666666667,
+              "tool_calls": 2.433333333333333
+            }
+          },
+          "by_template_group": {
+            "rl_only": {
+              "n": 38,
+              "accuracy": 0.15789473684210525,
+              "reward": 0.19492918127772527,
+              "tool_calls": 2.3421052631578947
+            },
+            "sft_seen": {
+              "n": 82,
+              "accuracy": 0.04878048780487805,
+              "reward": 0.10059708983704739,
+              "tool_calls": 2.7195121951219514
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "mismatches": []
+          }
+        },
+        "distilled": {
+          "n": 120,
+          "metrics": {
+            "accuracy": 0.8083333333333333,
+            "answered_rate": 0.9666666666666667,
+            "grounded_rate": 0.9666666666666667,
+            "unread_answer_rate": 0.0,
+            "answer_in_sql_literal_rate": 0.016666666666666666,
+            "no_failed_call_rate": 0.95,
+            "reward": 0.8252479551278447,
+            "efficiency": 0.9844374778225159,
+            "efficiency_when_correct": 0.9985516415534301,
+            "correct_and_optimal_rate": 0.8083333333333333,
+            "tool_calls": 2.341666666666667,
+            "failed_calls": 0.11666666666666667,
+            "rows_returned": 2.225,
+            "vm_steps": 9675.083333333334,
+            "call_ratio": 1.0041666666666667,
+            "vm_step_ratio": 0.911982016266086,
+            "latency_s": 5.653475,
+            "completion_tokens": 125.09166666666667,
+            "tool_call_validity": 0.9501779359430605
+          },
+          "counts": {
+            "accuracy": 120,
+            "answered_rate": 120,
+            "grounded_rate": 120,
+            "unread_answer_rate": 120,
+            "answer_in_sql_literal_rate": 120,
+            "no_failed_call_rate": 120,
+            "reward": 120,
+            "efficiency": 120,
+            "efficiency_when_correct": 97,
+            "correct_and_optimal_rate": 120,
+            "tool_calls": 120,
+            "failed_calls": 120,
+            "rows_returned": 120,
+            "vm_steps": 120,
+            "call_ratio": 120,
+            "vm_step_ratio": 120,
+            "latency_s": 120,
+            "completion_tokens": 120,
+            "tool_call_validity": 120
+          },
+          "auditkit_failed_samples": 0,
+          "auditkit_errors": [],
+          "auditkit_unscored": {
+            "efficiency_when_correct": {
+              "unknown": 0,
+              "not_tested": 23
+            }
+          },
+          "by_level": {
+            "1": {
+              "n": 40,
+              "accuracy": 0.825,
+              "reward": 0.8425,
+              "tool_calls": 2.0
+            },
+            "2": {
+              "n": 38,
+              "accuracy": 0.8947368421052632,
+              "reward": 0.9027242032255065,
+              "tool_calls": 2.1315789473684212
+            },
+            "3": {
+              "n": 42,
+              "accuracy": 0.7142857142857143,
+              "reward": 0.7387198783993361,
+              "tool_calls": 2.857142857142857
+            }
+          },
+          "by_domain": {
+            "clinic": {
+              "n": 30,
+              "accuracy": 0.7666666666666667,
+              "reward": 0.7883333333333333,
+              "tool_calls": 2.3666666666666667
+            },
+            "logistics": {
+              "n": 30,
+              "accuracy": 0.9,
+              "reward": 0.91,
+              "tool_calls": 2.2
+            },
+            "retail": {
+              "n": 30,
+              "accuracy": 0.9333333333333333,
+              "reward": 0.934589191866187,
+              "tool_calls": 2.3333333333333335
+            },
+            "school": {
+              "n": 30,
+              "accuracy": 0.6333333333333333,
+              "reward": 0.6680692953118582,
+              "tool_calls": 2.466666666666667
+            }
+          },
+          "by_template_group": {
+            "rl_only": {
+              "n": 38,
+              "accuracy": 0.4473684210526316,
+              "reward": 0.4957283093680424,
+              "tool_calls": 2.3421052631578947
+            },
+            "sft_seen": {
+              "n": 82,
+              "accuracy": 0.975609756097561,
+              "reward": 0.9779521812116554,
+              "tool_calls": 2.341463414634146
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "mismatches": []
+          }
+        },
+        "grpo": {
+          "n": 120,
+          "metrics": {
+            "accuracy": 0.8333333333333334,
+            "answered_rate": 0.9666666666666667,
+            "grounded_rate": 0.9666666666666667,
+            "unread_answer_rate": 0.0,
+            "answer_in_sql_literal_rate": 0.0,
+            "no_failed_call_rate": 0.95,
+            "reward": 0.8480356993401502,
+            "efficiency": 0.9857074106915716,
+            "efficiency_when_correct": 0.9992856784163606,
+            "correct_and_optimal_rate": 0.8333333333333334,
+            "tool_calls": 2.341666666666667,
+            "failed_calls": 0.11666666666666667,
+            "rows_returned": 2.225,
+            "vm_steps": 9870.333333333334,
+            "call_ratio": 1.0013888888888889,
+            "vm_step_ratio": 0.9308009705935987,
+            "latency_s": 5.645849999999999,
+            "completion_tokens": 125.36666666666666,
+            "tool_call_validity": 0.9501779359430605
+          },
+          "counts": {
+            "accuracy": 120,
+            "answered_rate": 120,
+            "grounded_rate": 120,
+            "unread_answer_rate": 120,
+            "answer_in_sql_literal_rate": 120,
+            "no_failed_call_rate": 120,
+            "reward": 120,
+            "efficiency": 120,
+            "efficiency_when_correct": 100,
+            "correct_and_optimal_rate": 120,
+            "tool_calls": 120,
+            "failed_calls": 120,
+            "rows_returned": 120,
+            "vm_steps": 120,
+            "call_ratio": 120,
+            "vm_step_ratio": 120,
+            "latency_s": 120,
+            "completion_tokens": 120,
+            "tool_call_validity": 120
+          },
+          "auditkit_failed_samples": 0,
+          "auditkit_errors": [],
+          "auditkit_unscored": {
+            "efficiency_when_correct": {
+              "unknown": 0,
+              "not_tested": 20
+            }
+          },
+          "by_level": {
+            "1": {
+              "n": 40,
+              "accuracy": 0.85,
+              "reward": 0.865,
+              "tool_calls": 2.0
+            },
+            "2": {
+              "n": 38,
+              "accuracy": 0.9210526315789473,
+              "reward": 0.9282159226700601,
+              "tool_calls": 2.0789473684210527
+            },
+            "3": {
+              "n": 42,
+              "accuracy": 0.7380952380952381,
+              "reward": 0.7593352109370416,
+              "tool_calls": 2.9047619047619047
+            }
+          },
+          "by_domain": {
+            "clinic": {
+              "n": 30,
+              "accuracy": 0.8,
+              "reward": 0.8200000000000001,
+              "tool_calls": 2.3
+            },
+            "logistics": {
+              "n": 30,
+              "accuracy": 1.0,
+              "reward": 1.0,
+              "tool_calls": 2.2
+            },
+            "retail": {
+              "n": 30,
+              "accuracy": 0.9,
+              "reward": 0.9040735020487428,
+              "tool_calls": 2.4
+            },
+            "school": {
+              "n": 30,
+              "accuracy": 0.6333333333333333,
+              "reward": 0.6680692953118582,
+              "tool_calls": 2.466666666666667
+            }
+          },
+          "by_template_group": {
+            "rl_only": {
+              "n": 38,
+              "accuracy": 0.5263157894736842,
+              "reward": 0.5676896068805866,
+              "tool_calls": 2.3421052631578947
+            },
+            "sft_seen": {
+              "n": 82,
+              "accuracy": 0.975609756097561,
+              "reward": 0.9779521812116554,
+              "tool_calls": 2.341463414634146
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "mismatches": []
+          }
+        },
+        "grpo-ungated": {
+          "n": 120,
+          "metrics": {
+            "accuracy": 0.8166666666666667,
+            "answered_rate": 0.9666666666666667,
+            "grounded_rate": 0.9666666666666667,
+            "unread_answer_rate": 0.0,
+            "answer_in_sql_literal_rate": 0.025,
+            "no_failed_call_rate": 0.95,
+            "reward": 0.8327479551278446,
+            "efficiency": 0.9850736779661052,
+            "efficiency_when_correct": 0.9985664207212522,
+            "correct_and_optimal_rate": 0.8166666666666667,
+            "tool_calls": 2.341666666666667,
+            "failed_calls": 0.11666666666666667,
+            "rows_returned": 2.225,
+            "vm_steps": 9535.75,
+            "call_ratio": 1.0041666666666667,
+            "vm_step_ratio": 0.9108436527830646,
+            "latency_s": 5.598675,
+            "completion_tokens": 125.05,
+            "tool_call_validity": 0.9501779359430605
+          },
+          "counts": {
+            "accuracy": 120,
+            "answered_rate": 120,
+            "grounded_rate": 120,
+            "unread_answer_rate": 120,
+            "answer_in_sql_literal_rate": 120,
+            "no_failed_call_rate": 120,
+            "reward": 120,
+            "efficiency": 120,
+            "efficiency_when_correct": 98,
+            "correct_and_optimal_rate": 120,
+            "tool_calls": 120,
+            "failed_calls": 120,
+            "rows_returned": 120,
+            "vm_steps": 120,
+            "call_ratio": 120,
+            "vm_step_ratio": 120,
+            "latency_s": 120,
+            "completion_tokens": 120,
+            "tool_call_validity": 120
+          },
+          "auditkit_failed_samples": 0,
+          "auditkit_errors": [],
+          "auditkit_unscored": {
+            "efficiency_when_correct": {
+              "unknown": 0,
+              "not_tested": 22
+            }
+          },
+          "by_level": {
+            "1": {
+              "n": 40,
+              "accuracy": 0.85,
+              "reward": 0.865,
+              "tool_calls": 2.0
+            },
+            "2": {
+              "n": 38,
+              "accuracy": 0.8947368421052632,
+              "reward": 0.9027242032255065,
+              "tool_calls": 2.1315789473684212
+            },
+            "3": {
+              "n": 42,
+              "accuracy": 0.7142857142857143,
+              "reward": 0.7387198783993361,
+              "tool_calls": 2.857142857142857
+            }
+          },
+          "by_domain": {
+            "clinic": {
+              "n": 30,
+              "accuracy": 0.7666666666666667,
+              "reward": 0.7883333333333333,
+              "tool_calls": 2.3666666666666667
+            },
+            "logistics": {
+              "n": 30,
+              "accuracy": 0.9333333333333333,
+              "reward": 0.94,
+              "tool_calls": 2.2
+            },
+            "retail": {
+              "n": 30,
+              "accuracy": 0.9333333333333333,
+              "reward": 0.934589191866187,
+              "tool_calls": 2.3333333333333335
+            },
+            "school": {
+              "n": 30,
+              "accuracy": 0.6333333333333333,
+              "reward": 0.6680692953118582,
+              "tool_calls": 2.466666666666667
+            }
+          },
+          "by_template_group": {
+            "rl_only": {
+              "n": 38,
+              "accuracy": 0.47368421052631576,
+              "reward": 0.5194125198943582,
+              "tool_calls": 2.3421052631578947
+            },
+            "sft_seen": {
+              "n": 82,
+              "accuracy": 0.975609756097561,
+              "reward": 0.9779521812116554,
+              "tool_calls": 2.341463414634146
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "mismatches": []
+          }
+        },
+        "naive": {
+          "n": 120,
+          "metrics": {
+            "accuracy": 1.0,
+            "answered_rate": 1.0,
+            "grounded_rate": 1.0,
+            "unread_answer_rate": 0.0,
+            "answer_in_sql_literal_rate": 0.0,
+            "no_failed_call_rate": 0.5,
+            "reward": 0.6398248278683251,
+            "efficiency": 0.27964965573665007,
+            "efficiency_when_correct": 0.27964965573665007,
+            "correct_and_optimal_rate": 0.0,
+            "tool_calls": 4.6,
+            "failed_calls": 0.5,
+            "rows_returned": 2195.3,
+            "vm_steps": 31494.666666666668,
+            "call_ratio": 1.9986111111111111,
+            "vm_step_ratio": 4.828246449494085,
+            "latency_s": null,
+            "completion_tokens": null,
+            "tool_call_validity": 0.8913043478260869
+          },
+          "counts": {
+            "accuracy": 120,
+            "answered_rate": 120,
+            "grounded_rate": 120,
+            "unread_answer_rate": 120,
+            "answer_in_sql_literal_rate": 120,
+            "no_failed_call_rate": 120,
+            "reward": 120,
+            "efficiency": 120,
+            "efficiency_when_correct": 120,
+            "correct_and_optimal_rate": 120,
+            "tool_calls": 120,
+            "failed_calls": 120,
+            "rows_returned": 120,
+            "vm_steps": 120,
+            "call_ratio": 120,
+            "vm_step_ratio": 120,
+            "latency_s": 0,
+            "completion_tokens": 0,
+            "tool_call_validity": 120
+          },
+          "auditkit_failed_samples": 0,
+          "auditkit_errors": [],
+          "auditkit_unscored": {
+            "latency_s": {
+              "unknown": 0,
+              "not_tested": 120
+            },
+            "completion_tokens": {
+              "unknown": 0,
+              "not_tested": 120
+            }
+          },
+          "by_level": {
+            "1": {
+              "n": 40,
+              "accuracy": 1.0,
+              "reward": 0.6577060539361818,
+              "tool_calls": 3.525
+            },
+            "2": {
+              "n": 38,
+              "accuracy": 1.0,
+              "reward": 0.6208282694612456,
+              "tool_calls": 5.105263157894737
+            },
+            "3": {
+              "n": 42,
+              "accuracy": 1.0,
+              "reward": 0.6399824511243905,
+              "tool_calls": 5.166666666666667
+            }
+          },
+          "by_domain": {
+            "clinic": {
+              "n": 30,
+              "accuracy": 1.0,
+              "reward": 0.6344120115579013,
+              "tool_calls": 4.6
+            },
+            "logistics": {
+              "n": 30,
+              "accuracy": 1.0,
+              "reward": 0.6395789148604828,
+              "tool_calls": 4.5
+            },
+            "retail": {
+              "n": 30,
+              "accuracy": 1.0,
+              "reward": 0.6416005047962419,
+              "tool_calls": 4.5
+            },
+            "school": {
+              "n": 30,
+              "accuracy": 1.0,
+              "reward": 0.6437078802586741,
+              "tool_calls": 4.8
+            }
+          },
+          "by_template_group": {
+            "rl_only": {
+              "n": 38,
+              "accuracy": 1.0,
+              "reward": 0.6415195315536827,
+              "tool_calls": 4.7105263157894735
+            },
+            "sft_seen": {
+              "n": 82,
+              "accuracy": 1.0,
+              "reward": 0.6390394773799886,
+              "tool_calls": 4.548780487804878
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "mismatches": []
+          }
+        },
+        "oracle": {
+          "n": 120,
+          "metrics": {
+            "accuracy": 1.0,
+            "answered_rate": 1.0,
+            "grounded_rate": 1.0,
+            "unread_answer_rate": 0.0,
+            "answer_in_sql_literal_rate": 0.0,
+            "no_failed_call_rate": 1.0,
+            "reward": 1.0,
+            "efficiency": 1.0,
+            "efficiency_when_correct": 1.0,
+            "correct_and_optimal_rate": 1.0,
+            "tool_calls": 2.35,
+            "failed_calls": 0.0,
+            "rows_returned": 2.8,
+            "vm_steps": 10406.916666666666,
+            "call_ratio": 1.0,
+            "vm_step_ratio": 1.0,
+            "latency_s": null,
+            "completion_tokens": null,
+            "tool_call_validity": 1.0
+          },
+          "counts": {
+            "accuracy": 120,
+            "answered_rate": 120,
+            "grounded_rate": 120,
+            "unread_answer_rate": 120,
+            "answer_in_sql_literal_rate": 120,
+            "no_failed_call_rate": 120,
+            "reward": 120,
+            "efficiency": 120,
+            "efficiency_when_correct": 120,
+            "correct_and_optimal_rate": 120,
+            "tool_calls": 120,
+            "failed_calls": 120,
+            "rows_returned": 120,
+            "vm_steps": 120,
+            "call_ratio": 120,
+            "vm_step_ratio": 120,
+            "latency_s": 0,
+            "completion_tokens": 0,
+            "tool_call_validity": 120
+          },
+          "auditkit_failed_samples": 0,
+          "auditkit_errors": [],
+          "auditkit_unscored": {
+            "latency_s": {
+              "unknown": 0,
+              "not_tested": 120
+            },
+            "completion_tokens": {
+              "unknown": 0,
+              "not_tested": 120
+            }
+          },
+          "by_level": {
+            "1": {
+              "n": 40,
+              "accuracy": 1.0,
+              "reward": 1.0,
+              "tool_calls": 2.0
+            },
+            "2": {
+              "n": 38,
+              "accuracy": 1.0,
+              "reward": 1.0,
+              "tool_calls": 2.0
+            },
+            "3": {
+              "n": 42,
+              "accuracy": 1.0,
+              "reward": 1.0,
+              "tool_calls": 3.0
+            }
+          },
+          "by_domain": {
+            "clinic": {
+              "n": 30,
+              "accuracy": 1.0,
+              "reward": 1.0,
+              "tool_calls": 2.4
+            },
+            "logistics": {
+              "n": 30,
+              "accuracy": 1.0,
+              "reward": 1.0,
+              "tool_calls": 2.3
+            },
+            "retail": {
+              "n": 30,
+              "accuracy": 1.0,
+              "reward": 1.0,
+              "tool_calls": 2.3
+            },
+            "school": {
+              "n": 30,
+              "accuracy": 1.0,
+              "reward": 1.0,
+              "tool_calls": 2.4
+            }
+          },
+          "by_template_group": {
+            "rl_only": {
+              "n": 38,
+              "accuracy": 1.0,
+              "reward": 1.0,
+              "tool_calls": 2.3157894736842106
+            },
+            "sft_seen": {
+              "n": 82,
+              "accuracy": 1.0,
+              "reward": 1.0,
+              "tool_calls": 2.3658536585365852
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "mismatches": []
+          }
+        },
+        "distilled-all": {
+          "n": 120,
+          "metrics": {
+            "accuracy": 0.9916666666666667,
+            "answered_rate": 1.0,
+            "grounded_rate": 1.0,
+            "unread_answer_rate": 0.0,
+            "answer_in_sql_literal_rate": 0.0,
+            "no_failed_call_rate": 1.0,
+            "reward": 0.9924999999999999,
+            "efficiency": 1.0,
+            "efficiency_when_correct": 1.0,
+            "correct_and_optimal_rate": 0.9916666666666667,
+            "tool_calls": 2.341666666666667,
+            "failed_calls": 0.0,
+            "rows_returned": 2.7416666666666667,
+            "vm_steps": 10207.833333333334,
+            "call_ratio": 0.9972222222222222,
+            "vm_step_ratio": 0.9917045858846881,
+            "latency_s": 5.325875,
+            "completion_tokens": 116.11666666666666,
+            "tool_call_validity": 1.0
+          },
+          "counts": {
+            "accuracy": 120,
+            "answered_rate": 120,
+            "grounded_rate": 120,
+            "unread_answer_rate": 120,
+            "answer_in_sql_literal_rate": 120,
+            "no_failed_call_rate": 120,
+            "reward": 120,
+            "efficiency": 120,
+            "efficiency_when_correct": 119,
+            "correct_and_optimal_rate": 120,
+            "tool_calls": 120,
+            "failed_calls": 120,
+            "rows_returned": 120,
+            "vm_steps": 120,
+            "call_ratio": 120,
+            "vm_step_ratio": 120,
+            "latency_s": 120,
+            "completion_tokens": 120,
+            "tool_call_validity": 120
+          },
+          "auditkit_failed_samples": 0,
+          "auditkit_errors": [],
+          "auditkit_unscored": {
+            "efficiency_when_correct": {
+              "unknown": 0,
+              "not_tested": 1
+            }
+          },
+          "by_level": {
+            "1": {
+              "n": 40,
+              "accuracy": 1.0,
+              "reward": 1.0,
+              "tool_calls": 2.0
+            },
+            "2": {
+              "n": 38,
+              "accuracy": 1.0,
+              "reward": 1.0,
+              "tool_calls": 2.0
+            },
+            "3": {
+              "n": 42,
+              "accuracy": 0.9761904761904762,
+              "reward": 0.9785714285714286,
+              "tool_calls": 2.9761904761904763
+            }
+          },
+          "by_domain": {
+            "clinic": {
+              "n": 30,
+              "accuracy": 1.0,
+              "reward": 1.0,
+              "tool_calls": 2.4
+            },
+            "logistics": {
+              "n": 30,
+              "accuracy": 1.0,
+              "reward": 1.0,
+              "tool_calls": 2.3
+            },
+            "retail": {
+              "n": 30,
+              "accuracy": 0.9666666666666667,
+              "reward": 0.9700000000000001,
+              "tool_calls": 2.2666666666666666
+            },
+            "school": {
+              "n": 30,
+              "accuracy": 1.0,
+              "reward": 1.0,
+              "tool_calls": 2.4
+            }
+          },
+          "by_template_group": {
+            "rl_only": {
+              "n": 38,
+              "accuracy": 0.9736842105263158,
+              "reward": 0.9763157894736842,
+              "tool_calls": 2.289473684210526
+            },
+            "sft_seen": {
+              "n": 82,
+              "accuracy": 1.0,
+              "reward": 1.0,
+              "tool_calls": 2.3658536585365852
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "mismatches": []
+          }
+        },
+        "distilled-mixed": {
+          "n": 120,
+          "metrics": {
+            "accuracy": 0.775,
+            "answered_rate": 0.9583333333333334,
+            "grounded_rate": 1.0,
+            "unread_answer_rate": 0.0,
+            "answer_in_sql_literal_rate": 0.008333333333333333,
+            "no_failed_call_rate": 0.9583333333333334,
+            "reward": 0.7347206679092889,
+            "efficiency": 0.8280968262617431,
+            "efficiency_when_correct": 0.8433651644970898,
+            "correct_and_optimal_rate": 0.4,
+            "tool_calls": 2.8916666666666666,
+            "failed_calls": 0.08333333333333333,
+            "rows_returned": 7.841666666666667,
+            "vm_steps": 9377.25,
+            "call_ratio": 1.2486111111111111,
+            "vm_step_ratio": 0.9407617887310438,
+            "latency_s": 6.4048,
+            "completion_tokens": 140.53333333333333,
+            "tool_call_validity": 0.9711815561959655
+          },
+          "counts": {
+            "accuracy": 120,
+            "answered_rate": 120,
+            "grounded_rate": 120,
+            "unread_answer_rate": 120,
+            "answer_in_sql_literal_rate": 120,
+            "no_failed_call_rate": 120,
+            "reward": 120,
+            "efficiency": 120,
+            "efficiency_when_correct": 93,
+            "correct_and_optimal_rate": 120,
+            "tool_calls": 120,
+            "failed_calls": 120,
+            "rows_returned": 120,
+            "vm_steps": 120,
+            "call_ratio": 120,
+            "vm_step_ratio": 120,
+            "latency_s": 120,
+            "completion_tokens": 120,
+            "tool_call_validity": 120
+          },
+          "auditkit_failed_samples": 0,
+          "auditkit_errors": [],
+          "auditkit_unscored": {
+            "efficiency_when_correct": {
+              "unknown": 0,
+              "not_tested": 27
+            }
+          },
+          "by_level": {
+            "1": {
+              "n": 40,
+              "accuracy": 0.8,
+              "reward": 0.7530387135255416,
+              "tool_calls": 2.475
+            },
+            "2": {
+              "n": 38,
+              "accuracy": 0.7894736842105263,
+              "reward": 0.7320277930285164,
+              "tool_calls": 2.789473684210526
+            },
+            "3": {
+              "n": 42,
+              "accuracy": 0.7380952380952381,
+              "reward": 0.7197113207859378,
+              "tool_calls": 3.380952380952381
+            }
+          },
+          "by_domain": {
+            "clinic": {
+              "n": 30,
+              "accuracy": 0.7,
+              "reward": 0.6722836986076159,
+              "tool_calls": 2.8666666666666667
+            },
+            "logistics": {
+              "n": 30,
+              "accuracy": 0.9666666666666667,
+              "reward": 0.8917127797708269,
+              "tool_calls": 2.7333333333333334
+            },
+            "retail": {
+              "n": 30,
+              "accuracy": 0.9,
+              "reward": 0.8599995649016972,
+              "tool_calls": 2.7
+            },
+            "school": {
+              "n": 30,
+              "accuracy": 0.5333333333333333,
+              "reward": 0.5148866283570159,
+              "tool_calls": 3.2666666666666666
+            }
+          },
+          "by_template_group": {
+            "rl_only": {
+              "n": 38,
+              "accuracy": 0.4473684210526316,
+              "reward": 0.4599587344923304,
+              "tool_calls": 2.8684210526315788
+            },
+            "sft_seen": {
+              "n": 82,
+              "accuracy": 0.926829268292683,
+              "reward": 0.8620493687610503,
+              "tool_calls": 2.902439024390244
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "mismatches": []
+          }
+        },
+        "grpo-mixed": {
+          "n": 120,
+          "metrics": {
+            "accuracy": 0.7666666666666667,
+            "answered_rate": 0.9666666666666667,
+            "grounded_rate": 1.0,
+            "unread_answer_rate": 0.0,
+            "answer_in_sql_literal_rate": 0.025,
+            "no_failed_call_rate": 0.9416666666666667,
+            "reward": 0.739669641429498,
+            "efficiency": 0.8612164445876815,
+            "efficiency_when_correct": 0.8730512385117338,
+            "correct_and_optimal_rate": 0.4666666666666667,
+            "tool_calls": 2.8,
+            "failed_calls": 0.09166666666666666,
+            "rows_returned": 7.3,
+            "vm_steps": 9881.083333333334,
+            "call_ratio": 1.202777777777778,
+            "vm_step_ratio": 0.9596917553368232,
+            "latency_s": 6.286166666666667,
+            "completion_tokens": 139.1,
+            "tool_call_validity": 0.9672619047619048
+          },
+          "counts": {
+            "accuracy": 120,
+            "answered_rate": 120,
+            "grounded_rate": 120,
+            "unread_answer_rate": 120,
+            "answer_in_sql_literal_rate": 120,
+            "no_failed_call_rate": 120,
+            "reward": 120,
+            "efficiency": 120,
+            "efficiency_when_correct": 92,
+            "correct_and_optimal_rate": 120,
+            "tool_calls": 120,
+            "failed_calls": 120,
+            "rows_returned": 120,
+            "vm_steps": 120,
+            "call_ratio": 120,
+            "vm_step_ratio": 120,
+            "latency_s": 120,
+            "completion_tokens": 120,
+            "tool_call_validity": 120
+          },
+          "auditkit_failed_samples": 0,
+          "auditkit_errors": [],
+          "auditkit_unscored": {
+            "efficiency_when_correct": {
+              "unknown": 0,
+              "not_tested": 28
+            }
+          },
+          "by_level": {
+            "1": {
+              "n": 40,
+              "accuracy": 0.8,
+              "reward": 0.7750793483117763,
+              "tool_calls": 2.35
+            },
+            "2": {
+              "n": 38,
+              "accuracy": 0.8157894736842105,
+              "reward": 0.7668675770970971,
+              "tool_calls": 2.6315789473684212
+            },
+            "3": {
+              "n": 42,
+              "accuracy": 0.6904761904761905,
+              "reward": 0.6813384549852147,
+              "tool_calls": 3.380952380952381
+            }
+          },
+          "by_domain": {
+            "clinic": {
+              "n": 30,
+              "accuracy": 0.7333333333333333,
+              "reward": 0.7184972674413667,
+              "tool_calls": 2.7
+            },
+            "logistics": {
+              "n": 30,
+              "accuracy": 0.9666666666666667,
+              "reward": 0.8976441507615107,
+              "tool_calls": 2.7
+            },
+            "retail": {
+              "n": 30,
+              "accuracy": 0.8333333333333334,
+              "reward": 0.8259838524914319,
+              "tool_calls": 2.533333333333333
+            },
+            "school": {
+              "n": 30,
+              "accuracy": 0.5333333333333333,
+              "reward": 0.5165532950236825,
+              "tool_calls": 3.2666666666666666
+            }
+          },
+          "by_template_group": {
+            "rl_only": {
+              "n": 38,
+              "accuracy": 0.42105263157894735,
+              "reward": 0.43681100357960634,
+              "tool_calls": 2.8157894736842106
+            },
+            "sft_seen": {
+              "n": 82,
+              "accuracy": 0.926829268292683,
+              "reward": 0.8800187662867649,
+              "tool_calls": 2.792682926829268
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "mismatches": []
+          }
+        },
+        "zero-shot-stop": {
+          "n": 120,
+          "metrics": {
+            "accuracy": 0.025,
+            "answered_rate": 0.275,
+            "grounded_rate": 0.05,
+            "unread_answer_rate": 0.25,
+            "answer_in_sql_literal_rate": 0.0,
+            "no_failed_call_rate": 0.9916666666666667,
+            "reward": 0.07375,
+            "efficiency": 1.0,
+            "efficiency_when_correct": 1.0,
+            "correct_and_optimal_rate": 0.025,
+            "tool_calls": 1.0666666666666667,
+            "failed_calls": 0.016666666666666666,
+            "rows_returned": 0.03333333333333333,
+            "vm_steps": 277.8333333333333,
+            "call_ratio": 0.46944444444444444,
+            "vm_step_ratio": 0.03186912871458076,
+            "latency_s": 7.134708333333333,
+            "completion_tokens": 181.875,
+            "tool_call_validity": 0.984375
+          },
+          "counts": {
+            "accuracy": 120,
+            "answered_rate": 120,
+            "grounded_rate": 120,
+            "unread_answer_rate": 120,
+            "answer_in_sql_literal_rate": 120,
+            "no_failed_call_rate": 120,
+            "reward": 120,
+            "efficiency": 120,
+            "efficiency_when_correct": 3,
+            "correct_and_optimal_rate": 120,
+            "tool_calls": 120,
+            "failed_calls": 120,
+            "rows_returned": 120,
+            "vm_steps": 120,
+            "call_ratio": 120,
+            "vm_step_ratio": 120,
+            "latency_s": 120,
+            "completion_tokens": 120,
+            "tool_call_validity": 120
+          },
+          "auditkit_failed_samples": 0,
+          "auditkit_errors": [],
+          "auditkit_unscored": {
+            "efficiency_when_correct": {
+              "unknown": 0,
+              "not_tested": 117
+            }
+          },
+          "by_level": {
+            "1": {
+              "n": 40,
+              "accuracy": 0.075,
+              "reward": 0.12125000000000001,
+              "tool_calls": 1.075
+            },
+            "2": {
+              "n": 38,
+              "accuracy": 0.0,
+              "reward": 0.05,
+              "tool_calls": 1.0263157894736843
+            },
+            "3": {
+              "n": 42,
+              "accuracy": 0.0,
+              "reward": 0.05,
+              "tool_calls": 1.0952380952380953
+            }
+          },
+          "by_domain": {
+            "clinic": {
+              "n": 30,
+              "accuracy": 0.1,
+              "reward": 0.145,
+              "tool_calls": 1.1333333333333333
+            },
+            "logistics": {
+              "n": 30,
+              "accuracy": 0.0,
+              "reward": 0.05,
+              "tool_calls": 1.0333333333333334
+            },
+            "retail": {
+              "n": 30,
+              "accuracy": 0.0,
+              "reward": 0.05,
+              "tool_calls": 1.1
+            },
+            "school": {
+              "n": 30,
+              "accuracy": 0.0,
+              "reward": 0.05,
+              "tool_calls": 1.0
+            }
+          },
+          "by_template_group": {
+            "rl_only": {
+              "n": 38,
+              "accuracy": 0.02631578947368421,
+              "reward": 0.075,
+              "tool_calls": 1.105263157894737
+            },
+            "sft_seen": {
+              "n": 82,
+              "accuracy": 0.024390243902439025,
+              "reward": 0.07317073170731707,
+              "tool_calls": 1.048780487804878
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "mismatches": []
+          }
+        }
+      }
+    },
+    "test_ood": {
+      "coverage": {
+        "union": 100,
+        "shared": 100,
+        "complete": true,
+        "missing": {}
+      },
+      "models": {
+        "zero-shot": {
+          "n": 100,
+          "metrics": {
+            "accuracy": 0.08,
+            "answered_rate": 0.52,
+            "grounded_rate": 0.29,
+            "unread_answer_rate": 0.25,
+            "answer_in_sql_literal_rate": 0.0,
+            "no_failed_call_rate": 0.71,
+            "reward": 0.1251121182179208,
+            "efficiency": 0.8775571198260438,
+            "efficiency_when_correct": 0.7403029554480195,
+            "correct_and_optimal_rate": 0.03,
+            "tool_calls": 2.3,
+            "failed_calls": 0.69,
+            "rows_returned": 0.58,
+            "vm_steps": 6245.4,
+            "call_ratio": 1.0083333333333333,
+            "vm_step_ratio": 0.7081395683188056,
+            "latency_s": 11.64067,
+            "completion_tokens": 297.2,
+            "tool_call_validity": 0.7
+          },
+          "counts": {
+            "accuracy": 100,
+            "answered_rate": 100,
+            "grounded_rate": 100,
+            "unread_answer_rate": 100,
+            "answer_in_sql_literal_rate": 100,
+            "no_failed_call_rate": 100,
+            "reward": 100,
+            "efficiency": 100,
+            "efficiency_when_correct": 8,
+            "correct_and_optimal_rate": 100,
+            "tool_calls": 100,
+            "failed_calls": 100,
+            "rows_returned": 100,
+            "vm_steps": 100,
+            "call_ratio": 100,
+            "vm_step_ratio": 100,
+            "latency_s": 100,
+            "completion_tokens": 100,
+            "tool_call_validity": 100
+          },
+          "auditkit_failed_samples": 0,
+          "auditkit_errors": [],
+          "auditkit_unscored": {
+            "efficiency_when_correct": {
+              "unknown": 0,
+              "not_tested": 92
+            }
+          },
+          "by_level": {
+            "1": {
+              "n": 30,
+              "accuracy": 0.2,
+              "reward": 0.23117767572773162,
+              "tool_calls": 2.8
+            },
+            "2": {
+              "n": 30,
+              "accuracy": 0.06666666666666667,
+              "reward": 0.10919605166533765,
+              "tool_calls": 2.033333333333333
+            },
+            "3": {
+              "n": 40,
+              "accuracy": 0.0,
+              "reward": 0.05750000000000001,
+              "tool_calls": 2.125
+            }
+          },
+          "by_domain": {
+            "saas": {
+              "n": 100,
+              "accuracy": 0.08,
+              "reward": 0.1251121182179208,
+              "tool_calls": 2.3
+            }
+          },
+          "by_template_group": {
+            "unseen_domain": {
+              "n": 100,
+              "accuracy": 0.08,
+              "reward": 0.1251121182179208,
+              "tool_calls": 2.3
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "mismatches": []
+          }
+        },
+        "distilled": {
+          "n": 100,
+          "metrics": {
+            "accuracy": 0.46,
+            "answered_rate": 0.87,
+            "grounded_rate": 0.87,
+            "unread_answer_rate": 0.0,
+            "answer_in_sql_literal_rate": 0.0,
+            "no_failed_call_rate": 0.76,
+            "reward": 0.49655931966258704,
+            "efficiency": 0.928097242563041,
+            "efficiency_when_correct": 0.9524318246199437,
+            "correct_and_optimal_rate": 0.4,
+            "tool_calls": 2.44,
+            "failed_calls": 0.48,
+            "rows_returned": 1.34,
+            "vm_steps": 9206.0,
+            "call_ratio": 1.0433333333333332,
+            "vm_step_ratio": 1.4518805106087942,
+            "latency_s": 6.24956,
+            "completion_tokens": 140.46,
+            "tool_call_validity": 0.8032786885245902
+          },
+          "counts": {
+            "accuracy": 100,
+            "answered_rate": 100,
+            "grounded_rate": 100,
+            "unread_answer_rate": 100,
+            "answer_in_sql_literal_rate": 100,
+            "no_failed_call_rate": 100,
+            "reward": 100,
+            "efficiency": 100,
+            "efficiency_when_correct": 46,
+            "correct_and_optimal_rate": 100,
+            "tool_calls": 100,
+            "failed_calls": 100,
+            "rows_returned": 100,
+            "vm_steps": 100,
+            "call_ratio": 100,
+            "vm_step_ratio": 100,
+            "latency_s": 100,
+            "completion_tokens": 100,
+            "tool_call_validity": 100
+          },
+          "auditkit_failed_samples": 0,
+          "auditkit_errors": [],
+          "auditkit_unscored": {
+            "efficiency_when_correct": {
+              "unknown": 0,
+              "not_tested": 54
+            }
+          },
+          "by_level": {
+            "1": {
+              "n": 30,
+              "accuracy": 0.8333333333333334,
+              "reward": 0.8426216948888428,
+              "tool_calls": 2.033333333333333
+            },
+            "2": {
+              "n": 30,
+              "accuracy": 0.5666666666666667,
+              "reward": 0.5842207920979192,
+              "tool_calls": 2.566666666666667
+            },
+            "3": {
+              "n": 40,
+              "accuracy": 0.1,
+              "reward": 0.17126643391639623,
+              "tool_calls": 2.65
+            }
+          },
+          "by_domain": {
+            "saas": {
+              "n": 100,
+              "accuracy": 0.46,
+              "reward": 0.49655931966258704,
+              "tool_calls": 2.44
+            }
+          },
+          "by_template_group": {
+            "unseen_domain": {
+              "n": 100,
+              "accuracy": 0.46,
+              "reward": 0.49655931966258704,
+              "tool_calls": 2.44
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "mismatches": []
+          }
+        },
+        "grpo": {
+          "n": 100,
+          "metrics": {
+            "accuracy": 0.47,
+            "answered_rate": 0.87,
+            "grounded_rate": 0.87,
+            "unread_answer_rate": 0.0,
+            "answer_in_sql_literal_rate": 0.0,
+            "no_failed_call_rate": 0.73,
+            "reward": 0.5077400250343185,
+            "efficiency": 0.9336505079780036,
+            "efficiency_when_correct": 0.9627235107843342,
+            "correct_and_optimal_rate": 0.41,
+            "tool_calls": 2.45,
+            "failed_calls": 0.52,
+            "rows_returned": 1.28,
+            "vm_steps": 8577.6,
+            "call_ratio": 1.05,
+            "vm_step_ratio": 1.2820448651164704,
+            "latency_s": 6.277469999999999,
+            "completion_tokens": 141.9,
+            "tool_call_validity": 0.7877551020408163
+          },
+          "counts": {
+            "accuracy": 100,
+            "answered_rate": 100,
+            "grounded_rate": 100,
+            "unread_answer_rate": 100,
+            "answer_in_sql_literal_rate": 100,
+            "no_failed_call_rate": 100,
+            "reward": 100,
+            "efficiency": 100,
+            "efficiency_when_correct": 47,
+            "correct_and_optimal_rate": 100,
+            "tool_calls": 100,
+            "failed_calls": 100,
+            "rows_returned": 100,
+            "vm_steps": 100,
+            "call_ratio": 100,
+            "vm_step_ratio": 100,
+            "latency_s": 100,
+            "completion_tokens": 100,
+            "tool_call_validity": 100
+          },
+          "auditkit_failed_samples": 0,
+          "auditkit_errors": [],
+          "auditkit_unscored": {
+            "efficiency_when_correct": {
+              "unknown": 0,
+              "not_tested": 53
+            }
+          },
+          "by_level": {
+            "1": {
+              "n": 30,
+              "accuracy": 0.8666666666666667,
+              "reward": 0.879606243955372,
+              "tool_calls": 2.0
+            },
+            "2": {
+              "n": 30,
+              "accuracy": 0.6,
+              "reward": 0.6123110849421823,
+              "tool_calls": 2.6666666666666665
+            },
+            "3": {
+              "n": 40,
+              "accuracy": 0.075,
+              "reward": 0.15041206591263057,
+              "tool_calls": 2.625
+            }
+          },
+          "by_domain": {
+            "saas": {
+              "n": 100,
+              "accuracy": 0.47,
+              "reward": 0.5077400250343185,
+              "tool_calls": 2.45
+            }
+          },
+          "by_template_group": {
+            "unseen_domain": {
+              "n": 100,
+              "accuracy": 0.47,
+              "reward": 0.5077400250343185,
+              "tool_calls": 2.45
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "mismatches": []
+          }
+        },
+        "grpo-ungated": {
+          "n": 100,
+          "metrics": {
+            "accuracy": 0.45,
+            "answered_rate": 0.87,
+            "grounded_rate": 0.87,
+            "unread_answer_rate": 0.0,
+            "answer_in_sql_literal_rate": 0.0,
+            "no_failed_call_rate": 0.76,
+            "reward": 0.49031588938485976,
+            "efficiency": 0.9371821912285432,
+            "efficiency_when_correct": 0.963626175043821,
+            "correct_and_optimal_rate": 0.4,
+            "tool_calls": 2.41,
+            "failed_calls": 0.5,
+            "rows_returned": 1.28,
+            "vm_steps": 8577.6,
+            "call_ratio": 1.03,
+            "vm_step_ratio": 1.3143411955475077,
+            "latency_s": 6.24946,
+            "completion_tokens": 140.3,
+            "tool_call_validity": 0.7925311203319503
+          },
+          "counts": {
+            "accuracy": 100,
+            "answered_rate": 100,
+            "grounded_rate": 100,
+            "unread_answer_rate": 100,
+            "answer_in_sql_literal_rate": 100,
+            "no_failed_call_rate": 100,
+            "reward": 100,
+            "efficiency": 100,
+            "efficiency_when_correct": 45,
+            "correct_and_optimal_rate": 100,
+            "tool_calls": 100,
+            "failed_calls": 100,
+            "rows_returned": 100,
+            "vm_steps": 100,
+            "call_ratio": 100,
+            "vm_step_ratio": 100,
+            "latency_s": 100,
+            "completion_tokens": 100,
+            "tool_call_validity": 100
+          },
+          "auditkit_failed_samples": 0,
+          "auditkit_errors": [],
+          "auditkit_unscored": {
+            "efficiency_when_correct": {
+              "unknown": 0,
+              "not_tested": 55
+            }
+          },
+          "by_level": {
+            "1": {
+              "n": 30,
+              "accuracy": 0.8333333333333334,
+              "reward": 0.8496160846347726,
+              "tool_calls": 2.0
+            },
+            "2": {
+              "n": 30,
+              "accuracy": 0.5666666666666667,
+              "reward": 0.5842207920979192,
+              "tool_calls": 2.533333333333333
+            },
+            "3": {
+              "n": 40,
+              "accuracy": 0.075,
+              "reward": 0.15041206591263057,
+              "tool_calls": 2.625
+            }
+          },
+          "by_domain": {
+            "saas": {
+              "n": 100,
+              "accuracy": 0.45,
+              "reward": 0.49031588938485976,
+              "tool_calls": 2.41
+            }
+          },
+          "by_template_group": {
+            "unseen_domain": {
+              "n": 100,
+              "accuracy": 0.45,
+              "reward": 0.49031588938485976,
+              "tool_calls": 2.41
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "mismatches": []
+          }
+        },
+        "naive": {
+          "n": 100,
+          "metrics": {
+            "accuracy": 1.0,
+            "answered_rate": 1.0,
+            "grounded_rate": 1.0,
+            "unread_answer_rate": 0.0,
+            "answer_in_sql_literal_rate": 0.0,
+            "no_failed_call_rate": 0.5,
+            "reward": 0.6440406312003694,
+            "efficiency": 0.2880812624007389,
+            "efficiency_when_correct": 0.2880812624007389,
+            "correct_and_optimal_rate": 0.0,
+            "tool_calls": 4.4,
+            "failed_calls": 0.5,
+            "rows_returned": 2282.7,
+            "vm_steps": 27385.7,
+            "call_ratio": 1.8666666666666665,
+            "vm_step_ratio": 3.913708853625632,
+            "latency_s": null,
+            "completion_tokens": null,
+            "tool_call_validity": 0.8863636363636364
+          },
+          "counts": {
+            "accuracy": 100,
+            "answered_rate": 100,
+            "grounded_rate": 100,
+            "unread_answer_rate": 100,
+            "answer_in_sql_literal_rate": 100,
+            "no_failed_call_rate": 100,
+            "reward": 100,
+            "efficiency": 100,
+            "efficiency_when_correct": 100,
+            "correct_and_optimal_rate": 100,
+            "tool_calls": 100,
+            "failed_calls": 100,
+            "rows_returned": 100,
+            "vm_steps": 100,
+            "call_ratio": 100,
+            "vm_step_ratio": 100,
+            "latency_s": 0,
+            "completion_tokens": 0,
+            "tool_call_validity": 100
+          },
+          "auditkit_failed_samples": 0,
+          "auditkit_errors": [],
+          "auditkit_unscored": {
+            "latency_s": {
+              "unknown": 0,
+              "not_tested": 100
+            },
+            "completion_tokens": {
+              "unknown": 0,
+              "not_tested": 100
+            }
+          },
+          "by_level": {
+            "1": {
+              "n": 30,
+              "accuracy": 1.0,
+              "reward": 0.6621029583687615,
+              "tool_calls": 3.5
+            },
+            "2": {
+              "n": 30,
+              "accuracy": 1.0,
+              "reward": 0.6010858512999511,
+              "tool_calls": 4.5
+            },
+            "3": {
+              "n": 40,
+              "accuracy": 1.0,
+              "reward": 0.6627099707493891,
+              "tool_calls": 5.0
+            }
+          },
+          "by_domain": {
+            "saas": {
+              "n": 100,
+              "accuracy": 1.0,
+              "reward": 0.6440406312003694,
+              "tool_calls": 4.4
+            }
+          },
+          "by_template_group": {
+            "unseen_domain": {
+              "n": 100,
+              "accuracy": 1.0,
+              "reward": 0.6440406312003694,
+              "tool_calls": 4.4
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "mismatches": []
+          }
+        },
+        "oracle": {
+          "n": 100,
+          "metrics": {
+            "accuracy": 1.0,
+            "answered_rate": 1.0,
+            "grounded_rate": 1.0,
+            "unread_answer_rate": 0.0,
+            "answer_in_sql_literal_rate": 0.0,
+            "no_failed_call_rate": 1.0,
+            "reward": 1.0,
+            "efficiency": 1.0,
+            "efficiency_when_correct": 1.0,
+            "correct_and_optimal_rate": 1.0,
+            "tool_calls": 2.4,
+            "failed_calls": 0.0,
+            "rows_returned": 2.7,
+            "vm_steps": 8736.7,
+            "call_ratio": 1.0,
+            "vm_step_ratio": 1.0,
+            "latency_s": null,
+            "completion_tokens": null,
+            "tool_call_validity": 1.0
+          },
+          "counts": {
+            "accuracy": 100,
+            "answered_rate": 100,
+            "grounded_rate": 100,
+            "unread_answer_rate": 100,
+            "answer_in_sql_literal_rate": 100,
+            "no_failed_call_rate": 100,
+            "reward": 100,
+            "efficiency": 100,
+            "efficiency_when_correct": 100,
+            "correct_and_optimal_rate": 100,
+            "tool_calls": 100,
+            "failed_calls": 100,
+            "rows_returned": 100,
+            "vm_steps": 100,
+            "call_ratio": 100,
+            "vm_step_ratio": 100,
+            "latency_s": 0,
+            "completion_tokens": 0,
+            "tool_call_validity": 100
+          },
+          "auditkit_failed_samples": 0,
+          "auditkit_errors": [],
+          "auditkit_unscored": {
+            "latency_s": {
+              "unknown": 0,
+              "not_tested": 100
+            },
+            "completion_tokens": {
+              "unknown": 0,
+              "not_tested": 100
+            }
+          },
+          "by_level": {
+            "1": {
+              "n": 30,
+              "accuracy": 1.0,
+              "reward": 1.0,
+              "tool_calls": 2.0
+            },
+            "2": {
+              "n": 30,
+              "accuracy": 1.0,
+              "reward": 1.0,
+              "tool_calls": 2.0
+            },
+            "3": {
+              "n": 40,
+              "accuracy": 1.0,
+              "reward": 1.0,
+              "tool_calls": 3.0
+            }
+          },
+          "by_domain": {
+            "saas": {
+              "n": 100,
+              "accuracy": 1.0,
+              "reward": 1.0,
+              "tool_calls": 2.4
+            }
+          },
+          "by_template_group": {
+            "unseen_domain": {
+              "n": 100,
+              "accuracy": 1.0,
+              "reward": 1.0,
+              "tool_calls": 2.4
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "mismatches": []
+          }
+        },
+        "distilled-all": {
+          "n": 100,
+          "metrics": {
+            "accuracy": 0.58,
+            "answered_rate": 0.92,
+            "grounded_rate": 0.92,
+            "unread_answer_rate": 0.0,
+            "answer_in_sql_literal_rate": 0.01,
+            "no_failed_call_rate": 0.76,
+            "reward": 0.6045739105059763,
+            "efficiency": 0.9522299183984856,
+            "efficiency_when_correct": 0.9537031396757802,
+            "correct_and_optimal_rate": 0.48,
+            "tool_calls": 2.43,
+            "failed_calls": 0.4,
+            "rows_returned": 1.39,
+            "vm_steps": 8042.1,
+            "call_ratio": 1.04,
+            "vm_step_ratio": 0.9941923380061543,
+            "latency_s": 6.29469,
+            "completion_tokens": 141.36,
+            "tool_call_validity": 0.8353909465020576
+          },
+          "counts": {
+            "accuracy": 100,
+            "answered_rate": 100,
+            "grounded_rate": 100,
+            "unread_answer_rate": 100,
+            "answer_in_sql_literal_rate": 100,
+            "no_failed_call_rate": 100,
+            "reward": 100,
+            "efficiency": 100,
+            "efficiency_when_correct": 58,
+            "correct_and_optimal_rate": 100,
+            "tool_calls": 100,
+            "failed_calls": 100,
+            "rows_returned": 100,
+            "vm_steps": 100,
+            "call_ratio": 100,
+            "vm_step_ratio": 100,
+            "latency_s": 100,
+            "completion_tokens": 100,
+            "tool_call_validity": 100
+          },
+          "auditkit_failed_samples": 0,
+          "auditkit_errors": [],
+          "auditkit_unscored": {
+            "efficiency_when_correct": {
+              "unknown": 0,
+              "not_tested": 42
+            }
+          },
+          "by_level": {
+            "1": {
+              "n": 30,
+              "accuracy": 0.8666666666666667,
+              "reward": 0.8798828606074185,
+              "tool_calls": 2.0
+            },
+            "2": {
+              "n": 30,
+              "accuracy": 0.7333333333333333,
+              "reward": 0.7342706899159798,
+              "tool_calls": 2.6
+            },
+            "3": {
+              "n": 40,
+              "accuracy": 0.25,
+              "reward": 0.30081961337239194,
+              "tool_calls": 2.625
+            }
+          },
+          "by_domain": {
+            "saas": {
+              "n": 100,
+              "accuracy": 0.58,
+              "reward": 0.6045739105059763,
+              "tool_calls": 2.43
+            }
+          },
+          "by_template_group": {
+            "unseen_domain": {
+              "n": 100,
+              "accuracy": 0.58,
+              "reward": 0.6045739105059763,
+              "tool_calls": 2.43
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "mismatches": []
+          }
+        },
+        "distilled-mixed": {
+          "n": 100,
+          "metrics": {
+            "accuracy": 0.49,
+            "answered_rate": 0.86,
+            "grounded_rate": 0.94,
+            "unread_answer_rate": 0.0,
+            "answer_in_sql_literal_rate": 0.0,
+            "no_failed_call_rate": 0.76,
+            "reward": 0.475644891013631,
+            "efficiency": 0.8217205059060898,
+            "efficiency_when_correct": 0.7618158816882898,
+            "correct_and_optimal_rate": 0.18,
+            "tool_calls": 2.99,
+            "failed_calls": 0.41,
+            "rows_returned": 4.3,
+            "vm_steps": 7511.6,
+            "call_ratio": 1.2783333333333333,
+            "vm_step_ratio": 1.0340868869060205,
+            "latency_s": 7.007770000000001,
+            "completion_tokens": 155.47,
+            "tool_call_validity": 0.862876254180602
+          },
+          "counts": {
+            "accuracy": 100,
+            "answered_rate": 100,
+            "grounded_rate": 100,
+            "unread_answer_rate": 100,
+            "answer_in_sql_literal_rate": 100,
+            "no_failed_call_rate": 100,
+            "reward": 100,
+            "efficiency": 100,
+            "efficiency_when_correct": 49,
+            "correct_and_optimal_rate": 100,
+            "tool_calls": 100,
+            "failed_calls": 100,
+            "rows_returned": 100,
+            "vm_steps": 100,
+            "call_ratio": 100,
+            "vm_step_ratio": 100,
+            "latency_s": 100,
+            "completion_tokens": 100,
+            "tool_call_validity": 100
+          },
+          "auditkit_failed_samples": 0,
+          "auditkit_errors": [],
+          "auditkit_unscored": {
+            "efficiency_when_correct": {
+              "unknown": 0,
+              "not_tested": 51
+            }
+          },
+          "by_level": {
+            "1": {
+              "n": 30,
+              "accuracy": 0.8333333333333334,
+              "reward": 0.7671146256284704,
+              "tool_calls": 2.533333333333333
+            },
+            "2": {
+              "n": 30,
+              "accuracy": 0.6666666666666666,
+              "reward": 0.5944083574652147,
+              "tool_calls": 3.1
+            },
+            "3": {
+              "n": 40,
+              "accuracy": 0.1,
+              "reward": 0.1679699902138137,
+              "tool_calls": 3.25
+            }
+          },
+          "by_domain": {
+            "saas": {
+              "n": 100,
+              "accuracy": 0.49,
+              "reward": 0.475644891013631,
+              "tool_calls": 2.99
+            }
+          },
+          "by_template_group": {
+            "unseen_domain": {
+              "n": 100,
+              "accuracy": 0.49,
+              "reward": 0.475644891013631,
+              "tool_calls": 2.99
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "mismatches": []
+          }
+        },
+        "grpo-mixed": {
+          "n": 100,
+          "metrics": {
+            "accuracy": 0.5,
+            "answered_rate": 0.86,
+            "grounded_rate": 0.94,
+            "unread_answer_rate": 0.0,
+            "answer_in_sql_literal_rate": 0.0,
+            "no_failed_call_rate": 0.76,
+            "reward": 0.4834281523281636,
+            "efficiency": 0.8219598532713038,
+            "efficiency_when_correct": 0.7617126093126546,
+            "correct_and_optimal_rate": 0.19,
+            "tool_calls": 2.99,
+            "failed_calls": 0.41,
+            "rows_returned": 4.3,
+            "vm_steps": 7463.8,
+            "call_ratio": 1.2783333333333333,
+            "vm_step_ratio": 1.0205828709455518,
+            "latency_s": 7.043229999999999,
+            "completion_tokens": 155.71,
+            "tool_call_validity": 0.862876254180602
+          },
+          "counts": {
+            "accuracy": 100,
+            "answered_rate": 100,
+            "grounded_rate": 100,
+            "unread_answer_rate": 100,
+            "answer_in_sql_literal_rate": 100,
+            "no_failed_call_rate": 100,
+            "reward": 100,
+            "efficiency": 100,
+            "efficiency_when_correct": 50,
+            "correct_and_optimal_rate": 100,
+            "tool_calls": 100,
+            "failed_calls": 100,
+            "rows_returned": 100,
+            "vm_steps": 100,
+            "call_ratio": 100,
+            "vm_step_ratio": 100,
+            "latency_s": 100,
+            "completion_tokens": 100,
+            "tool_call_validity": 100
+          },
+          "auditkit_failed_samples": 0,
+          "auditkit_errors": [],
+          "auditkit_unscored": {
+            "efficiency_when_correct": {
+              "unknown": 0,
+              "not_tested": 50
+            }
+          },
+          "by_level": {
+            "1": {
+              "n": 30,
+              "accuracy": 0.8333333333333334,
+              "reward": 0.7671146256284704,
+              "tool_calls": 2.533333333333333
+            },
+            "2": {
+              "n": 30,
+              "accuracy": 0.7,
+              "reward": 0.6203525618469902,
+              "tool_calls": 3.1
+            },
+            "3": {
+              "n": 40,
+              "accuracy": 0.1,
+              "reward": 0.1679699902138137,
+              "tool_calls": 3.25
+            }
+          },
+          "by_domain": {
+            "saas": {
+              "n": 100,
+              "accuracy": 0.5,
+              "reward": 0.4834281523281636,
+              "tool_calls": 2.99
+            }
+          },
+          "by_template_group": {
+            "unseen_domain": {
+              "n": 100,
+              "accuracy": 0.5,
+              "reward": 0.4834281523281636,
+              "tool_calls": 2.99
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "mismatches": []
+          }
+        },
+        "zero-shot-stop": {
+          "n": 100,
+          "metrics": {
+            "accuracy": 0.0,
+            "answered_rate": 0.24,
+            "grounded_rate": 0.0,
+            "unread_answer_rate": 0.24,
+            "answer_in_sql_literal_rate": 0.0,
+            "no_failed_call_rate": 0.99,
+            "reward": 0.05,
+            "efficiency": 0.9991666666666668,
+            "efficiency_when_correct": null,
+            "correct_and_optimal_rate": 0.0,
+            "tool_calls": 1.03,
+            "failed_calls": 0.03,
+            "rows_returned": 0.0,
+            "vm_steps": 1.2,
+            "call_ratio": 0.44333333333333336,
+            "vm_step_ratio": 0.00028885222583763725,
+            "latency_s": 7.17823,
+            "completion_tokens": 185.51,
+            "tool_call_validity": 0.970873786407767
+          },
+          "counts": {
+            "accuracy": 100,
+            "answered_rate": 100,
+            "grounded_rate": 100,
+            "unread_answer_rate": 100,
+            "answer_in_sql_literal_rate": 100,
+            "no_failed_call_rate": 100,
+            "reward": 100,
+            "efficiency": 100,
+            "efficiency_when_correct": 0,
+            "correct_and_optimal_rate": 100,
+            "tool_calls": 100,
+            "failed_calls": 100,
+            "rows_returned": 100,
+            "vm_steps": 100,
+            "call_ratio": 100,
+            "vm_step_ratio": 100,
+            "latency_s": 100,
+            "completion_tokens": 100,
+            "tool_call_validity": 100
+          },
+          "auditkit_failed_samples": 0,
+          "auditkit_errors": [],
+          "auditkit_unscored": {
+            "efficiency_when_correct": {
+              "unknown": 0,
+              "not_tested": 100
+            }
+          },
+          "by_level": {
+            "1": {
+              "n": 30,
+              "accuracy": 0.0,
+              "reward": 0.05,
+              "tool_calls": 1.0
+            },
+            "2": {
+              "n": 30,
+              "accuracy": 0.0,
+              "reward": 0.05,
+              "tool_calls": 1.0
+            },
+            "3": {
+              "n": 40,
+              "accuracy": 0.0,
+              "reward": 0.05,
+              "tool_calls": 1.075
+            }
+          },
+          "by_domain": {
+            "saas": {
+              "n": 100,
+              "accuracy": 0.0,
+              "reward": 0.05,
+              "tool_calls": 1.03
+            }
+          },
+          "by_template_group": {
+            "unseen_domain": {
+              "n": 100,
+              "accuracy": 0.0,
+              "reward": 0.05,
+              "tool_calls": 1.03
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "mismatches": []
+          }
+        }
+      }
+    }
+  },
+  "comparisons": {
+    "test_id": {
+      "baseline": "zero-shot",
+      "pairs": [
+        {
+          "model": "distilled",
+          "n_paired": 120,
+          "metrics": {
+            "accuracy": {
+              "direction": "max",
+              "baseline_mean": 0.08333333333333333,
+              "candidate_mean": 0.8083333333333333,
+              "delta": 0.725,
+              "ci_low": 0.6333333333333333,
+              "ci_high": 0.8083333333333333,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.725,
+              "auditkit_error": null
+            },
+            "reward": {
+              "direction": "max",
+              "baseline_mean": 0.13046891879326206,
+              "candidate_mean": 0.8252479551278447,
+              "delta": 0.6947790363345826,
+              "ci_low": 0.6155636746314148,
+              "ci_high": 0.767105977709712,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.694779,
+              "auditkit_error": null
+            },
+            "efficiency": {
+              "direction": "max",
+              "baseline_mean": 0.8891968153253198,
+              "candidate_mean": 0.9844374778225159,
+              "delta": 0.09524066249719623,
+              "ci_low": 0.06496929854752174,
+              "ci_high": 0.12758755822190967,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.095241,
+              "auditkit_error": null
+            },
+            "tool_calls": {
+              "direction": "min",
+              "baseline_mean": 2.6,
+              "candidate_mean": 2.341666666666667,
+              "delta": -0.25833333333333336,
+              "ci_low": -0.5166666666666667,
+              "ci_high": 0.0,
+              "excludes_zero": false,
+              "verdict": "no clear change",
+              "auditkit_p_value": 0.061938,
+              "auditkit_delta": -0.258333,
+              "auditkit_error": null
+            }
+          }
+        },
+        {
+          "model": "grpo",
+          "n_paired": 120,
+          "metrics": {
+            "accuracy": {
+              "direction": "max",
+              "baseline_mean": 0.08333333333333333,
+              "candidate_mean": 0.8333333333333334,
+              "delta": 0.75,
+              "ci_low": 0.6583333333333333,
+              "ci_high": 0.8333333333333334,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.75,
+              "auditkit_error": null
+            },
+            "reward": {
+              "direction": "max",
+              "baseline_mean": 0.13046891879326206,
+              "candidate_mean": 0.8480356993401502,
+              "delta": 0.7175667805468883,
+              "ci_low": 0.6378528579025282,
+              "ci_high": 0.7902156826331218,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.717567,
+              "auditkit_error": null
+            },
+            "efficiency": {
+              "direction": "max",
+              "baseline_mean": 0.8891968153253198,
+              "candidate_mean": 0.9857074106915716,
+              "delta": 0.09651059536625194,
+              "ci_low": 0.06606551088867497,
+              "ci_high": 0.12894802868233968,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.096511,
+              "auditkit_error": null
+            },
+            "tool_calls": {
+              "direction": "min",
+              "baseline_mean": 2.6,
+              "candidate_mean": 2.341666666666667,
+              "delta": -0.25833333333333336,
+              "ci_low": -0.5166666666666667,
+              "ci_high": 0.0,
+              "excludes_zero": false,
+              "verdict": "no clear change",
+              "auditkit_p_value": 0.060939,
+              "auditkit_delta": -0.258333,
+              "auditkit_error": null
+            }
+          }
+        },
+        {
+          "model": "grpo-ungated",
+          "n_paired": 120,
+          "metrics": {
+            "accuracy": {
+              "direction": "max",
+              "baseline_mean": 0.08333333333333333,
+              "candidate_mean": 0.8166666666666667,
+              "delta": 0.7333333333333333,
+              "ci_low": 0.6416666666666667,
+              "ci_high": 0.8166666666666667,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.733333,
+              "auditkit_error": null
+            },
+            "reward": {
+              "direction": "max",
+              "baseline_mean": 0.13046891879326206,
+              "candidate_mean": 0.8327479551278446,
+              "delta": 0.7022790363345826,
+              "ci_low": 0.625890029938993,
+              "ci_high": 0.7746171593168323,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.702279,
+              "auditkit_error": null
+            },
+            "efficiency": {
+              "direction": "max",
+              "baseline_mean": 0.8891968153253198,
+              "candidate_mean": 0.9850736779661052,
+              "delta": 0.09587686264078554,
+              "ci_low": 0.06583622946539874,
+              "ci_high": 0.12790806731497534,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.095877,
+              "auditkit_error": null
+            },
+            "tool_calls": {
+              "direction": "min",
+              "baseline_mean": 2.6,
+              "candidate_mean": 2.341666666666667,
+              "delta": -0.25833333333333336,
+              "ci_low": -0.5166666666666667,
+              "ci_high": 0.0,
+              "excludes_zero": false,
+              "verdict": "no clear change",
+              "auditkit_p_value": 0.061938,
+              "auditkit_delta": -0.258333,
+              "auditkit_error": null
+            }
+          }
+        },
+        {
+          "model": "naive",
+          "n_paired": 120,
+          "metrics": {
+            "accuracy": {
+              "direction": "max",
+              "baseline_mean": 0.08333333333333333,
+              "candidate_mean": 1.0,
+              "delta": 0.9166666666666666,
+              "ci_low": 0.8666666666666667,
+              "ci_high": 0.9583333333333334,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.916667,
+              "auditkit_error": null
+            },
+            "reward": {
+              "direction": "max",
+              "baseline_mean": 0.13046891879326206,
+              "candidate_mean": 0.6398248278683251,
+              "delta": 0.509355909075063,
+              "ci_low": 0.4660314693697192,
+              "ci_high": 0.5455947724328217,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.509356,
+              "auditkit_error": null
+            },
+            "efficiency": {
+              "direction": "max",
+              "baseline_mean": 0.8891968153253198,
+              "candidate_mean": 0.27964965573665007,
+              "delta": -0.6095471595886697,
+              "ci_low": -0.6384534450646856,
+              "ci_high": -0.5777883701599233,
+              "excludes_zero": true,
+              "verdict": "worse",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": -0.609547,
+              "auditkit_error": null
+            },
+            "tool_calls": {
+              "direction": "min",
+              "baseline_mean": 2.6,
+              "candidate_mean": 4.6,
+              "delta": 2.0,
+              "ci_low": 1.7333333333333334,
+              "ci_high": 2.275,
+              "excludes_zero": true,
+              "verdict": "worse",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 2.0,
+              "auditkit_error": null
+            }
+          }
+        },
+        {
+          "model": "oracle",
+          "n_paired": 120,
+          "metrics": {
+            "accuracy": {
+              "direction": "max",
+              "baseline_mean": 0.08333333333333333,
+              "candidate_mean": 1.0,
+              "delta": 0.9166666666666666,
+              "ci_low": 0.8666666666666667,
+              "ci_high": 0.9583333333333334,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.916667,
+              "auditkit_error": null
+            },
+            "reward": {
+              "direction": "max",
+              "baseline_mean": 0.13046891879326206,
+              "candidate_mean": 1.0,
+              "delta": 0.8695310812067379,
+              "ci_low": 0.8255753788953982,
+              "ci_high": 0.9066076657287143,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.869531,
+              "auditkit_error": null
+            },
+            "efficiency": {
+              "direction": "max",
+              "baseline_mean": 0.8891968153253198,
+              "candidate_mean": 1.0,
+              "delta": 0.11080318467468028,
+              "ci_low": 0.08333931346634088,
+              "ci_high": 0.14000876487728947,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.110803,
+              "auditkit_error": null
+            },
+            "tool_calls": {
+              "direction": "min",
+              "baseline_mean": 2.6,
+              "candidate_mean": 2.35,
+              "delta": -0.25,
+              "ci_low": -0.5,
+              "ci_high": 0.0,
+              "excludes_zero": false,
+              "verdict": "no clear change",
+              "auditkit_p_value": 0.067932,
+              "auditkit_delta": -0.25,
+              "auditkit_error": null
+            }
+          }
+        },
+        {
+          "model": "distilled-all",
+          "n_paired": 120,
+          "metrics": {
+            "accuracy": {
+              "direction": "max",
+              "baseline_mean": 0.08333333333333333,
+              "candidate_mean": 0.9916666666666667,
+              "delta": 0.9083333333333333,
+              "ci_low": 0.85,
+              "ci_high": 0.9583333333333334,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.908333,
+              "auditkit_error": null
+            },
+            "reward": {
+              "direction": "max",
+              "baseline_mean": 0.13046891879326206,
+              "candidate_mean": 0.9924999999999999,
+              "delta": 0.8620310812067379,
+              "ci_low": 0.8166163210067319,
+              "ci_high": 0.9000576983537911,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.862031,
+              "auditkit_error": null
+            },
+            "efficiency": {
+              "direction": "max",
+              "baseline_mean": 0.8891968153253198,
+              "candidate_mean": 1.0,
+              "delta": 0.11080318467468028,
+              "ci_low": 0.08333931346634088,
+              "ci_high": 0.14000876487728947,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.110803,
+              "auditkit_error": null
+            },
+            "tool_calls": {
+              "direction": "min",
+              "baseline_mean": 2.6,
+              "candidate_mean": 2.341666666666667,
+              "delta": -0.25833333333333336,
+              "ci_low": -0.5083333333333333,
+              "ci_high": -0.016666666666666666,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.052947,
+              "auditkit_delta": -0.258333,
+              "auditkit_error": null
+            }
+          }
+        },
+        {
+          "model": "distilled-mixed",
+          "n_paired": 120,
+          "metrics": {
+            "accuracy": {
+              "direction": "max",
+              "baseline_mean": 0.08333333333333333,
+              "candidate_mean": 0.775,
+              "delta": 0.6916666666666667,
+              "ci_low": 0.5916666666666667,
+              "ci_high": 0.7833333333333333,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.691667,
+              "auditkit_error": null
+            },
+            "reward": {
+              "direction": "max",
+              "baseline_mean": 0.13046891879326206,
+              "candidate_mean": 0.7347206679092889,
+              "delta": 0.6042517491160269,
+              "ci_low": 0.527280666352829,
+              "ci_high": 0.6773143470466269,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.604252,
+              "auditkit_error": null
+            },
+            "efficiency": {
+              "direction": "max",
+              "baseline_mean": 0.8891968153253198,
+              "candidate_mean": 0.8280968262617431,
+              "delta": -0.06109998906357663,
+              "ci_low": -0.10207426779631958,
+              "ci_high": -0.018170260268614444,
+              "excludes_zero": true,
+              "verdict": "worse",
+              "auditkit_p_value": 0.005994,
+              "auditkit_delta": -0.0611,
+              "auditkit_error": null
+            },
+            "tool_calls": {
+              "direction": "min",
+              "baseline_mean": 2.6,
+              "candidate_mean": 2.8916666666666666,
+              "delta": 0.2916666666666667,
+              "ci_low": 0.0,
+              "ci_high": 0.575,
+              "excludes_zero": false,
+              "verdict": "no clear change",
+              "auditkit_p_value": 0.054945,
+              "auditkit_delta": 0.291667,
+              "auditkit_error": null
+            }
+          }
+        },
+        {
+          "model": "grpo-mixed",
+          "n_paired": 120,
+          "metrics": {
+            "accuracy": {
+              "direction": "max",
+              "baseline_mean": 0.08333333333333333,
+              "candidate_mean": 0.7666666666666667,
+              "delta": 0.6833333333333333,
+              "ci_low": 0.5916666666666667,
+              "ci_high": 0.775,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.683333,
+              "auditkit_error": null
+            },
+            "reward": {
+              "direction": "max",
+              "baseline_mean": 0.13046891879326206,
+              "candidate_mean": 0.739669641429498,
+              "delta": 0.6092007226362359,
+              "ci_low": 0.5307215899537402,
+              "ci_high": 0.6831127953950237,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.609201,
+              "auditkit_error": null
+            },
+            "efficiency": {
+              "direction": "max",
+              "baseline_mean": 0.8891968153253198,
+              "candidate_mean": 0.8612164445876815,
+              "delta": -0.027980370737638118,
+              "ci_low": -0.06962669103413781,
+              "ci_high": 0.01333031920889396,
+              "excludes_zero": false,
+              "verdict": "no clear change",
+              "auditkit_p_value": 0.194805,
+              "auditkit_delta": -0.02798,
+              "auditkit_error": null
+            },
+            "tool_calls": {
+              "direction": "min",
+              "baseline_mean": 2.6,
+              "candidate_mean": 2.8,
+              "delta": 0.2,
+              "ci_low": -0.08333333333333333,
+              "ci_high": 0.49166666666666664,
+              "excludes_zero": false,
+              "verdict": "no clear change",
+              "auditkit_p_value": 0.190809,
+              "auditkit_delta": 0.2,
+              "auditkit_error": null
+            }
+          }
+        },
+        {
+          "model": "zero-shot-stop",
+          "n_paired": 120,
+          "metrics": {
+            "accuracy": {
+              "direction": "max",
+              "baseline_mean": 0.08333333333333333,
+              "candidate_mean": 0.025,
+              "delta": -0.058333333333333334,
+              "ci_low": -0.11666666666666667,
+              "ci_high": -0.008333333333333333,
+              "excludes_zero": true,
+              "verdict": "worse",
+              "auditkit_p_value": 0.041958,
+              "auditkit_delta": -0.058333,
+              "auditkit_error": null
+            },
+            "reward": {
+              "direction": "max",
+              "baseline_mean": 0.13046891879326206,
+              "candidate_mean": 0.07375,
+              "delta": -0.05671891879326205,
+              "ci_low": -0.10310507559144336,
+              "ci_high": -0.014362062030492556,
+              "excludes_zero": true,
+              "verdict": "worse",
+              "auditkit_p_value": 0.010989,
+              "auditkit_delta": -0.056719,
+              "auditkit_error": null
+            },
+            "efficiency": {
+              "direction": "max",
+              "baseline_mean": 0.8891968153253198,
+              "candidate_mean": 1.0,
+              "delta": 0.11080318467468028,
+              "ci_low": 0.08333931346634088,
+              "ci_high": 0.14000876487728947,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.110803,
+              "auditkit_error": null
+            },
+            "tool_calls": {
+              "direction": "min",
+              "baseline_mean": 2.6,
+              "candidate_mean": 1.0666666666666667,
+              "delta": -1.5333333333333334,
+              "ci_low": -1.775,
+              "ci_high": -1.2916666666666667,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": -1.533333,
+              "auditkit_error": null
+            }
+          }
+        }
+      ]
+    },
+    "test_ood": {
+      "baseline": "zero-shot",
+      "pairs": [
+        {
+          "model": "distilled",
+          "n_paired": 100,
+          "metrics": {
+            "accuracy": {
+              "direction": "max",
+              "baseline_mean": 0.08,
+              "candidate_mean": 0.46,
+              "delta": 0.38,
+              "ci_low": 0.28,
+              "ci_high": 0.48,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.38,
+              "auditkit_error": null
+            },
+            "reward": {
+              "direction": "max",
+              "baseline_mean": 0.1251121182179208,
+              "candidate_mean": 0.49655931966258704,
+              "delta": 0.37144720144466625,
+              "ci_low": 0.2864873486617025,
+              "ci_high": 0.4594400011138886,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.371447,
+              "auditkit_error": null
+            },
+            "efficiency": {
+              "direction": "max",
+              "baseline_mean": 0.8775571198260438,
+              "candidate_mean": 0.928097242563041,
+              "delta": 0.05054012273699716,
+              "ci_low": 0.006281875930859422,
+              "ci_high": 0.0957539456402368,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.032967,
+              "auditkit_delta": 0.05054,
+              "auditkit_error": null
+            },
+            "tool_calls": {
+              "direction": "min",
+              "baseline_mean": 2.3,
+              "candidate_mean": 2.44,
+              "delta": 0.14,
+              "ci_low": -0.16,
+              "ci_high": 0.42,
+              "excludes_zero": false,
+              "verdict": "no clear change",
+              "auditkit_p_value": 0.344655,
+              "auditkit_delta": 0.14,
+              "auditkit_error": null
+            }
+          }
+        },
+        {
+          "model": "grpo",
+          "n_paired": 100,
+          "metrics": {
+            "accuracy": {
+              "direction": "max",
+              "baseline_mean": 0.08,
+              "candidate_mean": 0.47,
+              "delta": 0.39,
+              "ci_low": 0.29,
+              "ci_high": 0.49,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.39,
+              "auditkit_error": null
+            },
+            "reward": {
+              "direction": "max",
+              "baseline_mean": 0.1251121182179208,
+              "candidate_mean": 0.5077400250343185,
+              "delta": 0.3826279068163977,
+              "ci_low": 0.2991850230777102,
+              "ci_high": 0.4710903010189679,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.382628,
+              "auditkit_error": null
+            },
+            "efficiency": {
+              "direction": "max",
+              "baseline_mean": 0.8775571198260438,
+              "candidate_mean": 0.9336505079780036,
+              "delta": 0.05609338815195977,
+              "ci_low": 0.012453733599224338,
+              "ci_high": 0.10059075273748633,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.017982,
+              "auditkit_delta": 0.056093,
+              "auditkit_error": null
+            },
+            "tool_calls": {
+              "direction": "min",
+              "baseline_mean": 2.3,
+              "candidate_mean": 2.45,
+              "delta": 0.15,
+              "ci_low": -0.15,
+              "ci_high": 0.44,
+              "excludes_zero": false,
+              "verdict": "no clear change",
+              "auditkit_p_value": 0.326673,
+              "auditkit_delta": 0.15,
+              "auditkit_error": null
+            }
+          }
+        },
+        {
+          "model": "grpo-ungated",
+          "n_paired": 100,
+          "metrics": {
+            "accuracy": {
+              "direction": "max",
+              "baseline_mean": 0.08,
+              "candidate_mean": 0.45,
+              "delta": 0.37,
+              "ci_low": 0.28,
+              "ci_high": 0.47,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.37,
+              "auditkit_error": null
+            },
+            "reward": {
+              "direction": "max",
+              "baseline_mean": 0.1251121182179208,
+              "candidate_mean": 0.49031588938485976,
+              "delta": 0.3652037711669389,
+              "ci_low": 0.2836918836998029,
+              "ci_high": 0.4518626454575639,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.365204,
+              "auditkit_error": null
+            },
+            "efficiency": {
+              "direction": "max",
+              "baseline_mean": 0.8775571198260438,
+              "candidate_mean": 0.9371821912285432,
+              "delta": 0.059625071402499376,
+              "ci_low": 0.017407988079296596,
+              "ci_high": 0.10276224335510031,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.010989,
+              "auditkit_delta": 0.059625,
+              "auditkit_error": null
+            },
+            "tool_calls": {
+              "direction": "min",
+              "baseline_mean": 2.3,
+              "candidate_mean": 2.41,
+              "delta": 0.11,
+              "ci_low": -0.18,
+              "ci_high": 0.38,
+              "excludes_zero": false,
+              "verdict": "no clear change",
+              "auditkit_p_value": 0.452547,
+              "auditkit_delta": 0.11,
+              "auditkit_error": null
+            }
+          }
+        },
+        {
+          "model": "naive",
+          "n_paired": 100,
+          "metrics": {
+            "accuracy": {
+              "direction": "max",
+              "baseline_mean": 0.08,
+              "candidate_mean": 1.0,
+              "delta": 0.92,
+              "ci_low": 0.86,
+              "ci_high": 0.97,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.92,
+              "auditkit_error": null
+            },
+            "reward": {
+              "direction": "max",
+              "baseline_mean": 0.1251121182179208,
+              "candidate_mean": 0.6440406312003694,
+              "delta": 0.5189285129824487,
+              "ci_low": 0.4709534574258717,
+              "ci_high": 0.5573946082800569,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.518929,
+              "auditkit_error": null
+            },
+            "efficiency": {
+              "direction": "max",
+              "baseline_mean": 0.8775571198260438,
+              "candidate_mean": 0.2880812624007389,
+              "delta": -0.589475857425305,
+              "ci_low": -0.6286650481314782,
+              "ci_high": -0.548580166997725,
+              "excludes_zero": true,
+              "verdict": "worse",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": -0.589476,
+              "auditkit_error": null
+            },
+            "tool_calls": {
+              "direction": "min",
+              "baseline_mean": 2.3,
+              "candidate_mean": 4.4,
+              "delta": 2.1,
+              "ci_low": 1.75,
+              "ci_high": 2.45,
+              "excludes_zero": true,
+              "verdict": "worse",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 2.1,
+              "auditkit_error": null
+            }
+          }
+        },
+        {
+          "model": "oracle",
+          "n_paired": 100,
+          "metrics": {
+            "accuracy": {
+              "direction": "max",
+              "baseline_mean": 0.08,
+              "candidate_mean": 1.0,
+              "delta": 0.92,
+              "ci_low": 0.86,
+              "ci_high": 0.97,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.92,
+              "auditkit_error": null
+            },
+            "reward": {
+              "direction": "max",
+              "baseline_mean": 0.1251121182179208,
+              "candidate_mean": 1.0,
+              "delta": 0.8748878817820792,
+              "ci_low": 0.8283312512819679,
+              "ci_high": 0.9136527281488956,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.874888,
+              "auditkit_error": null
+            },
+            "efficiency": {
+              "direction": "max",
+              "baseline_mean": 0.8775571198260438,
+              "candidate_mean": 1.0,
+              "delta": 0.12244288017395613,
+              "ci_low": 0.08789715379730251,
+              "ci_high": 0.1590082200783315,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.122443,
+              "auditkit_error": null
+            },
+            "tool_calls": {
+              "direction": "min",
+              "baseline_mean": 2.3,
+              "candidate_mean": 2.4,
+              "delta": 0.1,
+              "ci_low": -0.19,
+              "ci_high": 0.41,
+              "excludes_zero": false,
+              "verdict": "no clear change",
+              "auditkit_p_value": 0.541459,
+              "auditkit_delta": 0.1,
+              "auditkit_error": null
+            }
+          }
+        },
+        {
+          "model": "distilled-all",
+          "n_paired": 100,
+          "metrics": {
+            "accuracy": {
+              "direction": "max",
+              "baseline_mean": 0.08,
+              "candidate_mean": 0.58,
+              "delta": 0.5,
+              "ci_low": 0.4,
+              "ci_high": 0.6,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.5,
+              "auditkit_error": null
+            },
+            "reward": {
+              "direction": "max",
+              "baseline_mean": 0.1251121182179208,
+              "candidate_mean": 0.6045739105059763,
+              "delta": 0.47946179228805547,
+              "ci_low": 0.3952105589165011,
+              "ci_high": 0.5613823998022633,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.479462,
+              "auditkit_error": null
+            },
+            "efficiency": {
+              "direction": "max",
+              "baseline_mean": 0.8775571198260438,
+              "candidate_mean": 0.9522299183984856,
+              "delta": 0.0746727985724418,
+              "ci_low": 0.03621024206215586,
+              "ci_high": 0.11543026341104533,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.074673,
+              "auditkit_error": null
+            },
+            "tool_calls": {
+              "direction": "min",
+              "baseline_mean": 2.3,
+              "candidate_mean": 2.43,
+              "delta": 0.13,
+              "ci_low": -0.15,
+              "ci_high": 0.42,
+              "excludes_zero": false,
+              "verdict": "no clear change",
+              "auditkit_p_value": 0.373626,
+              "auditkit_delta": 0.13,
+              "auditkit_error": null
+            }
+          }
+        },
+        {
+          "model": "distilled-mixed",
+          "n_paired": 100,
+          "metrics": {
+            "accuracy": {
+              "direction": "max",
+              "baseline_mean": 0.08,
+              "candidate_mean": 0.49,
+              "delta": 0.41,
+              "ci_low": 0.32,
+              "ci_high": 0.5,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.41,
+              "auditkit_error": null
+            },
+            "reward": {
+              "direction": "max",
+              "baseline_mean": 0.1251121182179208,
+              "candidate_mean": 0.475644891013631,
+              "delta": 0.3505327727957102,
+              "ci_low": 0.27688431782845596,
+              "ci_high": 0.4283201361933909,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.350533,
+              "auditkit_error": null
+            },
+            "efficiency": {
+              "direction": "max",
+              "baseline_mean": 0.8775571198260438,
+              "candidate_mean": 0.8217205059060898,
+              "delta": -0.055836613919954196,
+              "ci_low": -0.09895306533344243,
+              "ci_high": -0.008965424272563837,
+              "excludes_zero": true,
+              "verdict": "worse",
+              "auditkit_p_value": 0.008991,
+              "auditkit_delta": -0.055837,
+              "auditkit_error": null
+            },
+            "tool_calls": {
+              "direction": "min",
+              "baseline_mean": 2.3,
+              "candidate_mean": 2.99,
+              "delta": 0.69,
+              "ci_low": 0.39,
+              "ci_high": 0.99,
+              "excludes_zero": true,
+              "verdict": "worse",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.69,
+              "auditkit_error": null
+            }
+          }
+        },
+        {
+          "model": "grpo-mixed",
+          "n_paired": 100,
+          "metrics": {
+            "accuracy": {
+              "direction": "max",
+              "baseline_mean": 0.08,
+              "candidate_mean": 0.5,
+              "delta": 0.42,
+              "ci_low": 0.33,
+              "ci_high": 0.51,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.42,
+              "auditkit_error": null
+            },
+            "reward": {
+              "direction": "max",
+              "baseline_mean": 0.1251121182179208,
+              "candidate_mean": 0.4834281523281636,
+              "delta": 0.3583160341102428,
+              "ci_low": 0.28303879942845156,
+              "ci_high": 0.43411982810816724,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.358316,
+              "auditkit_error": null
+            },
+            "efficiency": {
+              "direction": "max",
+              "baseline_mean": 0.8775571198260438,
+              "candidate_mean": 0.8219598532713038,
+              "delta": -0.055597266554739934,
+              "ci_low": -0.09873945650645671,
+              "ci_high": -0.009296896334405256,
+              "excludes_zero": true,
+              "verdict": "worse",
+              "auditkit_p_value": 0.008991,
+              "auditkit_delta": -0.055597,
+              "auditkit_error": null
+            },
+            "tool_calls": {
+              "direction": "min",
+              "baseline_mean": 2.3,
+              "candidate_mean": 2.99,
+              "delta": 0.69,
+              "ci_low": 0.39,
+              "ci_high": 0.98,
+              "excludes_zero": true,
+              "verdict": "worse",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.69,
+              "auditkit_error": null
+            }
+          }
+        },
+        {
+          "model": "zero-shot-stop",
+          "n_paired": 100,
+          "metrics": {
+            "accuracy": {
+              "direction": "max",
+              "baseline_mean": 0.08,
+              "candidate_mean": 0.0,
+              "delta": -0.08,
+              "ci_low": -0.14,
+              "ci_high": -0.03,
+              "excludes_zero": true,
+              "verdict": "worse",
+              "auditkit_p_value": 0.004995,
+              "auditkit_delta": -0.08,
+              "auditkit_error": null
+            },
+            "reward": {
+              "direction": "max",
+              "baseline_mean": 0.1251121182179208,
+              "candidate_mean": 0.05,
+              "delta": -0.07511211821792077,
+              "ci_low": -0.12166874871803195,
+              "ci_high": -0.03634727185110426,
+              "excludes_zero": true,
+              "verdict": "worse",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": -0.075112,
+              "auditkit_error": null
+            },
+            "efficiency": {
+              "direction": "max",
+              "baseline_mean": 0.8775571198260438,
+              "candidate_mean": 0.9991666666666668,
+              "delta": 0.12160954684062279,
+              "ci_low": 0.08706382046396915,
+              "ci_high": 0.15839728504269115,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": 0.12161,
+              "auditkit_error": null
+            },
+            "tool_calls": {
+              "direction": "min",
+              "baseline_mean": 2.3,
+              "candidate_mean": 1.03,
+              "delta": -1.27,
+              "ci_low": -1.54,
+              "ci_high": -0.98,
+              "excludes_zero": true,
+              "verdict": "better",
+              "auditkit_p_value": 0.000999,
+              "auditkit_delta": -1.27,
+              "auditkit_error": null
+            }
+          }
+        }
+      ]
+    }
+  },
+  "comparison_method": "Per-episode values come from AuditKit (ak.evaluate with model='precomputed' and custom scorers). Confidence intervals are a percentile paired bootstrap over tasks (frugal_analyst.metrics.paired_bootstrap_ci), because AuditKit 1.1.11 has no confidence interval. ak.compare(...).significance() adds AuditKit's own paired bootstrap p-value. ak.compare_models cannot take a different precomputed output per model, so it is not used.",
+  "auditkit_failed_samples_total": 0,
+  "crosscheck_ok": true
+}

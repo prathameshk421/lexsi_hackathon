@@ -1,0 +1,1542 @@
+{
+  "auditkit_version": "1.1.11",
+  "seed": 0,
+  "bootstrap": 2000,
+  "baseline": "zero-shot",
+  "headline": "tool_call_f1_name",
+  "tasks_dir": "/Volumes/SSD/Projects/Hackathons/Lexsi/reconciliation-agent/.claude/worktrees/frugal-analyst/data/tasks",
+  "inputs": [
+    {
+      "path": "outputs/traces/distilled-all_test_id.jsonl",
+      "records": 120,
+      "sha256": "b845643a362dc8b8f54ae2ade81f2df28930b8d4730bf4ea58015921339a02af"
+    },
+    {
+      "path": "outputs/traces/distilled-all_test_ood.jsonl",
+      "records": 100,
+      "sha256": "df995a7acb477a21bcc471451cb5a20f8b9efaa8146ce3a52cda4b37e988d67b"
+    },
+    {
+      "path": "outputs/traces/distilled-mixed_test_id.jsonl",
+      "records": 120,
+      "sha256": "868eaeb58cbd6a272bc451ff344c232aa8df2298080bc951bfc859a07a9939ed"
+    },
+    {
+      "path": "outputs/traces/distilled-mixed_test_ood.jsonl",
+      "records": 100,
+      "sha256": "6bd0884722fbf320345ce234ab99af500312710aa0dbb20fdeabd7f8438ff42f"
+    },
+    {
+      "path": "outputs/traces/distilled_test_id.jsonl",
+      "records": 120,
+      "sha256": "a5614b4ef77b3387eef78655e6d27240b9362cb993c704c50c13be5bc2fafafb"
+    },
+    {
+      "path": "outputs/traces/distilled_test_ood.jsonl",
+      "records": 100,
+      "sha256": "8acf8b54b2e3231f9d7efbc0590fbdf13823eab35517d57e20999b5040fe9ce3"
+    },
+    {
+      "path": "outputs/traces/grpo-mixed_test_id.jsonl",
+      "records": 120,
+      "sha256": "e1126077fa48633a99eb9633c71996ea2c8c91ca60bf282208fe037fab2829f4"
+    },
+    {
+      "path": "outputs/traces/grpo-mixed_test_ood.jsonl",
+      "records": 100,
+      "sha256": "6509c00a4df12fe0db048b86d3022102659d87145c367dd329fbac25aee258b9"
+    },
+    {
+      "path": "outputs/traces/grpo-ungated_test_id.jsonl",
+      "records": 120,
+      "sha256": "1dbc08ada9693eadfa529488832b4fbb05665347c8a7e675c7f79404da7c9058"
+    },
+    {
+      "path": "outputs/traces/grpo-ungated_test_ood.jsonl",
+      "records": 100,
+      "sha256": "9a02e35c7f145112a7bcd89b5bf272ce749abc98723335d491ad9814a7e30c1d"
+    },
+    {
+      "path": "outputs/traces/grpo_test_id.jsonl",
+      "records": 120,
+      "sha256": "2c0e869e844e82c426514153bf37976bb7b37d30e7be9ce08b17ec1e477cecf4"
+    },
+    {
+      "path": "outputs/traces/grpo_test_ood.jsonl",
+      "records": 100,
+      "sha256": "cb4e00593f62811852efb1e118d309773bf0040c2ef0d9280260763b13aec196"
+    },
+    {
+      "path": "outputs/traces/naive_test_id.jsonl",
+      "records": 120,
+      "sha256": "bff8f53292d63161666ec942f8f8c64edd78aa462bf4a7255e1a39b6c7e0d94e"
+    },
+    {
+      "path": "outputs/traces/naive_test_ood.jsonl",
+      "records": 100,
+      "sha256": "5782eb777b5c06fef27f34cc2cd0af250d385e96740d98e7a9340266a09491a5"
+    },
+    {
+      "path": "outputs/traces/oracle_test_id.jsonl",
+      "records": 120,
+      "sha256": "bbbdbbfcdffca91cec672088c50ab5396c1a5f279bf8f9db7b148206c1ce0fe0"
+    },
+    {
+      "path": "outputs/traces/oracle_test_ood.jsonl",
+      "records": 100,
+      "sha256": "91c0ee509b3344dfa7019f7c17da396bdee764320be6c927ea164eacc33856b6"
+    },
+    {
+      "path": "outputs/traces/zero-shot-stop_test_id.jsonl",
+      "records": 120,
+      "sha256": "a7375fdc7f1392a1576cbafc904c90732bd3a75b19298b40bd60206377b27652"
+    },
+    {
+      "path": "outputs/traces/zero-shot-stop_test_ood.jsonl",
+      "records": 100,
+      "sha256": "2443b27036e540965e04f03a1550099e3dd11f90f13416dd2f6767f245c651b1"
+    },
+    {
+      "path": "outputs/traces/zero-shot_test_id.jsonl",
+      "records": 120,
+      "sha256": "93ec3c7dd6d50a3584a17c81dc9444802ad852327d71958132333d4bd60004bb"
+    },
+    {
+      "path": "outputs/traces/zero-shot_test_ood.jsonl",
+      "records": 100,
+      "sha256": "be7e5504e9c6c31f887d7c0d70cc02498ba1f8522f523973e2f6fd4fce97c16a"
+    }
+  ],
+  "scorers": [
+    "tool_call_f1",
+    "tool_call_f1_name",
+    "redundant_tool_calls",
+    "agent_loop_detection",
+    "tool_call_validity"
+  ],
+  "metric_info": {
+    "tool_call_precision_name": {
+      "label": "name precision",
+      "direction": "max",
+      "auditkit_score": "tool_call_precision_name"
+    },
+    "tool_call_recall_name": {
+      "label": "name recall",
+      "direction": "max",
+      "auditkit_score": "tool_call_recall_name"
+    },
+    "tool_call_f1_name": {
+      "label": "name F1",
+      "direction": "max",
+      "auditkit_score": "tool_call_f1_name"
+    },
+    "tool_call_f1": {
+      "label": "argument F1",
+      "direction": "max",
+      "auditkit_score": "tool_call_f1"
+    },
+    "redundant_tool_calls": {
+      "label": "repeated call share",
+      "direction": "min",
+      "auditkit_score": "redundant_tool_calls"
+    },
+    "agent_loop_detection": {
+      "label": "loop-free",
+      "direction": "max",
+      "auditkit_score": "agent_loop_detection"
+    },
+    "tool_call_validity": {
+      "label": "schema-valid calls",
+      "direction": "max",
+      "auditkit_score": "tool_call_validity"
+    },
+    "task_success": {
+      "label": "task success",
+      "direction": "max",
+      "auditkit_score": null
+    }
+  },
+  "splits": {
+    "test_id": {
+      "coverage": {
+        "union": 120,
+        "shared": 120,
+        "complete": true,
+        "missing": {}
+      },
+      "models": {
+        "zero-shot": {
+          "n": 120,
+          "metrics": {
+            "tool_call_precision_name": 0.7979166666666667,
+            "tool_call_recall_name": 0.773611111111111,
+            "tool_call_f1_name": 0.7146428571428571,
+            "tool_call_f1": 0.4629365079365079,
+            "redundant_tool_calls": 0.17569444444444443,
+            "agent_loop_detection": 0.6666666666666666,
+            "tool_call_validity": 1.0,
+            "task_success": 0.08333333333333333
+          },
+          "counts": {
+            "tool_call_precision_name": 120,
+            "tool_call_recall_name": 120,
+            "tool_call_f1_name": 120,
+            "tool_call_f1": 120,
+            "redundant_tool_calls": 120,
+            "agent_loop_detection": 120,
+            "tool_call_validity": 120,
+            "task_success": 120
+          },
+          "failed_episodes": 0,
+          "failures": [],
+          "auditkit_summary": "Agent eval   Mode: recorded   Cases: 120\nVerified success: 10/120 (10/120 decided)   Failure: 110   Unknown outcome: 0   Error: 0   Over budget: 0\nEndpoint errors: 0\nStatus: completed 120\nTrace coverage: full 120, tool names only 0, answer only 0\nTool validity: 120/120 eligible\nMedian latency: n/a          Agent calls: 0",
+          "by_template_group": {
+            "rl_only": {
+              "n": 38,
+              "tool_call_f1_name": 0.7327067669172932,
+              "tool_call_f1": 0.49686716791979946,
+              "task_success": 0.15789473684210525
+            },
+            "sft_seen": {
+              "n": 82,
+              "tool_call_f1_name": 0.7062717770034843,
+              "tool_call_f1": 0.44721254355400697,
+              "task_success": 0.04878048780487805
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "checked_episodes": 120,
+            "mismatches": [],
+            "n_mismatches": 0
+          }
+        },
+        "distilled": {
+          "n": 120,
+          "metrics": {
+            "tool_call_precision_name": 0.98125,
+            "tool_call_recall_name": 0.975,
+            "tool_call_f1_name": 0.9736507936507937,
+            "tool_call_f1": 0.8526984126984127,
+            "redundant_tool_calls": 0.014583333333333334,
+            "agent_loop_detection": 0.975,
+            "tool_call_validity": 1.0,
+            "task_success": 0.8083333333333333
+          },
+          "counts": {
+            "tool_call_precision_name": 120,
+            "tool_call_recall_name": 120,
+            "tool_call_f1_name": 120,
+            "tool_call_f1": 120,
+            "redundant_tool_calls": 120,
+            "agent_loop_detection": 120,
+            "tool_call_validity": 120,
+            "task_success": 120
+          },
+          "failed_episodes": 0,
+          "failures": [],
+          "auditkit_summary": "Agent eval   Mode: recorded   Cases: 120\nVerified success: 97/120 (97/120 decided)   Failure: 23   Unknown outcome: 0   Error: 0   Over budget: 0\nEndpoint errors: 0\nStatus: completed 120\nTrace coverage: full 120, tool names only 0, answer only 0\nTool validity: 120/120 eligible\nMedian latency: n/a          Agent calls: 0",
+          "by_template_group": {
+            "rl_only": {
+              "n": 38,
+              "tool_call_f1_name": 0.9273182957393484,
+              "tool_call_f1": 0.5883458646616542,
+              "task_success": 0.4473684210526316
+            },
+            "sft_seen": {
+              "n": 82,
+              "tool_call_f1_name": 0.9951219512195121,
+              "tool_call_f1": 0.9752032520325203,
+              "task_success": 0.975609756097561
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "checked_episodes": 120,
+            "mismatches": [],
+            "n_mismatches": 0
+          }
+        },
+        "grpo": {
+          "n": 120,
+          "metrics": {
+            "tool_call_precision_name": 0.9833333333333333,
+            "tool_call_recall_name": 0.9777777777777777,
+            "tool_call_f1_name": 0.9769047619047619,
+            "tool_call_f1": 0.8656349206349206,
+            "redundant_tool_calls": 0.008333333333333333,
+            "agent_loop_detection": 0.9833333333333333,
+            "tool_call_validity": 1.0,
+            "task_success": 0.8333333333333334
+          },
+          "counts": {
+            "tool_call_precision_name": 120,
+            "tool_call_recall_name": 120,
+            "tool_call_f1_name": 120,
+            "tool_call_f1": 120,
+            "redundant_tool_calls": 120,
+            "agent_loop_detection": 120,
+            "tool_call_validity": 120,
+            "task_success": 120
+          },
+          "failed_episodes": 0,
+          "failures": [],
+          "auditkit_summary": "Agent eval   Mode: recorded   Cases: 120\nVerified success: 100/120 (100/120 decided)   Failure: 20   Unknown outcome: 0   Error: 0   Over budget: 0\nEndpoint errors: 0\nStatus: completed 120\nTrace coverage: full 120, tool names only 0, answer only 0\nTool validity: 120/120 eligible\nMedian latency: n/a          Agent calls: 0",
+          "by_template_group": {
+            "rl_only": {
+              "n": 38,
+              "tool_call_f1_name": 0.937593984962406,
+              "tool_call_f1": 0.6291979949874688,
+              "task_success": 0.5263157894736842
+            },
+            "sft_seen": {
+              "n": 82,
+              "tool_call_f1_name": 0.9951219512195121,
+              "tool_call_f1": 0.9752032520325203,
+              "task_success": 0.975609756097561
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "checked_episodes": 120,
+            "mismatches": [],
+            "n_mismatches": 0
+          }
+        },
+        "grpo-ungated": {
+          "n": 120,
+          "metrics": {
+            "tool_call_precision_name": 0.98125,
+            "tool_call_recall_name": 0.975,
+            "tool_call_f1_name": 0.9736507936507937,
+            "tool_call_f1": 0.861031746031746,
+            "redundant_tool_calls": 0.0125,
+            "agent_loop_detection": 0.975,
+            "tool_call_validity": 1.0,
+            "task_success": 0.8166666666666667
+          },
+          "counts": {
+            "tool_call_precision_name": 120,
+            "tool_call_recall_name": 120,
+            "tool_call_f1_name": 120,
+            "tool_call_f1": 120,
+            "redundant_tool_calls": 120,
+            "agent_loop_detection": 120,
+            "tool_call_validity": 120,
+            "task_success": 120
+          },
+          "failed_episodes": 0,
+          "failures": [],
+          "auditkit_summary": "Agent eval   Mode: recorded   Cases: 120\nVerified success: 98/120 (98/120 decided)   Failure: 22   Unknown outcome: 0   Error: 0   Over budget: 0\nEndpoint errors: 0\nStatus: completed 120\nTrace coverage: full 120, tool names only 0, answer only 0\nTool validity: 120/120 eligible\nMedian latency: n/a          Agent calls: 0",
+          "by_template_group": {
+            "rl_only": {
+              "n": 38,
+              "tool_call_f1_name": 0.9273182957393484,
+              "tool_call_f1": 0.6015037593984962,
+              "task_success": 0.47368421052631576
+            },
+            "sft_seen": {
+              "n": 82,
+              "tool_call_f1_name": 0.9951219512195121,
+              "tool_call_f1": 0.9813008130081301,
+              "task_success": 0.975609756097561
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "checked_episodes": 120,
+            "mismatches": [],
+            "n_mismatches": 0
+          }
+        },
+        "naive": {
+          "n": 120,
+          "metrics": {
+            "tool_call_precision_name": 0.52625,
+            "tool_call_recall_name": 1.0,
+            "tool_call_f1_name": 0.6821230158730158,
+            "tool_call_f1": 0.6821230158730158,
+            "redundant_tool_calls": 0.0,
+            "agent_loop_detection": 1.0,
+            "tool_call_validity": 1.0,
+            "task_success": 1.0
+          },
+          "counts": {
+            "tool_call_precision_name": 120,
+            "tool_call_recall_name": 120,
+            "tool_call_f1_name": 120,
+            "tool_call_f1": 120,
+            "redundant_tool_calls": 120,
+            "agent_loop_detection": 120,
+            "tool_call_validity": 120,
+            "task_success": 120
+          },
+          "failed_episodes": 0,
+          "failures": [],
+          "auditkit_summary": "Agent eval   Mode: recorded   Cases: 120\nVerified success: 120/120 (120/120 decided)   Failure: 0   Unknown outcome: 0   Error: 0   Over budget: 0\nEndpoint errors: 0\nStatus: completed 120\nTrace coverage: full 120, tool names only 0, answer only 0\nTool validity: 120/120 eligible\nMedian latency: n/a          Agent calls: 0",
+          "by_template_group": {
+            "rl_only": {
+              "n": 38,
+              "tool_call_f1_name": 0.6661027568922305,
+              "tool_call_f1": 0.6661027568922305,
+              "task_success": 1.0
+            },
+            "sft_seen": {
+              "n": 82,
+              "tool_call_f1_name": 0.6895470383275262,
+              "tool_call_f1": 0.6895470383275262,
+              "task_success": 1.0
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "checked_episodes": 120,
+            "mismatches": [],
+            "n_mismatches": 0
+          }
+        },
+        "oracle": {
+          "n": 120,
+          "metrics": {
+            "tool_call_precision_name": 1.0,
+            "tool_call_recall_name": 1.0,
+            "tool_call_f1_name": 1.0,
+            "tool_call_f1": 1.0,
+            "redundant_tool_calls": 0.0,
+            "agent_loop_detection": 1.0,
+            "tool_call_validity": 1.0,
+            "task_success": 1.0
+          },
+          "counts": {
+            "tool_call_precision_name": 120,
+            "tool_call_recall_name": 120,
+            "tool_call_f1_name": 120,
+            "tool_call_f1": 120,
+            "redundant_tool_calls": 120,
+            "agent_loop_detection": 120,
+            "tool_call_validity": 120,
+            "task_success": 120
+          },
+          "failed_episodes": 0,
+          "failures": [],
+          "auditkit_summary": "Agent eval   Mode: recorded   Cases: 120\nVerified success: 120/120 (120/120 decided)   Failure: 0   Unknown outcome: 0   Error: 0   Over budget: 0\nEndpoint errors: 0\nStatus: completed 120\nTrace coverage: full 120, tool names only 0, answer only 0\nTool validity: 120/120 eligible\nMedian latency: n/a          Agent calls: 0",
+          "by_template_group": {
+            "rl_only": {
+              "n": 38,
+              "tool_call_f1_name": 1.0,
+              "tool_call_f1": 1.0,
+              "task_success": 1.0
+            },
+            "sft_seen": {
+              "n": 82,
+              "tool_call_f1_name": 1.0,
+              "tool_call_f1": 1.0,
+              "task_success": 1.0
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "checked_episodes": 120,
+            "mismatches": [],
+            "n_mismatches": 0
+          }
+        },
+        "distilled-all": {
+          "n": 120,
+          "metrics": {
+            "tool_call_precision_name": 1.0,
+            "tool_call_recall_name": 0.9972222222222222,
+            "tool_call_f1_name": 0.9983333333333333,
+            "tool_call_f1": 0.995,
+            "redundant_tool_calls": 0.0,
+            "agent_loop_detection": 1.0,
+            "tool_call_validity": 1.0,
+            "task_success": 0.9916666666666667
+          },
+          "counts": {
+            "tool_call_precision_name": 120,
+            "tool_call_recall_name": 120,
+            "tool_call_f1_name": 120,
+            "tool_call_f1": 120,
+            "redundant_tool_calls": 120,
+            "agent_loop_detection": 120,
+            "tool_call_validity": 120,
+            "task_success": 120
+          },
+          "failed_episodes": 0,
+          "failures": [],
+          "auditkit_summary": "Agent eval   Mode: recorded   Cases: 120\nVerified success: 119/120 (119/120 decided)   Failure: 1   Unknown outcome: 0   Error: 0   Over budget: 0\nEndpoint errors: 0\nStatus: completed 120\nTrace coverage: full 120, tool names only 0, answer only 0\nTool validity: 120/120 eligible\nMedian latency: n/a          Agent calls: 0",
+          "by_template_group": {
+            "rl_only": {
+              "n": 38,
+              "tool_call_f1_name": 0.994736842105263,
+              "tool_call_f1": 0.9842105263157894,
+              "task_success": 0.9736842105263158
+            },
+            "sft_seen": {
+              "n": 82,
+              "tool_call_f1_name": 1.0,
+              "tool_call_f1": 1.0,
+              "task_success": 1.0
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "checked_episodes": 120,
+            "mismatches": [],
+            "n_mismatches": 0
+          }
+        },
+        "distilled-mixed": {
+          "n": 120,
+          "metrics": {
+            "tool_call_precision_name": 0.8354166666666667,
+            "tool_call_recall_name": 0.9916666666666667,
+            "tool_call_f1_name": 0.8951587301587302,
+            "tool_call_f1": 0.7644444444444445,
+            "redundant_tool_calls": 0.010416666666666666,
+            "agent_loop_detection": 1.0,
+            "tool_call_validity": 1.0,
+            "task_success": 0.775
+          },
+          "counts": {
+            "tool_call_precision_name": 120,
+            "tool_call_recall_name": 120,
+            "tool_call_f1_name": 120,
+            "tool_call_f1": 120,
+            "redundant_tool_calls": 120,
+            "agent_loop_detection": 120,
+            "tool_call_validity": 120,
+            "task_success": 120
+          },
+          "failed_episodes": 0,
+          "failures": [],
+          "auditkit_summary": "Agent eval   Mode: recorded   Cases: 120\nVerified success: 93/120 (93/120 decided)   Failure: 27   Unknown outcome: 0   Error: 0   Over budget: 0\nEndpoint errors: 0\nStatus: completed 120\nTrace coverage: full 120, tool names only 0, answer only 0\nTool validity: 120/120 eligible\nMedian latency: n/a          Agent calls: 0",
+          "by_template_group": {
+            "rl_only": {
+              "n": 38,
+              "tool_call_f1_name": 0.8729323308270677,
+              "tool_call_f1": 0.5453634085213033,
+              "task_success": 0.4473684210526316
+            },
+            "sft_seen": {
+              "n": 82,
+              "tool_call_f1_name": 0.905458768873403,
+              "tool_call_f1": 0.8659698025551684,
+              "task_success": 0.926829268292683
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "checked_episodes": 120,
+            "mismatches": [],
+            "n_mismatches": 0
+          }
+        },
+        "grpo-mixed": {
+          "n": 120,
+          "metrics": {
+            "tool_call_precision_name": 0.8645833333333334,
+            "tool_call_recall_name": 0.9916666666666667,
+            "tool_call_f1_name": 0.9129365079365079,
+            "tool_call_f1": 0.7821428571428571,
+            "redundant_tool_calls": 0.008333333333333333,
+            "agent_loop_detection": 1.0,
+            "tool_call_validity": 1.0,
+            "task_success": 0.7666666666666667
+          },
+          "counts": {
+            "tool_call_precision_name": 120,
+            "tool_call_recall_name": 120,
+            "tool_call_f1_name": 120,
+            "tool_call_f1": 120,
+            "redundant_tool_calls": 120,
+            "agent_loop_detection": 120,
+            "tool_call_validity": 120,
+            "task_success": 120
+          },
+          "failed_episodes": 0,
+          "failures": [],
+          "auditkit_summary": "Agent eval   Mode: recorded   Cases: 120\nVerified success: 92/120 (92/120 decided)   Failure: 28   Unknown outcome: 0   Error: 0   Over budget: 0\nEndpoint errors: 0\nStatus: completed 120\nTrace coverage: full 120, tool names only 0, answer only 0\nTool validity: 120/120 eligible\nMedian latency: n/a          Agent calls: 0",
+          "by_template_group": {
+            "rl_only": {
+              "n": 38,
+              "tool_call_f1_name": 0.8847117794486216,
+              "tool_call_f1": 0.5568922305764411,
+              "task_success": 0.42105263157894735
+            },
+            "sft_seen": {
+              "n": 82,
+              "tool_call_f1_name": 0.9260162601626016,
+              "tool_call_f1": 0.886527293844367,
+              "task_success": 0.926829268292683
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "checked_episodes": 120,
+            "mismatches": [],
+            "n_mismatches": 0
+          }
+        },
+        "zero-shot-stop": {
+          "n": 120,
+          "metrics": {
+            "tool_call_precision_name": 1.0,
+            "tool_call_recall_name": 0.46944444444444444,
+            "tool_call_f1_name": 0.6286111111111111,
+            "tool_call_f1": 0.6080555555555556,
+            "redundant_tool_calls": 0.0027777777777777775,
+            "agent_loop_detection": 1.0,
+            "tool_call_validity": 1.0,
+            "task_success": 0.025
+          },
+          "counts": {
+            "tool_call_precision_name": 120,
+            "tool_call_recall_name": 120,
+            "tool_call_f1_name": 120,
+            "tool_call_f1": 120,
+            "redundant_tool_calls": 120,
+            "agent_loop_detection": 120,
+            "tool_call_validity": 120,
+            "task_success": 120
+          },
+          "failed_episodes": 0,
+          "failures": [],
+          "auditkit_summary": "Agent eval   Mode: recorded   Cases: 120\nVerified success: 3/120 (3/120 decided)   Failure: 117   Unknown outcome: 0   Error: 0   Over budget: 0\nEndpoint errors: 0\nStatus: completed 120\nTrace coverage: full 120, tool names only 0, answer only 0\nTool validity: 120/120 eligible\nMedian latency: n/a          Agent calls: 0",
+          "by_template_group": {
+            "rl_only": {
+              "n": 38,
+              "tool_call_f1_name": 0.643859649122807,
+              "tool_call_f1": 0.6026315789473684,
+              "task_success": 0.02631578947368421
+            },
+            "sft_seen": {
+              "n": 82,
+              "tool_call_f1_name": 0.6215447154471544,
+              "tool_call_f1": 0.6105691056910568,
+              "task_success": 0.024390243902439025
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "checked_episodes": 120,
+            "mismatches": [],
+            "n_mismatches": 0
+          }
+        }
+      }
+    },
+    "test_ood": {
+      "coverage": {
+        "union": 100,
+        "shared": 100,
+        "complete": true,
+        "missing": {}
+      },
+      "models": {
+        "zero-shot": {
+          "n": 100,
+          "metrics": {
+            "tool_call_precision_name": 0.8316666666666667,
+            "tool_call_recall_name": 0.6966666666666668,
+            "tool_call_f1_name": 0.677,
+            "tool_call_f1": 0.4793333333333333,
+            "redundant_tool_calls": 0.145,
+            "agent_loop_detection": 0.74,
+            "tool_call_validity": 1.0,
+            "task_success": 0.08
+          },
+          "counts": {
+            "tool_call_precision_name": 100,
+            "tool_call_recall_name": 100,
+            "tool_call_f1_name": 100,
+            "tool_call_f1": 100,
+            "redundant_tool_calls": 100,
+            "agent_loop_detection": 100,
+            "tool_call_validity": 100,
+            "task_success": 100
+          },
+          "failed_episodes": 0,
+          "failures": [],
+          "auditkit_summary": "Agent eval   Mode: recorded   Cases: 100\nVerified success: 8/100 (8/100 decided)   Failure: 92   Unknown outcome: 0   Error: 0   Over budget: 0\nEndpoint errors: 0\nStatus: completed 100\nTrace coverage: full 100, tool names only 0, answer only 0\nTool validity: 100/100 eligible\nMedian latency: n/a          Agent calls: 0",
+          "by_template_group": {
+            "unseen_domain": {
+              "n": 100,
+              "tool_call_f1_name": 0.677,
+              "tool_call_f1": 0.4793333333333333,
+              "task_success": 0.08
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "checked_episodes": 100,
+            "mismatches": [],
+            "n_mismatches": 0
+          }
+        },
+        "distilled": {
+          "n": 100,
+          "metrics": {
+            "tool_call_precision_name": 0.9275,
+            "tool_call_recall_name": 0.9233333333333333,
+            "tool_call_f1_name": 0.9091428571428571,
+            "tool_call_f1": 0.5967142857142858,
+            "redundant_tool_calls": 0.055,
+            "agent_loop_detection": 0.88,
+            "tool_call_validity": 1.0,
+            "task_success": 0.46
+          },
+          "counts": {
+            "tool_call_precision_name": 100,
+            "tool_call_recall_name": 100,
+            "tool_call_f1_name": 100,
+            "tool_call_f1": 100,
+            "redundant_tool_calls": 100,
+            "agent_loop_detection": 100,
+            "tool_call_validity": 100,
+            "task_success": 100
+          },
+          "failed_episodes": 0,
+          "failures": [],
+          "auditkit_summary": "Agent eval   Mode: recorded   Cases: 100\nVerified success: 46/100 (46/100 decided)   Failure: 54   Unknown outcome: 0   Error: 0   Over budget: 0\nEndpoint errors: 0\nStatus: completed 100\nTrace coverage: full 100, tool names only 0, answer only 0\nTool validity: 100/100 eligible\nMedian latency: n/a          Agent calls: 0",
+          "by_template_group": {
+            "unseen_domain": {
+              "n": 100,
+              "tool_call_f1_name": 0.9091428571428571,
+              "tool_call_f1": 0.5967142857142858,
+              "task_success": 0.46
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "checked_episodes": 100,
+            "mismatches": [],
+            "n_mismatches": 0
+          }
+        },
+        "grpo": {
+          "n": 100,
+          "metrics": {
+            "tool_call_precision_name": 0.9208333333333333,
+            "tool_call_recall_name": 0.92,
+            "tool_call_f1_name": 0.9031428571428571,
+            "tool_call_f1": 0.597047619047619,
+            "redundant_tool_calls": 0.0525,
+            "agent_loop_detection": 0.89,
+            "tool_call_validity": 1.0,
+            "task_success": 0.47
+          },
+          "counts": {
+            "tool_call_precision_name": 100,
+            "tool_call_recall_name": 100,
+            "tool_call_f1_name": 100,
+            "tool_call_f1": 100,
+            "redundant_tool_calls": 100,
+            "agent_loop_detection": 100,
+            "tool_call_validity": 100,
+            "task_success": 100
+          },
+          "failed_episodes": 0,
+          "failures": [],
+          "auditkit_summary": "Agent eval   Mode: recorded   Cases: 100\nVerified success: 47/100 (47/100 decided)   Failure: 53   Unknown outcome: 0   Error: 0   Over budget: 0\nEndpoint errors: 0\nStatus: completed 100\nTrace coverage: full 100, tool names only 0, answer only 0\nTool validity: 100/100 eligible\nMedian latency: n/a          Agent calls: 0",
+          "by_template_group": {
+            "unseen_domain": {
+              "n": 100,
+              "tool_call_f1_name": 0.9031428571428571,
+              "tool_call_f1": 0.597047619047619,
+              "task_success": 0.47
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "checked_episodes": 100,
+            "mismatches": [],
+            "n_mismatches": 0
+          }
+        },
+        "grpo-ungated": {
+          "n": 100,
+          "metrics": {
+            "tool_call_precision_name": 0.9325,
+            "tool_call_recall_name": 0.92,
+            "tool_call_f1_name": 0.9104761904761905,
+            "tool_call_f1": 0.5967142857142858,
+            "redundant_tool_calls": 0.0525,
+            "agent_loop_detection": 0.89,
+            "tool_call_validity": 1.0,
+            "task_success": 0.45
+          },
+          "counts": {
+            "tool_call_precision_name": 100,
+            "tool_call_recall_name": 100,
+            "tool_call_f1_name": 100,
+            "tool_call_f1": 100,
+            "redundant_tool_calls": 100,
+            "agent_loop_detection": 100,
+            "tool_call_validity": 100,
+            "task_success": 100
+          },
+          "failed_episodes": 0,
+          "failures": [],
+          "auditkit_summary": "Agent eval   Mode: recorded   Cases: 100\nVerified success: 45/100 (45/100 decided)   Failure: 55   Unknown outcome: 0   Error: 0   Over budget: 0\nEndpoint errors: 0\nStatus: completed 100\nTrace coverage: full 100, tool names only 0, answer only 0\nTool validity: 100/100 eligible\nMedian latency: n/a          Agent calls: 0",
+          "by_template_group": {
+            "unseen_domain": {
+              "n": 100,
+              "tool_call_f1_name": 0.9104761904761905,
+              "tool_call_f1": 0.5967142857142858,
+              "task_success": 0.45
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "checked_episodes": 100,
+            "mismatches": [],
+            "n_mismatches": 0
+          }
+        },
+        "naive": {
+          "n": 100,
+          "metrics": {
+            "tool_call_precision_name": 0.555,
+            "tool_call_recall_name": 1.0,
+            "tool_call_f1_name": 0.7080952380952381,
+            "tool_call_f1": 0.7080952380952381,
+            "redundant_tool_calls": 0.0,
+            "agent_loop_detection": 1.0,
+            "tool_call_validity": 1.0,
+            "task_success": 1.0
+          },
+          "counts": {
+            "tool_call_precision_name": 100,
+            "tool_call_recall_name": 100,
+            "tool_call_f1_name": 100,
+            "tool_call_f1": 100,
+            "redundant_tool_calls": 100,
+            "agent_loop_detection": 100,
+            "tool_call_validity": 100,
+            "task_success": 100
+          },
+          "failed_episodes": 0,
+          "failures": [],
+          "auditkit_summary": "Agent eval   Mode: recorded   Cases: 100\nVerified success: 100/100 (100/100 decided)   Failure: 0   Unknown outcome: 0   Error: 0   Over budget: 0\nEndpoint errors: 0\nStatus: completed 100\nTrace coverage: full 100, tool names only 0, answer only 0\nTool validity: 100/100 eligible\nMedian latency: n/a          Agent calls: 0",
+          "by_template_group": {
+            "unseen_domain": {
+              "n": 100,
+              "tool_call_f1_name": 0.7080952380952381,
+              "tool_call_f1": 0.7080952380952381,
+              "task_success": 1.0
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "checked_episodes": 100,
+            "mismatches": [],
+            "n_mismatches": 0
+          }
+        },
+        "oracle": {
+          "n": 100,
+          "metrics": {
+            "tool_call_precision_name": 1.0,
+            "tool_call_recall_name": 1.0,
+            "tool_call_f1_name": 1.0,
+            "tool_call_f1": 1.0,
+            "redundant_tool_calls": 0.0,
+            "agent_loop_detection": 1.0,
+            "tool_call_validity": 1.0,
+            "task_success": 1.0
+          },
+          "counts": {
+            "tool_call_precision_name": 100,
+            "tool_call_recall_name": 100,
+            "tool_call_f1_name": 100,
+            "tool_call_f1": 100,
+            "redundant_tool_calls": 100,
+            "agent_loop_detection": 100,
+            "tool_call_validity": 100,
+            "task_success": 100
+          },
+          "failed_episodes": 0,
+          "failures": [],
+          "auditkit_summary": "Agent eval   Mode: recorded   Cases: 100\nVerified success: 100/100 (100/100 decided)   Failure: 0   Unknown outcome: 0   Error: 0   Over budget: 0\nEndpoint errors: 0\nStatus: completed 100\nTrace coverage: full 100, tool names only 0, answer only 0\nTool validity: 100/100 eligible\nMedian latency: n/a          Agent calls: 0",
+          "by_template_group": {
+            "unseen_domain": {
+              "n": 100,
+              "tool_call_f1_name": 1.0,
+              "tool_call_f1": 1.0,
+              "task_success": 1.0
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "checked_episodes": 100,
+            "mismatches": [],
+            "n_mismatches": 0
+          }
+        },
+        "distilled-all": {
+          "n": 100,
+          "metrics": {
+            "tool_call_precision_name": 0.9366666666666668,
+            "tool_call_recall_name": 0.9366666666666668,
+            "tool_call_f1_name": 0.9229523809523809,
+            "tool_call_f1": 0.6657619047619048,
+            "redundant_tool_calls": 0.035,
+            "agent_loop_detection": 0.94,
+            "tool_call_validity": 1.0,
+            "task_success": 0.58
+          },
+          "counts": {
+            "tool_call_precision_name": 100,
+            "tool_call_recall_name": 100,
+            "tool_call_f1_name": 100,
+            "tool_call_f1": 100,
+            "redundant_tool_calls": 100,
+            "agent_loop_detection": 100,
+            "tool_call_validity": 100,
+            "task_success": 100
+          },
+          "failed_episodes": 0,
+          "failures": [],
+          "auditkit_summary": "Agent eval   Mode: recorded   Cases: 100\nVerified success: 58/100 (58/100 decided)   Failure: 42   Unknown outcome: 0   Error: 0   Over budget: 0\nEndpoint errors: 0\nStatus: completed 100\nTrace coverage: full 100, tool names only 0, answer only 0\nTool validity: 100/100 eligible\nMedian latency: n/a          Agent calls: 0",
+          "by_template_group": {
+            "unseen_domain": {
+              "n": 100,
+              "tool_call_f1_name": 0.9229523809523809,
+              "tool_call_f1": 0.6657619047619048,
+              "task_success": 0.58
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "checked_episodes": 100,
+            "mismatches": [],
+            "n_mismatches": 0
+          }
+        },
+        "distilled-mixed": {
+          "n": 100,
+          "metrics": {
+            "tool_call_precision_name": 0.83,
+            "tool_call_recall_name": 0.9933333333333333,
+            "tool_call_f1_name": 0.8901904761904763,
+            "tool_call_f1": 0.5463333333333333,
+            "redundant_tool_calls": 0.04,
+            "agent_loop_detection": 0.91,
+            "tool_call_validity": 1.0,
+            "task_success": 0.49
+          },
+          "counts": {
+            "tool_call_precision_name": 100,
+            "tool_call_recall_name": 100,
+            "tool_call_f1_name": 100,
+            "tool_call_f1": 100,
+            "redundant_tool_calls": 100,
+            "agent_loop_detection": 100,
+            "tool_call_validity": 100,
+            "task_success": 100
+          },
+          "failed_episodes": 0,
+          "failures": [],
+          "auditkit_summary": "Agent eval   Mode: recorded   Cases: 100\nVerified success: 49/100 (49/100 decided)   Failure: 51   Unknown outcome: 0   Error: 0   Over budget: 0\nEndpoint errors: 0\nStatus: completed 100\nTrace coverage: full 100, tool names only 0, answer only 0\nTool validity: 100/100 eligible\nMedian latency: n/a          Agent calls: 0",
+          "by_template_group": {
+            "unseen_domain": {
+              "n": 100,
+              "tool_call_f1_name": 0.8901904761904763,
+              "tool_call_f1": 0.5463333333333333,
+              "task_success": 0.49
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "checked_episodes": 100,
+            "mismatches": [],
+            "n_mismatches": 0
+          }
+        },
+        "grpo-mixed": {
+          "n": 100,
+          "metrics": {
+            "tool_call_precision_name": 0.83,
+            "tool_call_recall_name": 0.9933333333333333,
+            "tool_call_f1_name": 0.8901904761904763,
+            "tool_call_f1": 0.5463333333333333,
+            "redundant_tool_calls": 0.04,
+            "agent_loop_detection": 0.91,
+            "tool_call_validity": 1.0,
+            "task_success": 0.5
+          },
+          "counts": {
+            "tool_call_precision_name": 100,
+            "tool_call_recall_name": 100,
+            "tool_call_f1_name": 100,
+            "tool_call_f1": 100,
+            "redundant_tool_calls": 100,
+            "agent_loop_detection": 100,
+            "tool_call_validity": 100,
+            "task_success": 100
+          },
+          "failed_episodes": 0,
+          "failures": [],
+          "auditkit_summary": "Agent eval   Mode: recorded   Cases: 100\nVerified success: 50/100 (50/100 decided)   Failure: 50   Unknown outcome: 0   Error: 0   Over budget: 0\nEndpoint errors: 0\nStatus: completed 100\nTrace coverage: full 100, tool names only 0, answer only 0\nTool validity: 100/100 eligible\nMedian latency: n/a          Agent calls: 0",
+          "by_template_group": {
+            "unseen_domain": {
+              "n": 100,
+              "tool_call_f1_name": 0.8901904761904763,
+              "tool_call_f1": 0.5463333333333333,
+              "task_success": 0.5
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "checked_episodes": 100,
+            "mismatches": [],
+            "n_mismatches": 0
+          }
+        },
+        "zero-shot-stop": {
+          "n": 100,
+          "metrics": {
+            "tool_call_precision_name": 0.9975,
+            "tool_call_recall_name": 0.44,
+            "tool_call_f1_name": 0.6035714285714285,
+            "tool_call_f1": 0.5978571428571429,
+            "redundant_tool_calls": 0.005,
+            "agent_loop_detection": 0.99,
+            "tool_call_validity": 1.0,
+            "task_success": 0.0
+          },
+          "counts": {
+            "tool_call_precision_name": 100,
+            "tool_call_recall_name": 100,
+            "tool_call_f1_name": 100,
+            "tool_call_f1": 100,
+            "redundant_tool_calls": 100,
+            "agent_loop_detection": 100,
+            "tool_call_validity": 100,
+            "task_success": 100
+          },
+          "failed_episodes": 0,
+          "failures": [],
+          "auditkit_summary": "Agent eval   Mode: recorded   Cases: 100\nVerified success: 0/100 (0/100 decided)   Failure: 100   Unknown outcome: 0   Error: 0   Over budget: 0\nEndpoint errors: 0\nStatus: completed 100\nTrace coverage: full 100, tool names only 0, answer only 0\nTool validity: 100/100 eligible\nMedian latency: n/a          Agent calls: 0",
+          "by_template_group": {
+            "unseen_domain": {
+              "n": 100,
+              "tool_call_f1_name": 0.6035714285714285,
+              "tool_call_f1": 0.5978571428571429,
+              "task_success": 0.0
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "checked_episodes": 100,
+            "mismatches": [],
+            "n_mismatches": 0
+          }
+        }
+      }
+    }
+  },
+  "comparisons": {
+    "test_id": {
+      "baseline": "zero-shot",
+      "pairs": [
+        {
+          "model": "distilled",
+          "metrics": {
+            "tool_call_f1_name": {
+              "n_paired": 120,
+              "direction": "max",
+              "baseline_mean": 0.7146428571428571,
+              "candidate_mean": 0.9736507936507937,
+              "delta": 0.2590079365079366,
+              "ci_low": 0.23333333333333336,
+              "ci_high": 0.28515873015873017,
+              "excludes_zero": true,
+              "verdict": "better"
+            },
+            "tool_call_f1": {
+              "n_paired": 120,
+              "direction": "max",
+              "baseline_mean": 0.4629365079365079,
+              "candidate_mean": 0.8526984126984127,
+              "delta": 0.38976190476190475,
+              "ci_low": 0.3333333333333333,
+              "ci_high": 0.44313492063492066,
+              "excludes_zero": true,
+              "verdict": "better"
+            }
+          }
+        },
+        {
+          "model": "grpo",
+          "metrics": {
+            "tool_call_f1_name": {
+              "n_paired": 120,
+              "direction": "max",
+              "baseline_mean": 0.7146428571428571,
+              "candidate_mean": 0.9769047619047619,
+              "delta": 0.2622619047619048,
+              "ci_low": 0.23734126984126988,
+              "ci_high": 0.28785714285714287,
+              "excludes_zero": true,
+              "verdict": "better"
+            },
+            "tool_call_f1": {
+              "n_paired": 120,
+              "direction": "max",
+              "baseline_mean": 0.4629365079365079,
+              "candidate_mean": 0.8656349206349206,
+              "delta": 0.40269841269841267,
+              "ci_low": 0.34992063492063497,
+              "ci_high": 0.45531746031746034,
+              "excludes_zero": true,
+              "verdict": "better"
+            }
+          }
+        },
+        {
+          "model": "grpo-ungated",
+          "metrics": {
+            "tool_call_f1_name": {
+              "n_paired": 120,
+              "direction": "max",
+              "baseline_mean": 0.7146428571428571,
+              "candidate_mean": 0.9736507936507937,
+              "delta": 0.2590079365079366,
+              "ci_low": 0.23333333333333336,
+              "ci_high": 0.28515873015873017,
+              "excludes_zero": true,
+              "verdict": "better"
+            },
+            "tool_call_f1": {
+              "n_paired": 120,
+              "direction": "max",
+              "baseline_mean": 0.4629365079365079,
+              "candidate_mean": 0.861031746031746,
+              "delta": 0.3980952380952381,
+              "ci_low": 0.3456746031746032,
+              "ci_high": 0.44972222222222225,
+              "excludes_zero": true,
+              "verdict": "better"
+            }
+          }
+        },
+        {
+          "model": "naive",
+          "metrics": {
+            "tool_call_f1_name": {
+              "n_paired": 120,
+              "direction": "max",
+              "baseline_mean": 0.7146428571428571,
+              "candidate_mean": 0.6821230158730158,
+              "delta": -0.03251984126984126,
+              "ci_low": -0.05962301587301586,
+              "ci_high": -0.004503968253968244,
+              "excludes_zero": true,
+              "verdict": "worse"
+            },
+            "tool_call_f1": {
+              "n_paired": 120,
+              "direction": "max",
+              "baseline_mean": 0.4629365079365079,
+              "candidate_mean": 0.6821230158730158,
+              "delta": 0.21918650793650793,
+              "ci_low": 0.18339285714285716,
+              "ci_high": 0.25263888888888886,
+              "excludes_zero": true,
+              "verdict": "better"
+            }
+          }
+        },
+        {
+          "model": "oracle",
+          "metrics": {
+            "tool_call_f1_name": {
+              "n_paired": 120,
+              "direction": "max",
+              "baseline_mean": 0.7146428571428571,
+              "candidate_mean": 1.0,
+              "delta": 0.2853571428571429,
+              "ci_low": 0.2617460317460318,
+              "ci_high": 0.31007936507936507,
+              "excludes_zero": true,
+              "verdict": "better"
+            },
+            "tool_call_f1": {
+              "n_paired": 120,
+              "direction": "max",
+              "baseline_mean": 0.4629365079365079,
+              "candidate_mean": 1.0,
+              "delta": 0.537063492063492,
+              "ci_low": 0.5063888888888889,
+              "ci_high": 0.5663492063492064,
+              "excludes_zero": true,
+              "verdict": "better"
+            }
+          }
+        },
+        {
+          "model": "distilled-all",
+          "metrics": {
+            "tool_call_f1_name": {
+              "n_paired": 120,
+              "direction": "max",
+              "baseline_mean": 0.7146428571428571,
+              "candidate_mean": 0.9983333333333333,
+              "delta": 0.2836904761904762,
+              "ci_low": 0.26051587301587303,
+              "ci_high": 0.3084126984126984,
+              "excludes_zero": true,
+              "verdict": "better"
+            },
+            "tool_call_f1": {
+              "n_paired": 120,
+              "direction": "max",
+              "baseline_mean": 0.4629365079365079,
+              "candidate_mean": 0.995,
+              "delta": 0.532063492063492,
+              "ci_low": 0.4980158730158731,
+              "ci_high": 0.5633333333333334,
+              "excludes_zero": true,
+              "verdict": "better"
+            }
+          }
+        },
+        {
+          "model": "distilled-mixed",
+          "metrics": {
+            "tool_call_f1_name": {
+              "n_paired": 120,
+              "direction": "max",
+              "baseline_mean": 0.7146428571428571,
+              "candidate_mean": 0.8951587301587302,
+              "delta": 0.18051587301587305,
+              "ci_low": 0.1503571428571429,
+              "ci_high": 0.20944444444444446,
+              "excludes_zero": true,
+              "verdict": "better"
+            },
+            "tool_call_f1": {
+              "n_paired": 120,
+              "direction": "max",
+              "baseline_mean": 0.4629365079365079,
+              "candidate_mean": 0.7644444444444445,
+              "delta": 0.30150793650793656,
+              "ci_low": 0.24761904761904763,
+              "ci_high": 0.3538095238095238,
+              "excludes_zero": true,
+              "verdict": "better"
+            }
+          }
+        },
+        {
+          "model": "grpo-mixed",
+          "metrics": {
+            "tool_call_f1_name": {
+              "n_paired": 120,
+              "direction": "max",
+              "baseline_mean": 0.7146428571428571,
+              "candidate_mean": 0.9129365079365079,
+              "delta": 0.19829365079365083,
+              "ci_low": 0.16793650793650797,
+              "ci_high": 0.2272619047619048,
+              "excludes_zero": true,
+              "verdict": "better"
+            },
+            "tool_call_f1": {
+              "n_paired": 120,
+              "direction": "max",
+              "baseline_mean": 0.4629365079365079,
+              "candidate_mean": 0.7821428571428571,
+              "delta": 0.3192063492063492,
+              "ci_low": 0.2642857142857143,
+              "ci_high": 0.3708730158730159,
+              "excludes_zero": true,
+              "verdict": "better"
+            }
+          }
+        },
+        {
+          "model": "zero-shot-stop",
+          "metrics": {
+            "tool_call_f1_name": {
+              "n_paired": 120,
+              "direction": "max",
+              "baseline_mean": 0.7146428571428571,
+              "candidate_mean": 0.6286111111111111,
+              "delta": -0.08603174603174603,
+              "ci_low": -0.11396825396825397,
+              "ci_high": -0.05785714285714285,
+              "excludes_zero": true,
+              "verdict": "worse"
+            },
+            "tool_call_f1": {
+              "n_paired": 120,
+              "direction": "max",
+              "baseline_mean": 0.4629365079365079,
+              "candidate_mean": 0.6080555555555556,
+              "delta": 0.1451190476190476,
+              "ci_low": 0.1193253968253968,
+              "ci_high": 0.17055555555555554,
+              "excludes_zero": true,
+              "verdict": "better"
+            }
+          }
+        }
+      ]
+    },
+    "test_ood": {
+      "baseline": "zero-shot",
+      "pairs": [
+        {
+          "model": "distilled",
+          "metrics": {
+            "tool_call_f1_name": {
+              "n_paired": 100,
+              "direction": "max",
+              "baseline_mean": 0.677,
+              "candidate_mean": 0.9091428571428571,
+              "delta": 0.23214285714285718,
+              "ci_low": 0.19976190476190478,
+              "ci_high": 0.2636666666666667,
+              "excludes_zero": true,
+              "verdict": "better"
+            },
+            "tool_call_f1": {
+              "n_paired": 100,
+              "direction": "max",
+              "baseline_mean": 0.4793333333333333,
+              "candidate_mean": 0.5967142857142858,
+              "delta": 0.1173809523809524,
+              "ci_low": 0.0592857142857143,
+              "ci_high": 0.17723809523809528,
+              "excludes_zero": true,
+              "verdict": "better"
+            }
+          }
+        },
+        {
+          "model": "grpo",
+          "metrics": {
+            "tool_call_f1_name": {
+              "n_paired": 100,
+              "direction": "max",
+              "baseline_mean": 0.677,
+              "candidate_mean": 0.9031428571428571,
+              "delta": 0.22614285714285717,
+              "ci_low": 0.19480952380952385,
+              "ci_high": 0.2571428571428572,
+              "excludes_zero": true,
+              "verdict": "better"
+            },
+            "tool_call_f1": {
+              "n_paired": 100,
+              "direction": "max",
+              "baseline_mean": 0.4793333333333333,
+              "candidate_mean": 0.597047619047619,
+              "delta": 0.11771428571428574,
+              "ci_low": 0.06071428571428574,
+              "ci_high": 0.17571428571428574,
+              "excludes_zero": true,
+              "verdict": "better"
+            }
+          }
+        },
+        {
+          "model": "grpo-ungated",
+          "metrics": {
+            "tool_call_f1_name": {
+              "n_paired": 100,
+              "direction": "max",
+              "baseline_mean": 0.677,
+              "candidate_mean": 0.9104761904761905,
+              "delta": 0.2334761904761905,
+              "ci_low": 0.20314285714285718,
+              "ci_high": 0.26300000000000007,
+              "excludes_zero": true,
+              "verdict": "better"
+            },
+            "tool_call_f1": {
+              "n_paired": 100,
+              "direction": "max",
+              "baseline_mean": 0.4793333333333333,
+              "candidate_mean": 0.5967142857142858,
+              "delta": 0.1173809523809524,
+              "ci_low": 0.060809523809523834,
+              "ci_high": 0.17623809523809528,
+              "excludes_zero": true,
+              "verdict": "better"
+            }
+          }
+        },
+        {
+          "model": "naive",
+          "metrics": {
+            "tool_call_f1_name": {
+              "n_paired": 100,
+              "direction": "max",
+              "baseline_mean": 0.677,
+              "candidate_mean": 0.7080952380952381,
+              "delta": 0.031095238095238096,
+              "ci_low": -0.0004999999999999971,
+              "ci_high": 0.06414285714285714,
+              "excludes_zero": false,
+              "verdict": "no clear change"
+            },
+            "tool_call_f1": {
+              "n_paired": 100,
+              "direction": "max",
+              "baseline_mean": 0.4793333333333333,
+              "candidate_mean": 0.7080952380952381,
+              "delta": 0.22876190476190478,
+              "ci_low": 0.19123809523809523,
+              "ci_high": 0.26578571428571424,
+              "excludes_zero": true,
+              "verdict": "better"
+            }
+          }
+        },
+        {
+          "model": "oracle",
+          "metrics": {
+            "tool_call_f1_name": {
+              "n_paired": 100,
+              "direction": "max",
+              "baseline_mean": 0.677,
+              "candidate_mean": 1.0,
+              "delta": 0.32300000000000006,
+              "ci_low": 0.2974285714285715,
+              "ci_high": 0.3493333333333334,
+              "excludes_zero": true,
+              "verdict": "better"
+            },
+            "tool_call_f1": {
+              "n_paired": 100,
+              "direction": "max",
+              "baseline_mean": 0.4793333333333333,
+              "candidate_mean": 1.0,
+              "delta": 0.5206666666666667,
+              "ci_low": 0.48909523809523814,
+              "ci_high": 0.5499047619047619,
+              "excludes_zero": true,
+              "verdict": "better"
+            }
+          }
+        },
+        {
+          "model": "distilled-all",
+          "metrics": {
+            "tool_call_f1_name": {
+              "n_paired": 100,
+              "direction": "max",
+              "baseline_mean": 0.677,
+              "candidate_mean": 0.9229523809523809,
+              "delta": 0.24595238095238098,
+              "ci_low": 0.2212857142857143,
+              "ci_high": 0.27133333333333337,
+              "excludes_zero": true,
+              "verdict": "better"
+            },
+            "tool_call_f1": {
+              "n_paired": 100,
+              "direction": "max",
+              "baseline_mean": 0.4793333333333333,
+              "candidate_mean": 0.6657619047619048,
+              "delta": 0.18642857142857147,
+              "ci_low": 0.12752380952380954,
+              "ci_high": 0.24390476190476193,
+              "excludes_zero": true,
+              "verdict": "better"
+            }
+          }
+        },
+        {
+          "model": "distilled-mixed",
+          "metrics": {
+            "tool_call_f1_name": {
+              "n_paired": 100,
+              "direction": "max",
+              "baseline_mean": 0.677,
+              "candidate_mean": 0.8901904761904763,
+              "delta": 0.21319047619047624,
+              "ci_low": 0.1754761904761905,
+              "ci_high": 0.2530476190476191,
+              "excludes_zero": true,
+              "verdict": "better"
+            },
+            "tool_call_f1": {
+              "n_paired": 100,
+              "direction": "max",
+              "baseline_mean": 0.4793333333333333,
+              "candidate_mean": 0.5463333333333333,
+              "delta": 0.067,
+              "ci_low": 0.02180952380952382,
+              "ci_high": 0.11409523809523811,
+              "excludes_zero": true,
+              "verdict": "better"
+            }
+          }
+        },
+        {
+          "model": "grpo-mixed",
+          "metrics": {
+            "tool_call_f1_name": {
+              "n_paired": 100,
+              "direction": "max",
+              "baseline_mean": 0.677,
+              "candidate_mean": 0.8901904761904763,
+              "delta": 0.21319047619047624,
+              "ci_low": 0.17523809523809525,
+              "ci_high": 0.2528571428571429,
+              "excludes_zero": true,
+              "verdict": "better"
+            },
+            "tool_call_f1": {
+              "n_paired": 100,
+              "direction": "max",
+              "baseline_mean": 0.4793333333333333,
+              "candidate_mean": 0.5463333333333333,
+              "delta": 0.067,
+              "ci_low": 0.02238095238095239,
+              "ci_high": 0.11361904761904762,
+              "excludes_zero": true,
+              "verdict": "better"
+            }
+          }
+        },
+        {
+          "model": "zero-shot-stop",
+          "metrics": {
+            "tool_call_f1_name": {
+              "n_paired": 100,
+              "direction": "max",
+              "baseline_mean": 0.677,
+              "candidate_mean": 0.6035714285714285,
+              "delta": -0.07342857142857143,
+              "ci_low": -0.10114285714285715,
+              "ci_high": -0.0470952380952381,
+              "excludes_zero": true,
+              "verdict": "worse"
+            },
+            "tool_call_f1": {
+              "n_paired": 100,
+              "direction": "max",
+              "baseline_mean": 0.4793333333333333,
+              "candidate_mean": 0.5978571428571429,
+              "delta": 0.11852380952380952,
+              "ci_low": 0.08704761904761904,
+              "ci_high": 0.14904761904761904,
+              "excludes_zero": true,
+              "verdict": "better"
+            }
+          }
+        }
+      ]
+    }
+  },
+  "comparison_method": "Per-episode values come from AuditKit (AgentEvalRunner, recorded mode). Confidence intervals are a percentile paired bootstrap over tasks (frugal_analyst.metrics.paired_bootstrap_ci), because AuditKit 1.1.11 has no confidence interval.",
+  "failed_episodes_total": 0,
+  "crosscheck_ok": true
+}
