@@ -27,6 +27,12 @@ REPO_ID:SUBDIR, for example `me/frugal-runs:sft-r16/adapter`.
 
 Step arguments go in one string: `--extra "--max-steps 30 --num-generations 4"`.
 `hf jobs uv run` drops a bare `--`, so `--` works only when you run this file directly.
+Paths in --extra are relative to the project root, for example
+`--extra "--teacher data/teacher/train_sft.jsonl"` (sft) or
+`--extra "--tasks data/tasks/train_rl.jsonl"` (grpo).
+
+The job exits with the step's exit code. train_grpo.py exits with 4 when its
+no-signal guard stops training; the logs are still uploaded.
 
 See scripts/jobs/README.md for the exact launch commands and costs.
 """

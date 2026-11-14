@@ -223,6 +223,39 @@ def test_crosscheck_catches_a_scorer_that_disagrees(tmp_path, monkeypatch):
     assert load(out)["crosscheck_ok"] is False
 
 
+def with_evidence(traces, supported=True, literal=False):
+    for t in traces:
+        t.update(supported=supported and t["correct"], answer_in_sql_literal=literal and t["correct"])
+    return traces
+
+
+def test_new_and_old_trace_files_mix_and_new_metrics_are_reported(tmp_path):
+    f1 = write(tmp_path / "zs.jsonl", wasteful_model(IDS))  # old format: no evidence fields
+    new = with_evidence(good_model(IDS), literal=False)
+    new[0]["answer_in_sql_literal"] = True
+    f2 = write(tmp_path / "grpo.jsonl", new)
+    code, out = run_script(tmp_path, [f1, f2])
+    assert code == 0
+    res = load(out)
+    assert res["crosscheck_ok"] is True
+    zs = res["splits"]["test_id"]["models"]["zero-shot"]
+    g = res["splits"]["test_id"]["models"]["grpo"]
+    assert zs["metrics"]["answer_in_sql_literal_rate"] is None and zs["counts"]["answer_in_sql_literal_rate"] == 0
+    assert g["metrics"]["answer_in_sql_literal_rate"] == pytest.approx(1 / 6)
+    assert g["metrics"]["unread_answer_rate"] == 0.0
+    md = (out / "results.md").read_text()
+    assert "answered with no table read" in md and "answer is a literal in its supporting SQL" in md
+
+
+def test_correct_but_not_supported_is_bad_input(tmp_path, capsys):
+    traces = with_evidence(good_model(IDS))
+    traces[2]["supported"] = False
+    f = write(tmp_path / "bad.jsonl", traces)
+    code, _ = run_script(tmp_path, [f])
+    assert code == script.EXIT_BAD_INPUT
+    assert "supported is false" in capsys.readouterr().err
+
+
 def test_glob_pattern_is_expanded(tmp_path):
     write(tmp_path / "x_1.jsonl", wasteful_model(IDS))
     out = tmp_path / "out"

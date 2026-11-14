@@ -24,11 +24,12 @@ from __future__ import annotations
 import itertools
 import json
 import random
+import zlib
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
 from . import db
-from .db import DOMAINS, OOD_DOMAINS, ensure_dbs
+from .db import DOMAINS, OOD_DOMAINS, TRAIN_DOMAINS, ensure_dbs
 from .env import execute_metered, format_number
 
 SPLITS = ["train", "val", "test_id", "test_ood"]
@@ -626,6 +627,63 @@ TEMPLATES: dict[str, list[Template]] = {
     "school": SCHOOL,
     "saas": SAAS,
 }
+
+# ---------------------------------------------------------------------------
+# RL-only templates
+# ---------------------------------------------------------------------------
+# GRPO on the SFT adapter got reward 1.0 on every rollout, so the gradient was 0:
+# SFT had seen all train templates and copied them. So some templates are kept
+# away from SFT and used only in GRPO.
+#
+# Fixed rule: in each train domain, the LAST template of each level, in
+# TEMPLATES order, is RL-only. That is 12 templates (4 domains x 3 levels).
+# The rule only reads the template list. It does not change generation, so the
+# task files stay the same. test_id keeps tasks from these templates, so a
+# test_id score on them shows what GRPO added on top of SFT.
+
+
+def _last_template_per_level(templates: list[Template]) -> tuple[str, ...]:
+    last: dict[int, str] = {}
+    for tpl in templates:
+        last[tpl.level] = tpl.name  # a later template of the same level replaces an earlier one
+    return tuple(last[level] for level in sorted(last))
+
+
+RL_ONLY_TEMPLATES: dict[str, tuple[str, ...]] = {
+    domain: _last_template_per_level(TEMPLATES[domain]) for domain in TRAIN_DOMAINS
+}
+
+# train_rl.jsonl adds one SFT-seen train task for every 3 RL-only tasks, to show
+# if GRPO makes the model forget what SFT taught.
+FORGET_CHECK_RATIO = 3
+
+
+def is_rl_only(task: Task) -> bool:
+    """True if the task comes from an RL-only template. Works on saved tasks."""
+    return task.template in RL_ONLY_TEMPLATES.get(task.domain, ())
+
+
+def _stable_hash(task_id: str) -> int:
+    # crc32, not hash(): Python's str hash changes with every process.
+    return zlib.crc32(task_id.encode("utf-8"))
+
+
+def split_train_for_rl(train: list[Task]) -> tuple[list[Task], list[Task]]:
+    """Split train tasks into (train_sft, train_rl).
+
+    train_sft: train tasks that are not RL-only.
+    train_rl: every RL-only train task, plus len(rl_only) // FORGET_CHECK_RATIO
+    SFT-seen tasks with the smallest crc32 of the id. Both lists are sorted by id.
+    """
+    for t in train:
+        if t.split != "train" or t.domain not in TRAIN_DOMAINS:
+            raise ValueError(f"only train tasks of train domains may enter training, got {t.id} ({t.split})")
+    rl_only = [t for t in train if is_rl_only(t)]
+    sft = [t for t in train if not is_rl_only(t)]
+    n_check = len(rl_only) // FORGET_CHECK_RATIO
+    check = sorted(sft, key=lambda t: (_stable_hash(t.id), t.id))[:n_check]
+    train_rl = sorted(rl_only + check, key=lambda t: t.id)
+    return sorted(sft, key=lambda t: t.id), train_rl
 
 # ---------------------------------------------------------------------------
 # Generation

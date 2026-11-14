@@ -45,9 +45,24 @@ def naive_policy(task: Task) -> tuple[list[ToolCall], str]:
     return calls, f"ANSWER: {task.gold_answer}"
 
 
+def explorer_policy(task: Task) -> tuple[list[ToolCall], str]:
+    """The oracle path, plus a 5-row preview of the first table on half of the tasks.
+
+    It is the "mixed teacher" experiment: the preview is correct but not needed.
+    SFT on these traces shows the model both habits. GRPO must then learn to
+    drop the preview. The write-up must say that we added this waste on purpose.
+    """
+    calls, final = oracle_policy(task)
+    if zlib.crc32(("preview:" + task.id).encode()) % 2 == 0:  # a stable half of the tasks
+        table = _tables_in(task.gold_sql)[0]
+        preview = ToolCall("run_sql", {"database": task.domain, "query": f"SELECT * FROM {table} LIMIT 5"})
+        calls.insert(1, preview)  # right after get_schema
+    return calls, final
+
+
 def guess_policy(task: Task) -> tuple[list[ToolCall], str]:
     """No tool calls, a made-up answer."""
     return [], "ANSWER: 42" if task.answer_type == "number" else "ANSWER: unknown"
 
 
-POLICIES = {"oracle": oracle_policy, "naive": naive_policy, "guess": guess_policy}
+POLICIES = {"oracle": oracle_policy, "naive": naive_policy, "explorer": explorer_policy, "guess": guess_policy}

@@ -19,6 +19,14 @@ fix three things we found in the source (details in docs/training-notes.md):
    in the same context the tokens were sampled in. Tool tokens stay masked out
    of the loss (env_mask = 0). Turn it off with --no-turn-context-fix.
 
+No-signal guard (--stop-if-no-signal N, default 3): if no GRPO group has any
+reward spread in each of the first N optimizer steps, every advantage is 0 and
+training cannot learn. The script then stops, keeps reward_log.jsonl and
+trajectories.jsonl, saves no adapter, and exits with code 4.
+
+Tasks: after SFT on data/teacher/train_sft.jsonl, train GRPO on
+data/tasks/train_rl.jsonl (RL-only templates plus forgetting checks).
+
 Starting point (--init-adapter): the SFT adapter is merged into the base
 weights, and GRPO trains a fresh LoRA on top. TRL computes the KL reference by
 disabling the trainable adapter, so the reference is the distilled policy, not
@@ -44,6 +52,7 @@ sys.path.insert(0, str(REPO_ROOT))
 
 from frugal_analyst.env import TOOLS  # noqa: E402
 from frugal_analyst.runner import (  # noqa: E402
+    DEFAULT_MAX_TOOL_STEPS,
     LORA_TARGET_MODULES,
     load_model,
     load_tokenizer,
@@ -228,15 +237,80 @@ def with_first_batch_print(reward_fn, max_chars: int = 2000):
     return frugal_reward
 
 
-def make_reward_logger(path: Path):
-    """A TrainerCallback that appends every logged metrics dict (mean reward per step) to a jsonl file."""
+def with_group_spread_metric(reward_fn, num_generations: int):
+    """Log `frugal/frac_groups_no_spread`: the share of GRPO groups whose rewards are all equal.
+
+    A group with equal rewards has advantage 0, so it gives no gradient. TRL
+    logs `frac_reward_zero_std` too, but with `scale_rewards="batch"` TRL
+    computes it from the batch std, not the group std (trl grpo_trainer.py:2345-2359).
+    This metric is per group for every setting. TRL repeats each prompt
+    `num_generations` times in a row (RepeatSampler), so a group is a run of
+    `num_generations` rewards.
+    """
+
+    def frugal_reward(completions, **kwargs):
+        rewards = reward_fn(completions, **kwargs)
+        log_metric = kwargs.get("log_metric")
+        if callable(log_metric) and rewards and len(rewards) % num_generations == 0:
+            groups = [rewards[i:i + num_generations] for i in range(0, len(rewards), num_generations)]
+            flat = sum(1 for g in groups if max(g) - min(g) <= 1e-6)
+            log_metric("frugal/frac_groups_no_spread", flat / len(groups))
+        return rewards
+
+    return frugal_reward
+
+
+# Exit code when the no-signal guard stops training. 1 is a Python error, 2 is argparse.
+EXIT_NO_SIGNAL = 4
+# Our per-group metric first; TRL's metric if ours is missing.
+NO_SIGNAL_KEYS = ("frugal/frac_groups_no_spread", "frac_reward_zero_std")
+
+
+class NoSignalGuard:
+    """Stop GRPO when the first N optimizer steps have no reward spread in any group.
+
+    Then every advantage is 0 and the steps only burn GPU time. Our last real
+    run did that: reward 1.0 on every rollout and gradient 0. N <= 0 turns the
+    guard off. It looks only at the first N steps, so a later quiet step never
+    stops a run that has learned something.
+    """
+
+    def __init__(self, n_steps: int):
+        self.n_steps = n_steps
+        self.values: list[float] = []
+        self.stopped = False
+
+    def update(self, logs: dict) -> bool:
+        """Read one log line. Returns True when training must stop now."""
+        if self.n_steps <= 0 or len(self.values) >= self.n_steps:
+            return False
+        value = next((logs[k] for k in NO_SIGNAL_KEYS if logs.get(k) is not None), None)
+        if value is None:
+            return False  # not a training-step line (for example the final summary)
+        self.values.append(float(value))
+        if len(self.values) == self.n_steps and all(v >= 1.0 - 1e-6 for v in self.values):
+            self.stopped = True
+        return self.stopped
+
+
+def make_reward_logger(path: Path, guard: NoSignalGuard | None = None):
+    """A TrainerCallback that appends every logged metrics dict (mean reward per step) to a jsonl
+    file, and stops training when `guard` says there is no learning signal."""
     from transformers import TrainerCallback
 
     class RewardLogger(TrainerCallback):
         def on_log(self, args, state, control, logs=None, **kwargs):
-            if logs and state.is_world_process_zero and any("reward" in k for k in logs):
+            if not logs:
+                return
+            if state.is_world_process_zero and any("reward" in k for k in logs):
                 with path.open("a", encoding="utf-8") as f:
                     f.write(json.dumps({"step": state.global_step, **logs}, default=float) + "\n")
+            if guard is not None and guard.update(logs):
+                print(f"[grpo] STOP: no reward spread in any group for the first {guard.n_steps} steps "
+                      f"(frac_groups_no_spread = {guard.values}). Every advantage is 0, so training "
+                      f"cannot learn. Use harder tasks (data/tasks/train_rl.jsonl), a higher temperature, "
+                      f"or turn this off with --stop-if-no-signal 0.")
+                control.should_training_stop = True
 
     return RewardLogger()
 
@@ -246,11 +320,12 @@ def make_reward_logger(path: Path):
 # ---------------------------------------------------------------------------
 
 
-def main(argv: list[str] | None = None) -> None:
+def build_parser() -> argparse.ArgumentParser:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--model", default="CohereLabs/tiny-aya-global")
     p.add_argument("--init-adapter", default=None, help="SFT adapter dir or hub id, merged into the base first (comma list allowed)")
-    p.add_argument("--tasks", default=str(REPO_ROOT / "data/tasks/train.jsonl"))
+    p.add_argument("--tasks", default=str(REPO_ROOT / "data/tasks/train.jsonl"),
+                   help="task jsonl; use data/tasks/train_rl.jsonl after SFT on train_sft")
     p.add_argument("--out", default=str(REPO_ROOT / "outputs/grpo"))
     p.add_argument("--max-steps", type=int, default=40, help="optimizer steps")
     p.add_argument("--num-generations", type=int, default=4, help="completions per prompt (the GRPO group)")
@@ -259,8 +334,21 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--lr", type=float, default=1e-5)
     p.add_argument("--beta", type=float, default=0.04, help="KL weight against the starting (distilled) policy")
     p.add_argument("--temperature", type=float, default=0.8)
+    # Each of these is a GRPOConfig field in trl 1.7.1. top_p reaches the rollout
+    # through trainer.generation_config (see docs/training-notes.md, section 2e).
+    p.add_argument("--top-p", type=float, default=0.95, help="sampling top-p (0.95 is AgentTune's default)")
+    p.add_argument("--scale-rewards", default="group", choices=["group", "batch", "none"],
+                   help="divide advantages by the group std, the batch std, or nothing")
+    p.add_argument("--loss-type", default="dapo",
+                   choices=["grpo", "dapo", "bnpo", "dr_grpo", "cispo", "sapo", "luspo", "vespo"])
+    p.add_argument("--epsilon-high", type=float, default=None,
+                   help="upper clip bound; default: same as epsilon (0.2). DAPO uses 0.28")
+    p.add_argument("--stop-if-no-signal", type=int, default=3, metavar="N",
+                   help=f"stop (exit code {EXIT_NO_SIGNAL}) if the first N steps have no reward spread "
+                        "in any group; 0 turns it off")
     p.add_argument("--max-completion-length", type=int, default=256, help="max new tokens PER MODEL TURN")
-    p.add_argument("--max-tool-steps", type=int, default=4, help="tool rounds per episode")
+    p.add_argument("--max-tool-steps", type=int, default=DEFAULT_MAX_TOOL_STEPS,
+                   help="tool calls executed per episode; one answer turn always follows")
     p.add_argument("--reward-mode", default="gated", choices=["gated", "ungated"])
     p.add_argument("--lora-r", type=int, default=16)
     p.add_argument("--warmup-steps", type=int, default=2)
@@ -272,7 +360,11 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--no-gradient-checkpointing", action="store_true")
     p.add_argument("--no-turn-context-fix", action="store_true")
     p.add_argument("--push-to-hub", default=None, metavar="REPO", help="upload the adapter to this HF model repo (off by default)")
-    args = p.parse_args(argv)
+    return p
+
+
+def main(argv: list[str] | None = None) -> None:
+    args = build_parser().parse_args(argv)
 
     import torch
     from datasets import Dataset
@@ -316,15 +408,21 @@ def main(argv: list[str] | None = None) -> None:
         "max_completion_length": args.max_completion_length,
         "max_steps": args.max_steps,
         "seed": args.seed,
-        "logging_steps": 1,
+        "logging_steps": 1,  # the no-signal guard reads one log line per optimizer step
+        "top_p": args.top_p,
+        "scale_rewards": args.scale_rewards,
+        "loss_type": args.loss_type,
+        "epsilon_high": args.epsilon_high,
     }
+    guard = NoSignalGuard(args.stop_if_no_signal)
+    reward = with_group_spread_metric(make_grpo_reward(args.reward_mode), args.num_generations)
     trainer = create_agentic_trainer(
         "grpo",
         model=model,
         processing_class=tok,
         tools=list(TOOLS),
         rollout_func=rollout_func,
-        reward_funcs=[with_first_batch_print(make_grpo_reward(args.reward_mode))],
+        reward_funcs=[with_first_batch_print(reward)],
         train_dataset=dataset,
         output_dir=str(out),
         peft_config=LoraConfig(
@@ -340,7 +438,7 @@ def main(argv: list[str] | None = None) -> None:
         use_cpu=device == "cpu",
         gradient_checkpointing=not args.no_gradient_checkpointing,
         use_vllm=False,
-        callbacks=[make_reward_logger(reward_log)],
+        callbacks=[make_reward_logger(reward_log, guard)],
         **expected,
     )
 
@@ -352,9 +450,14 @@ def main(argv: list[str] | None = None) -> None:
     resolved = trainer.trainer.args
     print("[grpo] resolved GRPOConfig:")
     for key in [*expected, "steps_per_generation", "generation_batch_size", "warmup_steps", "bf16", "fp16",
-                "use_cpu", "gradient_checkpointing", "use_vllm", "loss_type", "scale_rewards", "remove_unused_columns"]:
+                "use_cpu", "gradient_checkpointing", "use_vllm", "epsilon", "num_iterations", "remove_unused_columns"]:
         print(f"    {key} = {getattr(resolved, key, '<missing>')}")
     wrong = {k: (v, getattr(resolved, k, None)) for k, v in expected.items() if getattr(resolved, k, None) != v}
+    # The rollout samples with trainer.generation_config, so top_p must be there too.
+    gen_top_p = getattr(getattr(trainer.trainer, "generation_config", None), "top_p", None)
+    print(f"    generation_config.top_p = {gen_top_p}")
+    if gen_top_p != args.top_p:
+        wrong["generation_config.top_p"] = (args.top_p, gen_top_p)
     if wrong:
         raise SystemExit(f"[grpo] settings did not take effect (wanted, got): {wrong}")
     if trainer.trainer.rollout_func is not rollout_func:
@@ -363,7 +466,6 @@ def main(argv: list[str] | None = None) -> None:
 
     result = trainer.trainer.train()
     trainer._train_result = result
-    trainer.save_model(str(out))
     meta = {
         "base_model": args.model,
         "init_adapters": init_adapters,
@@ -372,7 +474,17 @@ def main(argv: list[str] | None = None) -> None:
         "rollout_stats": rollout_func.stats,
         "global_step": result.global_step,
         "train_loss": result.training_loss,
+        "stopped_no_signal": guard.stopped,
+        "no_signal_values": guard.values,
     }
+    if guard.stopped:
+        # No adapter: it learned nothing, and a saved one could be evaluated by mistake.
+        # reward_log.jsonl and trajectories.jsonl are already on disk.
+        meta["inference_adapters"] = None
+        (out / "frugal_grpo_meta.json").write_text(json.dumps(meta, indent=2, default=str))
+        print(f"[grpo] stopped after {result.global_step} steps: no learning signal. Logs are in {out}.")
+        sys.exit(EXIT_NO_SIGNAL)
+    trainer.save_model(str(out))
     (out / "frugal_grpo_meta.json").write_text(json.dumps(meta, indent=2, default=str))
     print(f"[grpo] saved adapter to {out}. rollout stats: {rollout_func.stats}")
     print(f"[grpo] evaluate with: python -m frugal_analyst.runner --model {args.model} --adapter {','.join(meta['inference_adapters'])} ...")

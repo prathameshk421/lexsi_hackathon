@@ -119,6 +119,42 @@ def _json_spans(text: str) -> list[tuple[int, int, Any]]:
     return spans
 
 
+_CODE_FENCE = "```"
+
+
+def _is_call_item(item: Any) -> bool:
+    """One call in the project format, or the generic name/arguments shape."""
+    if not isinstance(item, dict):
+        return False
+    return "tool_name" in item or ("name" in item and ("arguments" in item or "parameters" in item))
+
+
+def ends_with_tool_call(text: str | None) -> bool:
+    """True if `text` ends with one complete tool-call list.
+
+    The format is AgentTune's fallback format for Tiny Aya:
+    `[{"tool_name": "run_sql", "parameters": {...}}]`. Whitespace and a closing
+    code fence may follow the list, because parse_completion also reads a
+    fenced call. Any other text after the list gives False, so the check is
+    false while the model still writes, and true the moment the list closes.
+
+    The runner uses this to end a model turn at the tool call, as an agent
+    harness does. Pure function: no model, no AgentTune.
+    """
+    if not text:
+        return False
+    body = text.rstrip()
+    if body.endswith(_CODE_FENCE):
+        body = body[: -len(_CODE_FENCE)].rstrip()
+    if not body.endswith("]"):
+        return False  # cheap exit for almost every token
+    spans = _json_spans(body)
+    if not spans:
+        return False
+    start, end, obj = spans[-1]
+    return end == len(body) and isinstance(obj, list) and bool(obj) and all(_is_call_item(c) for c in obj)
+
+
 def _as_tool_calls(normalised: list[dict] | None) -> list[ToolCall]:
     """AgentTune's normalised call dicts as ToolCall objects."""
     calls = []

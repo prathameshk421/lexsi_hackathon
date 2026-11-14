@@ -43,11 +43,22 @@ def _efficiency_when_correct(t: dict) -> Optional[float]:
     return float(t["efficiency"]) if t["correct"] else None
 
 
+def _answer_in_sql_literal(t: dict) -> Optional[float]:
+    # Old trace files do not have this field. None leaves them out instead of guessing 0.
+    value = t.get("answer_in_sql_literal")
+    return None if value is None else float(value)
+
+
 # key -> (direction, label, per-episode function)
 EPISODE_METRICS: dict[str, tuple[str, str, Callable[[dict], Optional[float]]]] = {
     "accuracy": ("max", "accuracy", lambda t: float(t["correct"])),
     "answered_rate": ("max", "answered rate", lambda t: float(t["answered"])),
     "grounded_rate": ("max", "grounded rate", lambda t: float(t["grounded"])),
+    # An answer given with no query that read a data table: a guess.
+    "unread_answer_rate": ("min", "answered with no table read",
+                           lambda t: float(bool(t["answered"]) and not t["grounded"])),
+    # Suspicion flag from reward.find_support. Not part of the reward.
+    "answer_in_sql_literal_rate": ("min", "answer is a literal in its supporting SQL", _answer_in_sql_literal),
     "no_failed_call_rate": ("max", "episodes with 0 failed calls", lambda t: float(t["cost"]["failed_calls"] == 0)),
     "reward": ("max", "mean reward", lambda t: float(t["reward"])),
     "efficiency": ("max", "mean efficiency", lambda t: float(t["efficiency"])),
@@ -67,7 +78,7 @@ EPISODE_METRICS: dict[str, tuple[str, str, Callable[[dict], Optional[float]]]] =
 }
 
 # Metrics that exist only for some episodes (the rest are defined for every episode).
-CONDITIONAL_METRICS = ("efficiency_when_correct", "latency_s", "completion_tokens")
+CONDITIONAL_METRICS = ("efficiency_when_correct", "answer_in_sql_literal_rate", "latency_s", "completion_tokens")
 
 # Derived from sums, not a mean of per-episode values.
 DERIVED_METRICS: dict[str, tuple[str, str]] = {
@@ -178,6 +189,10 @@ def validate_trace(rec: Any) -> list[str]:
     need("predicted", lambda x: x is None or is_str(x), "a string or null")
     for key in ("answered", "grounded", "correct"):
         need(key, is_bool, "true or false")
+    # Added with the evidence rule. Old trace files do not have them, so they are optional.
+    for key in ("supported", "answer_in_sql_literal"):
+        if key in rec and not is_bool(rec[key]):
+            errs.append(f"{key!r} must be true or false, got {rec[key]!r}"[:200])
     need("efficiency", lambda x: _is_num(x) and 0.0 <= x <= 1.0, "a number in 0..1")
     need("reward", _is_num, "a number")
     need("raw_completion", lambda x: x is None or is_str(x), "a string or null")
@@ -242,6 +257,13 @@ def validate_trace(rec: Any) -> list[str]:
             errs.append(f"cost.tool_calls is {cost['tool_calls']} but steps has {n_tool_steps} tool_call steps")
     if not errs and rec["correct"] and not (rec["answered"] and rec["grounded"]):
         errs.append("correct is true but answered or grounded is false")
+    if not errs and "supported" in rec:
+        if rec["correct"] and not rec["supported"]:
+            errs.append("correct is true but supported is false")
+        if rec["supported"] and not (rec["answered"] and rec["grounded"]):
+            errs.append("supported is true but answered or grounded is false")
+        if rec.get("answer_in_sql_literal") and not rec["supported"]:
+            errs.append("answer_in_sql_literal is true but supported is false")
     return errs
 
 

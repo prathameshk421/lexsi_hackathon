@@ -129,6 +129,41 @@ def test_validation_catches_problems(change, expected):
     assert any(expected in p for p in problems), problems
 
 
+@pytest.mark.parametrize("change, expected", [
+    (lambda t: t.update(supported=False), "supported is false"),
+    (lambda t: t.update(supported="yes"), "supported"),
+    (lambda t: t.update(answer_in_sql_literal=1), "answer_in_sql_literal"),
+    (lambda t: t.update(correct=False, supported=False, answer_in_sql_literal=True), "answer_in_sql_literal is true"),
+    (lambda t: t.update(correct=False, grounded=False), "supported is true but"),
+])
+def test_validation_of_the_evidence_fields(change, expected):
+    trace = make_trace()
+    trace.update(supported=True, answer_in_sql_literal=False)
+    assert M.validate_trace(trace) == []
+    change(trace)
+    problems = M.validate_trace(trace)
+    assert any(expected in p for p in problems), problems
+
+
+def test_old_traces_without_evidence_fields_are_valid():
+    trace = make_trace()
+    assert "supported" not in trace and M.validate_trace(trace) == []
+
+
+def test_unread_answer_and_literal_flag_rates():
+    guess = make_trace("g", correct=False, grounded=False, tool_calls=0, rows=0, vm=0, efficiency=0.0, reward=0.0)
+    flagged = make_trace("f")
+    flagged.update(supported=True, answer_in_sql_literal=True)
+    clean = make_trace("c")
+    clean.update(supported=True, answer_in_sql_literal=False)
+    agg = M.aggregate([guess, flagged, clean])
+    assert agg["metrics"]["unread_answer_rate"] == pytest.approx(1 / 3)  # only the guess answered with no table read
+    assert agg["metrics"]["answer_in_sql_literal_rate"] == pytest.approx(1 / 2)  # the guess has no flag field
+    assert agg["counts"]["answer_in_sql_literal_rate"] == 2
+    assert M.metric_direction("unread_answer_rate") == "min"
+    assert M.metric_direction("answer_in_sql_literal_rate") == "min"
+
+
 def test_validation_rejects_non_object():
     assert M.validate_trace([1, 2]) == ["record is not a JSON object"]
 

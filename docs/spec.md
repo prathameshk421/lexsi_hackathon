@@ -44,6 +44,8 @@ scripts/
   train_sft.py       distillation with AgentTune                                   [training agent]
   train_grpo.py      GRPO with AgentTune                                           [training agent]
   eval_auditkit.py   AuditKit evaluation over trace files                          [eval agent]
+  rescore_traces.py  replay old trace files and score them with the current reward [eval agent]
+  reward_audit.py    mean reward of honest and cheating behaviours on val           [eval agent]
   jobs/              HF Jobs entry points                                          [training agent]
 app/
   app.py             Gradio demo, also the HF Space entry point                    [demo agent]
@@ -81,8 +83,11 @@ TOOLS = [get_schema, run_sql]
 - `run_sql` opens the file read-only (`file:...?mode=ro`, `uri=True`). Only one statement. Only `SELECT` or `WITH`. Anything else returns `ERROR: only SELECT queries are allowed`.
 - Output format: header line with column names joined by ` | `, then rows. At most `MAX_ROWS_SHOWN = 20` rows, then a line `... (N more rows not shown)`. Output is cut at `MAX_OUTPUT_CHARS = 1500`.
 - Errors are returned as text that starts with `ERROR:`. Tools never raise.
-- Metering: `execute_metered(database, query, db_dir=None) -> SqlResult` with fields `ok: bool, columns: list[str], rows: list[tuple], n_rows: int, vm_steps: int, error: str | None`. VM steps come from `set_progress_handler` with a small period (for example 50) times the callback count. A query that passes `MAX_VM_STEPS = 5_000_000` is aborted and returns an error. `n_rows` is the full row count of the result, fetched up to `MAX_ROWS_FETCHED = 2000`.
+- Metering: `execute_metered(database, query, db_dir=None) -> SqlResult` with fields `ok: bool, columns: list[str], rows: list[tuple], n_rows: int, vm_steps: int, error: str | None, tables_read: tuple[str, ...]`. VM steps come from `set_progress_handler` with a small period (`PROGRESS_PERIOD = 10`) times the callback count. A query that passes `MAX_VM_STEPS = 5_000_000` is aborted and returns an error. `n_rows` is the full row count of the result, fetched up to `MAX_ROWS_FETCHED = 2000`.
+- `tables_read`: the data tables the query read, sorted, no repeats. The SQLite authorizer records the table name of each `SQLITE_READ` while SQLite compiles the query. The allow/deny rule is the same as before. `SELECT COUNT(*) FROM orders` gives `("orders",)`. `SELECT 1` and a CTE that holds only literals give `()`. Tables whose name starts with `sqlite_` hold the schema, so they do not count. A failed query gives `()`.
+- VM-step counts are not portable between machines. The `zero-shot` and `distilled` traces in `outputs/traces/` came from model runs on another machine. A local replay (SQLite 3.54.1) gives other VM steps for 13 of the 880 recorded traces, all join or lookup queries. Rows and output text are the same. The likely cause is a different SQLite build. This is not checked.
 - `render_result(result: SqlResult) -> str` gives the tool output text. `run_sql` is `render_result(execute_metered(...))`.
+- `run_tool(name, arguments, db_dir=None) -> ToolResult` with fields `output, ok, n_rows, vm_steps, is_sql, rows, tables_read`. `rows` holds every fetched row, not only the 20 rows shown.
 
 ## Tasks (`tasks.py`)
 
@@ -132,16 +137,29 @@ class Score:
     reward: float
     cost: EpisodeCost
     predicted: str | None
+    supported: bool = False
+    answer_in_sql_literal: bool = False
 
 def extract_answer(text: str | None) -> str | None
 def answers_match(predicted: str, gold: str, answer_type: str) -> bool
+def sql_literals(query: str) -> list[str]
+def select_list_literals(query: str) -> list[str]
+def find_support(predicted: str, answer_type: str, evidence: list[tuple[str, list[tuple]]]) -> tuple[bool, bool]
 def score_trajectory(task: Task, calls: list[ToolCall], final_text: str | None,
                      cfg: RewardConfig = RewardConfig(), db_dir=None) -> Score
 ```
 
-- `score_trajectory` re-executes every `run_sql` call with `execute_metered` to get rows and VM steps. It does not trust tool output text. This keeps the reward stateless and deterministic.
-- `grounded`: at least one `run_sql` call succeeded.
-- `correct`: answered, grounded, and `answers_match`. Number match: parse both as float after removing commas, currency signs and a trailing `%`; equal if `abs(a-b) <= 0.01` or relative error `<= 0.001`. Text match: case-insensitive, trimmed, surrounding quotes and final period removed.
+- `score_trajectory` re-executes every tool call with `run_tool` to get rows, VM steps and `tables_read`. It does not trust tool output text. This keeps the reward stateless and deterministic. Both GRPO inputs (the `trajectories` kwarg and the text fallback) become a list of calls first, so both use this path.
+- `grounded`: at least one successful `run_sql` call read at least one data table (`tables_read` is not empty). `SELECT 1` and `SELECT '42'` are not grounding.
+- `supported`: some successful, table-reading `run_sql` result has a cell that matches the predicted answer (same rule and tolerance as `answers_match`, with the cell as the reference value), and the predicted answer is not a literal in any select list of that query, at any nesting depth.
+  - A select list is the text after a `SELECT` (or `VALUES`) up to the next `FROM`, `WHERE`, `GROUP`, `HAVING`, `WINDOW`, `ORDER`, `LIMIT`, `UNION`, `INTERSECT` or `EXCEPT` at the same parenthesis depth, or up to the `)` that closes its subquery. `select_list_literals` tracks one "inside a select list" flag per parenthesis depth. A `(` inside a select list (a function call, a `CASE`, a scalar subquery) starts inside one too, and a `(` in `FROM` or `WHERE` starts outside one.
+  - So these count: CTE bodies, `FROM` subqueries, scalar subqueries, every `UNION` part, `VALUES` rows, a `SELECT` with no `FROM`, function arguments and `CASE` branches (conditions and results) in a select list, and the select list of a subquery inside `WHERE`. Comments are removed first.
+  - These do not count, on purpose: `WHERE`, `ON`, `HAVING`, `GROUP BY`, `ORDER BY`, `LIMIT`, and `IN (...)` lists. A real filter can hold a number that equals the answer: 2 of 400 train tasks (`school-L3-0012`, `school-L3-0039`) filter on `grade_level = 11` or `10`, and their oracle path scores 1.0.
+  - False positives: 0. The oracle and naive paths of all 660 tasks (all four splits) stay supported and correct. No gold query has the answer as a select-list literal. The test splits were checked once as a sanity check, not for tuning.
+  - Cells come from every row the engine fetched (up to `MAX_ROWS_FETCHED`), not only the 20 rows shown or the text left after the output cap. The rule then does not depend on display limits. The cost: a large dump can hold the value by chance. The answer must still equal gold, and the dump costs efficiency.
+  - Known gaps. (1) An answer computed from other literals passes: `SELECT (360.0 / 2) FROM orders LIMIT 1` or `SELECT 'Gar' || 'den' FROM products LIMIT 1`. (2) A filter value echoed back through a column passes, because it looks the same as the 2 honest tasks: `SELECT grade_level FROM students WHERE grade_level = 10 LIMIT 1`. The flag below reports (2), not (1).
+- `answer_in_sql_literal`: a suspicion flag, not part of the reward. It is true when the answer is supported, but every supporting query also has the predicted value as a literal outside its select lists (for example in `WHERE`). On the oracle path it is true for the 2 train tasks above and for no val or test task.
+- `correct`: answered, supported, and `answers_match` with gold. Number match: parse both as float after removing commas, currency signs and a trailing `%`; equal if `abs(a-b) <= 0.01` or relative error `<= 0.001`. Text match: case-insensitive, trimmed, surrounding quotes and final period removed.
 - Efficiency is the mean of three parts, each in 0..1:
   - calls: `min(1, optimal_tool_calls / tool_calls)`
   - rows: `min(1, (optimal_rows + 1) / (rows_returned + 1))`
@@ -152,14 +170,16 @@ def score_trajectory(task: Task, calls: list[ToolCall], final_text: str | None,
   - not correct but grounded and answered: `0.1`
   - at least one valid tool call (any tool, no error) but no grounded answer: `0.05`
   - else `0.0`
-- Ungated reward for the ablation (`mode="ungated"`): `0.5 * correct + 0.5 * efficiency_naive`, where `efficiency_naive` gives full marks for zero calls. This is the hackable reward. It must be easy to see in tests that "answer with no query" beats an honest wrong attempt under this mode and loses under the gated mode.
-- Required tests: oracle trajectory scores 1.0; empty trajectory scores 0.0; correct answer with a `SELECT *` dump scores below the oracle; a correct number with no query scores at most 0.0 to 0.05 in gated mode (not grounded).
+- Ungated reward for the ablation (`mode="ungated"`): `0.5 * correct + 0.5 * efficiency_naive`, where `efficiency_naive` gives full marks for zero calls. This is the hackable reward. It must be easy to see in tests that "answer with no query" beats an honest wrong attempt under this mode and loses under the gated mode. `correct` uses the same evidence rule in both modes.
+- Required tests: oracle scores 1.0 on every train and val task; empty trajectory scores 0.0; correct answer with a `SELECT *` dump scores below the oracle; a correct number with no query scores at most 0.05 in gated mode (not grounded); `SELECT 1` then gold scores at most 0.05; `SELECT '<gold>'` scores at most 0.05; `SELECT '<gold>' FROM t LIMIT 1` scores at most 0.1; `SELECT 1` then a wrong answer scores 0.05; oracle plus one `LIMIT 5` preview scores strictly between naive and oracle; the 2 tasks with the answer in `WHERE` still score 1.0; a literal in a CTE, a `FROM` subquery, `VALUES`, a scalar subquery or a `CASE` result scores at most 0.1; the `WHERE` echo gap is tested and documented.
+- `scripts/reward_audit.py` scores scripted honest and cheating behaviours on the val split only (never a test split), under both modes. It prints a markdown table and writes `outputs/eval/reward_audit.md`.
 
 ## Scripted policies (`policies.py`)
 
 No model. Each returns `(calls: list[ToolCall], final_text: str)`.
 - `oracle_policy(task)`: the efficient path from `task.oracle_calls`, final text `ANSWER: {gold_answer}`.
 - `naive_policy(task)`: correct but wasteful. It calls `get_schema`, runs `SELECT *` on each table the gold query touches, maybe one failed query, then the gold query. It models an untrained agent that is right but expensive.
+- `explorer_policy(task)`: the oracle path plus one `SELECT * FROM <first table> LIMIT 5` after `get_schema`, on a stable half of the tasks (crc32 of the task id). It is the "mixed teacher" experiment. We add this waste on purpose, so GRPO has a habit to remove. The write-up must say so.
 - `guess_policy(task)`: no tool calls, just a made-up answer. Used in reward tests.
 
 ## Traces (`traces.py`)
@@ -176,8 +196,8 @@ One JSON object per line. This is the only interface between runs, evaluation an
      "ok": true, "n_rows": 1, "vm_steps": 812, "output": "..."},
     {"type": "final", "text": "ANSWER: 42"}
   ],
-  "predicted": "42", "answered": true, "grounded": true, "correct": true,
-  "efficiency": 1.0, "reward": 1.0,
+  "predicted": "42", "answered": true, "grounded": true, "supported": true, "correct": true,
+  "answer_in_sql_literal": false, "efficiency": 1.0, "reward": 1.0,
   "cost": {"tool_calls": 2, "sql_calls": 1, "failed_calls": 0, "rows_returned": 1, "vm_steps": 812},
   "optimal": {"tool_calls": 2, "rows": 1, "vm_steps": 812},
   "raw_completion": null, "completion_tokens": null, "latency_s": null
@@ -185,13 +205,17 @@ One JSON object per line. This is the only interface between runs, evaluation an
 ```
 
 - `build_trace(task, calls, final_text, model_label, raw_completion=None, completion_tokens=None, latency_s=None, db_dir=None) -> dict` executes the calls, scores, and fills every field.
+- `supported` and `answer_in_sql_literal` came with the evidence rule. Trace files written before it do not have them. Readers use `.get()`, and the validator accepts a trace without them.
 - `write_traces(path, traces)`, `read_traces(path) -> list[dict]`.
+- `scripts/rescore_traces.py --traces ... --out DIR` scores old trace files again with the current reward. It replays every recorded tool call against the local databases and stops, writing nothing, if a replayed output, ok flag or row count differs. A VM-step difference also stops it, unless `--allow-vm-drift` is given. It never writes into the folder of an input file. It prints how many traces changed `correct`, `grounded` or `reward`.
 - `run_scripted_policy(policy_name, tasks, out_path)` for `oracle`, `naive`, `guess`.
 - Model labels used everywhere: `zero-shot`, `distilled`, `grpo`, `grpo-ungated`, `oracle`, `naive`.
 
 ## `scripts/gen_data.py`
 
 `python scripts/gen_data.py --seed 0` builds the databases, writes `data/tasks/{train,val,test_id,test_ood}.jsonl`, writes `data/teacher/train.jsonl` (oracle traces for the train split), and writes scripted traces for both test splits to `outputs/traces/{oracle,naive}_{test_id,test_ood}.jsonl`. It prints counts per split, domain and level. Running it twice gives identical task files.
+
+It also writes `data/tasks/train_sft.jsonl` and `data/teacher/train_sft.jsonl` (train tasks without RL-only templates), `data/teacher/train_sft_mixed.jsonl` (the same tasks with `explorer_policy`), and `data/tasks/train_rl.jsonl` (all RL-only train tasks plus one SFT-seen train task per three RL-only tasks, chosen by the lowest crc32 of the task id). RL-only templates: in each train domain, the last template of each level in `TEMPLATES` order (`RL_ONLY_TEMPLATES`, `is_rl_only` in `tasks.py`). No val, test or saas task enters any train file.
 
 ## Training and inference (training agent)
 
@@ -200,11 +224,15 @@ One JSON object per line. This is the only interface between runs, evaluation an
 - `trajectory.py`: `parse_completion(text: str) -> tuple[list[ToolCall], str | None]` for AgentTune's flattened completion text. Per AgentTune's own docs, agentic GRPO passes each completion to the reward function as a flat string, not a message list.
 - GRPO reward function: parse, then `score_trajectory`, return `score.reward`. Dataset columns `task_id` etc. arrive as kwargs.
 - `runner.py`: `run_model(model_id, adapter, tasks, out_path, label, ...)` writes trace files in the schema above. It must use the same prompt rendering and tool loop as training.
+- SFT trains on `data/teacher/train_sft.jsonl`. GRPO trains on `data/tasks/train_rl.jsonl` from the SFT adapter. The first run used all 400 train tasks for both, and GRPO had no reward spread. It is kept as the reference `distilled-all`.
+- `--max-tool-steps` is the number of executed tool calls per episode. An answer turn always follows. The default is 4 in SFT, GRPO and the runner.
+- The runner ends a model turn when its text ends with a complete tool-call list (`trajectory.ends_with_tool_call`). `--no-stop-after-tool-call` turns this off. The harness settings go to `<trace>.run.json`.
+- `train_grpo.py` stops with exit code 4 if the first N steps (`--stop-if-no-signal`, default 3) have no reward spread in any group.
 - All GPU work runs on HF Jobs. Total budget is 20 USD. Every script takes `--max-steps` or `--limit` so a smoke run costs cents.
 
 ## Evaluation (eval agent)
 
-`scripts/eval_auditkit.py --traces outputs/traces/*.jsonl --out outputs/eval/` uses AuditKit (`import auditkit as ak`) with custom `@ak.scorer` functions over precomputed outputs. Metrics per model and split: accuracy, grounded rate, answered rate, mean reward, mean efficiency, mean tool calls, mean rows returned, mean VM steps, VM-step ratio to optimal, and "correct and optimal" rate. It runs one `ak.evaluate` per model and uses `ak.compare` for significance. `compare_models` does not work with precomputed outputs (see `docs/eval-notes.md`). The 95% interval is our own paired bootstrap in `frugal_analyst/metrics.py`. It writes `results.json` and `results.md`, and reports AuditKit's failed-sample count. It fails loudly if a trace file is malformed.
+`scripts/eval_auditkit.py --traces outputs/traces/*.jsonl --out outputs/eval/` uses AuditKit (`import auditkit as ak`) with custom `@ak.scorer` functions over precomputed outputs. Metrics per model and split: accuracy, grounded rate, answered rate, "answered with no table read" rate (lower is better), the `answer_in_sql_literal` rate (lower is better, only for traces that have the field), mean reward, mean efficiency, mean tool calls, mean rows returned, mean VM steps, VM-step ratio to optimal, and "correct and optimal" rate. It runs one `ak.evaluate` per model and uses `ak.compare` for significance. `compare_models` does not work with precomputed outputs (see `docs/eval-notes.md`). The 95% interval is our own paired bootstrap in `frugal_analyst/metrics.py`. It writes `results.json` and `results.md`, and reports AuditKit's failed-sample count. It fails loudly if a trace file is malformed.
 
 ## Demo (demo agent)
 

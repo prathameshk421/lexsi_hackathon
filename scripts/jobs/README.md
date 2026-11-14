@@ -127,11 +127,70 @@ hf jobs uv run --flavor a10g-small --timeout 3h --secrets HF_TOKEN \
 Same as step 3 with `--run-name grpo-ungated` and `--reward-mode ungated`, then
 step 4 with `--trace-label grpo-ungated` and `--adapters ...:sft/adapter,...:grpo-ungated/adapter`.
 
+### 6. Pipeline with RL-only templates (use this one now)
+
+The first GRPO run got reward 1.0 on every rollout and gradient 0: SFT had
+seen every train template. `scripts/gen_data.py` now also writes:
+
+| File | Content |
+|---|---|
+| `data/tasks/train_sft.jsonl`, `data/teacher/train_sft.jsonl` | 274 train tasks, no RL-only template |
+| `data/tasks/train_rl.jsonl` | 168 tasks: all 126 RL-only train tasks plus 42 SFT-seen tasks to check for forgetting |
+
+RL-only means the last template of each level in each train domain
+(`RL_ONLY_TEMPLATES` in `frugal_analyst/tasks.py`). 38 of the 120 test_id tasks
+come from those templates.
+
+Smoke each step first (add `--smoke`, change `--run-name`).
+
+```bash
+# 6a. SFT on train_sft only
+hf jobs uv run --flavor a10g-small --timeout 2h --secrets HF_TOKEN \
+    scripts/jobs/frugal_job.py --step sft --run-name sft-rlsplit $COMMON \
+    --extra "--teacher data/teacher/train_sft.jsonl --epochs 2 --lr 2e-4 --lora-r 16 --batch-size 2 --grad-accum 8"
+
+# 6b. GRPO on train_rl, on top of that adapter
+hf jobs uv run --flavor a10g-small --timeout 4h --secrets HF_TOKEN \
+    scripts/jobs/frugal_job.py --step grpo --run-name grpo-rlsplit \
+    --init-adapter YOU/frugal-runs:sft-rlsplit/adapter $COMMON \
+    --extra "--tasks data/tasks/train_rl.jsonl --max-steps 40 --num-generations 4 --batch-size 4 --grad-accum 4 --lr 1e-5 --beta 0.04 --temperature 0.8 --max-completion-length 256 --max-tool-steps 4 --reward-mode gated --stop-if-no-signal 3"
+
+# 6c. Evaluations (all with the same harness: stop after a tool call, 4 tool steps)
+hf jobs uv run --flavor a10g-small --timeout 3h --secrets HF_TOKEN \
+    scripts/jobs/frugal_job.py --step baseline --run-name zero-shot-stop $COMMON
+hf jobs uv run --flavor a10g-small --timeout 3h --secrets HF_TOKEN \
+    scripts/jobs/frugal_job.py --step eval --run-name eval-distilled-rlsplit --trace-label distilled \
+    --adapters YOU/frugal-runs:sft-rlsplit/adapter $COMMON
+hf jobs uv run --flavor a10g-small --timeout 3h --secrets HF_TOKEN \
+    scripts/jobs/frugal_job.py --step eval --run-name eval-grpo-rlsplit --trace-label grpo \
+    --adapters YOU/frugal-runs:sft-rlsplit/adapter,YOU/frugal-runs:grpo-rlsplit/adapter $COMMON
+```
+
+Notes:
+
+- No-signal guard. If no GRPO group has any reward spread in each of the first
+  3 optimizer steps, `train_grpo.py` stops, saves no adapter and exits with
+  code 4. The job then shows `status=4` in `job_info.txt` and still uploads
+  `reward_log.jsonl` and `trajectories.jsonl`. `--stop-if-no-signal 0` turns it off.
+- New GRPO flags, all real `GRPOConfig` fields in trl 1.7.1: `--top-p`
+  (default 0.95, AgentTune's default), `--scale-rewards {group,batch,none}`
+  (default group), `--loss-type` (default dapo), `--epsilon-high` (default:
+  same as epsilon, 0.2). The script prints the resolved config and stops if
+  one did not take effect. These are untested suggestions, not measured
+  results: `--scale-rewards batch` (with group scaling, a gap of 0.01 in
+  efficiency inside a group becomes a full-size advantage) and
+  `--epsilon-high 0.28` (DAPO's value).
+- Evaluation harness. The runner now ends a model turn as soon as it ends with
+  a complete tool call, for every model. `--extra "--no-stop-after-tool-call"`
+  gives the old behaviour. Each trace file gets a `<name>.run.json` next to it
+  with the harness settings. The runner default for `--max-tool-steps` is now 4,
+  the same as GRPO (it was 5).
+
 ### Get the results back
 
 ```bash
 hf download YOU/frugal-runs --local-dir outputs/hub-runs
-cp outputs/hub-runs/*/traces/*.jsonl outputs/traces/
+cp outputs/hub-runs/*/traces/*.jsonl outputs/hub-runs/*/traces/*.run.json outputs/traces/
 ```
 
 ## Cost estimate

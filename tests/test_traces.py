@@ -12,7 +12,8 @@ ensure_dbs()
 
 TOP_KEYS = [
     "task_id", "domain", "level", "split", "question", "gold_answer", "answer_type", "model", "steps",
-    "predicted", "answered", "grounded", "correct", "efficiency", "reward", "cost", "optimal",
+    "predicted", "answered", "grounded", "supported", "correct", "answer_in_sql_literal", "efficiency", "reward",
+    "cost", "optimal",
     "raw_completion", "completion_tokens", "latency_s",
 ]
 
@@ -27,7 +28,8 @@ def test_oracle_trace_has_every_field(splits):
     trace = build_trace(task, *oracle_policy(task), "oracle")
     assert list(trace) == TOP_KEYS
     assert trace["task_id"] == task.id and trace["split"] == "test_id" and trace["model"] == "oracle"
-    assert trace["correct"] and trace["grounded"] and trace["answered"]
+    assert trace["correct"] and trace["grounded"] and trace["answered"] and trace["supported"]
+    assert trace["answer_in_sql_literal"] is False
     assert trace["efficiency"] == 1.0 and trace["reward"] == 1.0
     assert trace["predicted"] == task.gold_answer
     assert trace["optimal"] == {"tool_calls": task.optimal_tool_calls, "rows": task.optimal_rows, "vm_steps": task.optimal_vm_steps}
@@ -71,6 +73,26 @@ def test_failed_call_is_recorded(splits):
     assert trace["cost"]["failed_calls"] == 1
 
 
+def test_literal_cheat_trace_is_not_supported(splits):
+    task = splits["val"][0]
+    query = f"SELECT '{task.gold_answer}' FROM {task.gold_sql.split(' FROM ')[1].split()[0]} LIMIT 1"
+    trace = build_trace(task, [ToolCall("run_sql", {"database": task.domain, "query": query})],
+                        f"ANSWER: {task.gold_answer}", "grpo")
+    assert trace["grounded"] and not trace["supported"] and not trace["correct"] and trace["reward"] == 0.1
+
+
+def test_old_trace_without_new_fields_is_still_readable_and_valid(tmp_path, splits):
+    from frugal_analyst.metrics import aggregate, validate_trace
+
+    trace = build_trace(splits["val"][0], *oracle_policy(splits["val"][0]), "oracle")
+    del trace["supported"], trace["answer_in_sql_literal"]
+    write_traces(tmp_path / "old.jsonl", [trace])
+    (old,) = read_traces(tmp_path / "old.jsonl")
+    assert validate_trace(old) == []
+    agg = aggregate([old])
+    assert agg["metrics"]["answer_in_sql_literal_rate"] is None and agg["counts"]["answer_in_sql_literal_rate"] == 0
+
+
 def test_write_and_read_round_trip(tmp_path, splits):
     traces = [build_trace(t, *oracle_policy(t), "oracle") for t in splits["val"][:5]]
     path = tmp_path / "deep" / "t.jsonl"
@@ -106,7 +128,27 @@ def test_scripted_traces_are_byte_identical_across_runs(tmp_path, splits):
 def test_unknown_policy_name(tmp_path, splits):
     with pytest.raises(ValueError):
         run_scripted_policy("magic", splits["val"][:1], tmp_path / "x.jsonl")
-    assert set(POLICIES) == {"oracle", "naive", "guess"}
+    assert set(POLICIES) == {"oracle", "naive", "explorer", "guess"}
+
+
+def test_explorer_policy_adds_one_preview_on_about_half_of_the_tasks(tmp_path, splits):
+    from frugal_analyst.policies import explorer_policy
+
+    tasks = splits["train"]
+    extra = 0
+    for task in tasks:
+        calls, text = explorer_policy(task)
+        oracle_calls, oracle_text = oracle_policy(task)
+        assert text == oracle_text
+        assert len(calls) - len(oracle_calls) in (0, 1) and len(calls) <= 4
+        if len(calls) > len(oracle_calls):
+            extra += 1
+            assert calls[1].arguments["query"].endswith("LIMIT 5")
+            assert calls[:1] + calls[2:] == oracle_calls  # the rest is the oracle path
+    assert 0.4 < extra / len(tasks) < 0.6
+    # Correct on every task, and never better than the oracle.
+    traces = run_scripted_policy("explorer", tasks[:40], tmp_path / "e.jsonl")
+    assert all(t["correct"] and 0.5 < t["reward"] <= 1.0 for t in traces)
 
 
 def test_naive_policy_shape(splits):

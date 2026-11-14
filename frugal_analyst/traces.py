@@ -1,6 +1,9 @@
 """Trace records: the only interface between runs, evaluation and the demo.
 
 One JSON object per line. See docs/spec.md for the schema.
+
+Trace files written before the evidence rule have no `supported` and no
+`answer_in_sql_literal` field. Readers must use `.get()` for those two fields.
 """
 
 from __future__ import annotations
@@ -41,7 +44,8 @@ def build_trace(
         "question": task.question, "gold_answer": task.gold_answer, "answer_type": task.answer_type,
         "model": model_label,
         "steps": steps,
-        "predicted": score.predicted, "answered": score.answered, "grounded": score.grounded, "correct": score.correct,
+        "predicted": score.predicted, "answered": score.answered, "grounded": score.grounded,
+        "supported": score.supported, "correct": score.correct, "answer_in_sql_literal": score.answer_in_sql_literal,
         "efficiency": score.efficiency, "reward": score.reward,
         "cost": {
             "tool_calls": score.cost.tool_calls, "sql_calls": score.cost.sql_calls, "failed_calls": score.cost.failed_calls,

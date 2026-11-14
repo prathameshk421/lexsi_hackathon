@@ -153,6 +153,46 @@ def test_format_number():
     assert env.format_number(12.5) == "12.5"
 
 
+@pytest.mark.parametrize("query, tables", [
+    ("SELECT COUNT(*) FROM orders", ("orders",)),
+    ("SELECT 1", ()),
+    ("SELECT 'Garden'", ()),
+    ("WITH t AS (SELECT 1 AS x) SELECT x FROM t", ()),
+    ("WITH t AS (SELECT quantity FROM orders) SELECT COUNT(*) FROM t", ("orders",)),
+    ("SELECT 1 FROM orders WHERE 0", ("orders",)),
+    ("SELECT o.order_id FROM orders o JOIN customers c ON c.customer_id = o.customer_id LIMIT 1", ("customers", "orders")),
+    ("SELECT (SELECT COUNT(*) FROM products)", ("products",)),
+    ("SELECT name FROM sqlite_master", ()),  # schema tables are not data tables
+])
+def test_tables_read(query, tables):
+    r = env.execute_metered("retail", query)
+    assert r.ok, r.error
+    assert r.tables_read == tables
+
+
+def test_tables_read_is_empty_for_refused_and_failed_queries():
+    for query in ("DELETE FROM orders", "SELECT nope FROM orders", "PRAGMA table_info(orders)"):
+        r = env.execute_metered("retail", query)
+        assert not r.ok and r.tables_read == ()
+
+
+def test_run_tool_carries_rows_and_tables_read():
+    r = env.run_tool("run_sql", {"database": "retail", "query": "SELECT order_id FROM orders"})
+    assert r.ok and r.tables_read == ("orders",)
+    assert len(r.rows) == env.MAX_ROWS_FETCHED == r.n_rows  # every fetched row, not only the 20 shown
+    assert r.output.count("\n") == env.MAX_ROWS_SHOWN + 1
+    schema = env.run_tool("get_schema", {"database": "retail"})
+    assert schema.rows == [] and schema.tables_read == ()
+
+
+def test_recording_authorizer_keeps_the_deny_rule():
+    tables = set()
+    check = env._recording_authorizer(tables)
+    for action in range(0, 40):
+        assert check(action, "orders", None, "main", None) == env._authorizer(action)
+    assert tables == {"orders"}  # only SQLITE_READ records a table
+
+
 def test_run_tool_rejects_unknown_arguments():
     from frugal_analyst.env import run_tool
     bad = run_tool("run_sql", {"database": "retail", "query": "SELECT 1", "limit": 5})

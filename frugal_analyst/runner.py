@@ -5,6 +5,11 @@ The tool loop is AgentTune's own (`create_rollout_fn` with a
 prompt rendering, the tool-call parser and the tool-result format are the same
 at training time and at evaluation time.
 
+By default a model turn stops as soon as it ends with a complete tool-call
+list (`make_engine`). This applies to every model the runner evaluates.
+`--no-stop-after-tool-call` restores the old behaviour. The setting is written
+to `<out>.run.json` next to the trace file.
+
 Example:
     python -m frugal_analyst.runner --model CohereLabs/tiny-aya-global \
         --tasks data/tasks/test_id.jsonl --out outputs/traces/zero-shot_test_id.jsonl \
@@ -18,6 +23,7 @@ weights in order. A GRPO adapter trained on top of the SFT adapter needs both:
 from __future__ import annotations
 
 import argparse
+import json
 import os
 import sys
 import time
@@ -27,12 +33,14 @@ from typing import Any
 from .env import TOOLS
 from .tasks import Task, load_tasks
 from .traces import build_trace, write_traces
-from .trajectory import build_prompt_messages, calls_from_trajectory
+from .trajectory import build_prompt_messages, calls_from_trajectory, ends_with_tool_call
 
-# One generation per tool round plus the final answer. The efficient path
-# needs 2 or 3 calls, so 5 leaves room for a retry without letting a looping
-# model run forever.
-DEFAULT_MAX_TOOL_STEPS = 5
+# AgentTune's `max_steps` is the number of tool rounds it executes. After the
+# last round it always generates one more turn for the answer
+# (rollout_factory.py:2311-2417 and 2491-2521). So 4 means up to 4 executed
+# calls and then an answer: the 3-call efficient path plus one retry. SFT, GRPO
+# and the runner all use this value, so training and evaluation use one harness.
+DEFAULT_MAX_TOOL_STEPS = 4
 DEFAULT_MAX_NEW_TOKENS = 256  # per model turn, not per episode
 
 # Projection modules of Cohere2 (Tiny Aya). peft has no default LoRA targets for
@@ -132,15 +140,85 @@ def load_model(model_id: str, adapters: list[str] | None = None, device: str = "
 # ---------------------------------------------------------------------------
 
 
-def build_rollout_fn(model, tok, max_tool_steps: int = DEFAULT_MAX_TOOL_STEPS):
-    """AgentTune's tool loop over a transformers model. Defaults for the tool
-    prompt and tool-result format are AgentTune's, the same as in GRPO."""
-    from agenttune.agentic.rollout_engines.rollout_factory import create_rollout_fn
+def make_tool_call_stop(tok, prompt_len: int):
+    """A transformers StoppingCriteria that ends a turn once it ends with a tool-call list.
+
+    Zero-shot Tiny Aya writes more text after its own call in the same turn,
+    often a fake "Tool result: 1\nANSWER: 1". That fake text stays in the
+    context of later turns. An agent harness ends the turn at the call, so the
+    runner does too. `prompt_len` is the prompt length in tokens.
+    """
+    import torch
+    from transformers import StoppingCriteria
+
+    class StopAfterToolCall(StoppingCriteria):
+        def __init__(self):
+            self.fired = False
+
+        def __call__(self, input_ids, scores, **kwargs):
+            # Batch size is 1 in the runner (one episode per generate call).
+            last = tok.decode(input_ids[0, -1:], skip_special_tokens=True)
+            done = False
+            if "]" in last:  # a list can only close on a token with "]"
+                done = ends_with_tool_call(tok.decode(input_ids[0, prompt_len:], skip_special_tokens=True))
+            self.fired = self.fired or done
+            return torch.full((input_ids.shape[0],), done, dtype=torch.bool, device=input_ids.device)
+
+    return StopAfterToolCall()
+
+
+def make_engine(model, tok, stop_after_tool_call: bool = True):
+    """AgentTune's TransformersRolloutEngine, plus an optional stop after a tool call.
+
+    The engine calls `self.model.generate(...)` with fixed arguments and has no
+    way to pass a StoppingCriteria. So for each turn we wrap `model.generate`
+    on the instance, add the criteria, and remove the wrapper afterwards.
+    The engine then decodes only the tokens up to the stop, so the assistant
+    turn kept in the conversation ends at the tool call.
+    """
     from agenttune.agentic.rollout_engines.transformers_engine import TransformersRolloutEngine
+    from transformers import StoppingCriteriaList
+
+    class FrugalEngine(TransformersRolloutEngine):
+        def __init__(self, *args, **kwargs):
+            super().__init__(*args, **kwargs)
+            self.stop_after_tool_call = stop_after_tool_call
+            self.stats = {"turns": 0, "stopped_after_tool_call": 0}
+
+        def generate(self, prompts, tools, gen_cfg):
+            self.stats["turns"] += 1
+            if not self.stop_after_tool_call:
+                return super().generate(prompts, tools, gen_cfg)
+            original = self.model.generate
+            stops = []
+
+            def generate_with_stop(*args, **kwargs):
+                stop = make_tool_call_stop(self.tokenizer, kwargs["input_ids"].shape[1])
+                stops.append(stop)
+                criteria = StoppingCriteriaList(list(kwargs.pop("stopping_criteria", None) or []) + [stop])
+                return original(*args, stopping_criteria=criteria, **kwargs)
+
+            self.model.generate = generate_with_stop
+            try:
+                return super().generate(prompts, tools, gen_cfg)
+            finally:
+                del self.model.generate  # back to the class method
+                self.stats["stopped_after_tool_call"] += sum(s.fired for s in stops)
+
+    return FrugalEngine(model, tok)
+
+
+def build_rollout_fn(model, tok, max_tool_steps: int = DEFAULT_MAX_TOOL_STEPS, stop_after_tool_call: bool = True):
+    """AgentTune's tool loop over a transformers model. Defaults for the tool
+    prompt and tool-result format are AgentTune's, the same as in GRPO.
+    The engine is on `rollout_fn.engine`, its counters on `rollout_fn.engine.stats`."""
+    from agenttune.agentic.rollout_engines.rollout_factory import create_rollout_fn
 
     model.generation_config.eos_token_id = stop_token_ids(model, tok)
-    engine = TransformersRolloutEngine(model, tok)
-    return create_rollout_fn(rollout_engine=engine, tools=list(TOOLS), max_steps=max_tool_steps)
+    engine = make_engine(model, tok, stop_after_tool_call)
+    rollout_fn = create_rollout_fn(rollout_engine=engine, tools=list(TOOLS), max_steps=max_tool_steps)
+    rollout_fn.engine = engine
+    return rollout_fn
 
 
 def run_episode(rollout_fn, tok, task: Task, gen_kwargs: dict) -> dict[str, Any]:
@@ -178,11 +256,15 @@ def run_model(
     device: str | None = None,
     dtype: str | None = None,
     db_dir: str | Path | None = None,
+    stop_after_tool_call: bool = True,
 ) -> list[dict]:
     """Run the model over `tasks`, write one trace per task to `out_path`, return the traces.
 
     Episodes run one at a time: AgentTune's loop handles one conversation per
     generate() call, and its threaded mode is not safe on one shared model.
+
+    The harness settings go to `run_log_path(out_path)`, a JSON file next to
+    the traces, so a reader can tell which harness produced a trace file.
     """
     import torch
     from transformers import set_seed
@@ -193,11 +275,13 @@ def run_model(
     tasks = tasks[:limit] if limit else tasks
     adapters = split_adapters(adapter)
     print(f"[runner] model={model_id} adapters={adapters} device={device} dtype={torch_dtype} tasks={len(tasks)}")
+    print(f"[runner] harness: stop_after_tool_call={stop_after_tool_call} max_tool_steps={max_tool_steps} "
+          f"max_new_tokens={max_new_tokens} temperature={temperature}")
 
     tok = load_tokenizer(model_id)
     model = load_model(model_id, adapters, device, torch_dtype)
     model.eval()
-    rollout_fn = build_rollout_fn(model, tok, max_tool_steps)
+    rollout_fn = build_rollout_fn(model, tok, max_tool_steps, stop_after_tool_call)
 
     gen_kwargs: dict[str, Any] = {"max_new_tokens": max_new_tokens}
     if temperature and temperature > 0:
@@ -227,11 +311,28 @@ def run_model(
         if n % 10 == 0:
             write_traces(out_path, traces)  # partial results survive a crash
     write_traces(out_path, traces)
+    run_log = {
+        "label": label, "model": model_id, "adapters": adapters, "n_tasks": len(tasks), "failures": failures,
+        "harness": {
+            "stop_after_tool_call": stop_after_tool_call, "max_tool_steps": max_tool_steps,
+            "max_new_tokens": max_new_tokens, "temperature": temperature, "seed": seed,
+        },
+        "engine_stats": dict(rollout_fn.engine.stats),
+    }
+    run_log_path(out_path).write_text(json.dumps(run_log, indent=2) + "\n", encoding="utf-8")
+    print(f"[runner] run log: {json.dumps(run_log)}")
     if traces:
         acc = sum(t["correct"] for t in traces) / len(traces)
         mean_reward = sum(t["reward"] for t in traces) / len(traces)
         print(f"[runner] wrote {len(traces)} traces to {out_path}: accuracy={acc:.3f} mean_reward={mean_reward:.3f} failures={failures}")
     return traces
+
+
+def run_log_path(out_path: str | Path) -> Path:
+    """`x/zero-shot_test_id.jsonl` -> `x/zero-shot_test_id.run.json`. Not a .jsonl,
+    so trace globs (eval_auditkit.py, the app) do not pick it up."""
+    out_path = Path(out_path)
+    return out_path.with_name(out_path.name.removesuffix(".jsonl") + ".run.json")
 
 
 def main(argv: list[str] | None = None) -> None:
@@ -248,12 +349,14 @@ def main(argv: list[str] | None = None) -> None:
     p.add_argument("--limit", type=int, default=None)
     p.add_argument("--device", default=None, help="cuda, mps or cpu (default: best available)")
     p.add_argument("--dtype", default=None, choices=["bf16", "fp16", "fp32"])
+    p.add_argument("--no-stop-after-tool-call", action="store_true",
+                   help="let a model turn run on after a complete tool call (the old harness)")
     args = p.parse_args(argv)
     run_model(
         args.model, args.adapter, load_tasks(args.tasks), args.out, args.label,
         max_new_tokens=args.max_new_tokens, max_tool_steps=args.max_tool_steps,
         temperature=args.temperature, seed=args.seed, limit=args.limit,
-        device=args.device, dtype=args.dtype,
+        device=args.device, dtype=args.dtype, stop_after_tool_call=not args.no_stop_after_tool_call,
     )
 
 

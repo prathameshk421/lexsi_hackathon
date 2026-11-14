@@ -26,6 +26,9 @@ recorded rows. See docs/training-notes.md.
 Example (smoke test on CPU):
     python scripts/train_sft.py --model HuggingFaceTB/SmolLM2-135M-Instruct \
         --limit 8 --max-steps 3 --out outputs/smoke/sft --device cpu
+
+For the SFT-then-GRPO pipeline, train on the SFT subset so GRPO gets templates
+SFT never saw: `--teacher data/teacher/train_sft.jsonl`.
 """
 
 from __future__ import annotations
@@ -198,7 +201,8 @@ class ExactFormatSFTFactory:
 def main(argv: list[str] | None = None) -> None:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--model", default="CohereLabs/tiny-aya-global")
-    p.add_argument("--teacher", default=str(REPO_ROOT / "data/teacher/train.jsonl"))
+    p.add_argument("--teacher", default=str(REPO_ROOT / "data/teacher/train.jsonl"),
+                   help="teacher traces; data/teacher/train_sft.jsonl leaves the RL-only templates for GRPO")
     p.add_argument("--out", default=str(REPO_ROOT / "outputs/sft"))
     p.add_argument("--epochs", type=float, default=2.0)
     p.add_argument("--max-steps", type=int, default=-1, help="optimizer steps; -1 means use --epochs")

@@ -34,6 +34,9 @@ class SqlResult:
     n_rows: int = 0
     vm_steps: int = 0
     error: str | None = None
+    # Data tables the query read, from the SQLite authorizer. Sorted, no repeats.
+    # The reward uses it: an answer must come from a query that read real data.
+    tables_read: tuple[str, ...] = ()
 
 
 # ---------------------------------------------------------------------------
@@ -118,6 +121,27 @@ def _authorizer(action, *_args) -> int:
     return sqlite3.SQLITE_OK if action in _ALLOWED_ACTIONS else sqlite3.SQLITE_DENY
 
 
+def _is_data_table(name: object) -> bool:
+    # sqlite_master and the other sqlite_* tables hold the schema, not data.
+    return isinstance(name, str) and name != "" and not name.lower().startswith("sqlite_")
+
+
+def _recording_authorizer(tables: set):
+    """The same allow/deny rule as `_authorizer`, plus a record of each data table read.
+
+    SQLite calls the authorizer while it compiles the query. For SQLITE_READ the
+    first argument is the real table name. A CTE or a subquery is not a table,
+    so a literal-only CTE reports nothing. `COUNT(*) FROM t` reports `t` once
+    with an empty column name.
+    """
+    def check(action, arg1, *_rest) -> int:
+        if action == sqlite3.SQLITE_READ and _is_data_table(arg1):
+            tables.add(arg1)
+        return _authorizer(action)
+
+    return check
+
+
 # ---------------------------------------------------------------------------
 # Metered execution
 # ---------------------------------------------------------------------------
@@ -135,6 +159,7 @@ def execute_metered(database: str, query: str, db_dir: str | Path | None = None)
     if error:
         return _fail(error)
     steps = [0]
+    tables: set[str] = set()
 
     def on_progress() -> int:
         steps[0] += 1
@@ -144,12 +169,13 @@ def execute_metered(database: str, query: str, db_dir: str | Path | None = None)
     try:
         path = ensure_db(database, db_dir)
         conn = sqlite3.connect(f"{path.resolve().as_uri()}?mode=ro", uri=True)
-        conn.set_authorizer(_authorizer)
+        conn.set_authorizer(_recording_authorizer(tables))
         conn.set_progress_handler(on_progress, PROGRESS_PERIOD)
         cursor = conn.execute(statement)
         columns = [d[0] for d in cursor.description or []]
         rows = [tuple(r) for r in cursor.fetchmany(MAX_ROWS_FETCHED)]
-        return SqlResult(ok=True, columns=columns, rows=rows, n_rows=len(rows), vm_steps=steps[0] * PROGRESS_PERIOD)
+        return SqlResult(ok=True, columns=columns, rows=rows, n_rows=len(rows), vm_steps=steps[0] * PROGRESS_PERIOD,
+                         tables_read=tuple(sorted(tables)))
     except sqlite3.Error as exc:
         vm = steps[0] * PROGRESS_PERIOD
         text = str(exc)
@@ -243,6 +269,10 @@ class ToolResult:
     n_rows: int = 0
     vm_steps: int = 0
     is_sql: bool = False
+    # For run_sql only. `rows` holds every row the engine fetched (up to
+    # MAX_ROWS_FETCHED), not only the 20 rows shown in `output`.
+    rows: list[tuple] = field(default_factory=list)
+    tables_read: tuple[str, ...] = ()
 
 
 def run_tool(name: str, arguments: dict, db_dir: str | Path | None = None) -> ToolResult:
@@ -267,7 +297,8 @@ def run_tool(name: str, arguments: dict, db_dir: str | Path | None = None) -> To
                 if key not in arguments:
                     return ToolResult(f"ERROR: missing argument {key!r}", False, is_sql=True)
             result = execute_metered(arguments["database"], arguments["query"], db_dir)
-            return ToolResult(render_result(result), result.ok, result.n_rows, result.vm_steps, is_sql=True)
+            return ToolResult(render_result(result), result.ok, result.n_rows, result.vm_steps, is_sql=True,
+                              rows=result.rows, tables_read=result.tables_read)
         return ToolResult(f"ERROR: unknown tool {name!r}. Valid tools: get_schema, run_sql", False)
     except Exception as exc:
         return ToolResult(f"ERROR: {type(exc).__name__}: {exc}", False)

@@ -48,6 +48,8 @@ frugal_analyst/           core package, standard library only
 scripts/
   gen_data.py             build databases, tasks and teacher traces
   eval_auditkit.py        AuditKit evaluation over trace files
+  rescore_traces.py       replay old trace files, score them with the current reward
+  reward_audit.py         mean reward of honest and cheating behaviours, val split only
   train_sft.py            distillation with AgentTune
   train_grpo.py           GRPO with AgentTune
   jobs/                   HF Jobs entry point and README
@@ -73,6 +75,8 @@ uv pip install --python .venv/bin/python -r requirements-train.txt   # training 
 .venv/bin/python -m pytest -q
 .venv/bin/python scripts/gen_data.py --seed 0
 .venv/bin/python scripts/eval_auditkit.py --traces outputs/traces/*.jsonl --out outputs/eval/
+.venv/bin/python scripts/rescore_traces.py --traces outputs/traces/*.jsonl --out outputs/rescored/ --allow-vm-drift
+.venv/bin/python scripts/reward_audit.py                             # writes outputs/eval/reward_audit.md
 .venv/bin/python app/app.py                                          # http://127.0.0.1:7860
 ```
 
@@ -94,6 +98,7 @@ Pass step arguments to `frugal_job.py` as one `--extra "..."` string. `hf jobs u
 - Report results as they are. Never tune a metric or the data to look better.
 - Every experiment uses a fixed seed and a saved config. No data leaks. Test splits and the held-out `saas` domain never enter training. The test set never tunes the reward.
 - A reward change needs tests. A perfect answer scores 1.0. An empty answer scores 0. An answer with no query scores at most 0.05 in gated mode.
+- A correct answer needs evidence: a cell from a query that read a data table, and not a literal in any select list of that query. Run `scripts/reward_audit.py` after a reward change.
 - Do not weaken SQL tool security: read-only, SELECT or WITH only, one statement, row cap, output cap, VM-step abort.
 - Escape all model and database text before it appears in the app. Ask before you add a dependency or a top-level folder.
 - Never commit secrets. Read them from environment variables, for example `HF_TOKEN`.

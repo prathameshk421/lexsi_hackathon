@@ -121,6 +121,10 @@ def make_samples(traces: list[dict]) -> list:
     for t in traces:
         compact = {k: t[k] for k in ("correct", "answered", "grounded", "efficiency", "reward", "cost", "optimal",
                                       "latency_s", "completion_tokens")}
+        # Optional fields: old trace files do not have them, and the metric then leaves the episode out.
+        for k in ("supported", "answer_in_sql_literal"):
+            if k in t:
+                compact[k] = t[k]
         final = [s["text"] for s in t["steps"] if s["type"] == "final"]
         samples.append(ak.Sample(
             input=build_user_prompt(SimpleNamespace(domain=t["domain"], question=t["question"])),
@@ -294,7 +298,8 @@ def fmt(key: str, value, n: int | None = None, total: int | None = None) -> str:
     return text
 
 
-TABLE_KEYS = ["accuracy", "answered_rate", "grounded_rate", "tool_call_validity", "no_failed_call_rate", "reward",
+TABLE_KEYS = ["accuracy", "answered_rate", "grounded_rate", "unread_answer_rate", "answer_in_sql_literal_rate",
+              "tool_call_validity", "no_failed_call_rate", "reward",
               "efficiency", "efficiency_when_correct", "tool_calls", "rows_returned", "vm_steps", "call_ratio",
               "vm_step_ratio", "correct_and_optimal_rate", "latency_s", "completion_tokens"]
 
@@ -318,9 +323,10 @@ def render_markdown(results: dict) -> str:
              f"AuditKit vs direct recomputation: **{'all agree' if results['crosscheck_ok'] else 'MISMATCH, see results.json'}**.")
     L += ["", "Arrows show the better direction: ↑ higher is better, ↓ lower is better. "
           "Failed, wrong and truncated episodes count as failures and stay in every denominator, "
-          "except the three metrics marked below.", ""]
+          "except the four metrics marked below.", ""]
     L.append("Metrics with fewer episodes: `efficiency (correct only)` uses correct episodes only. "
-             "`latency` and `completion tokens` use episodes where the trace has a value. "
+             "`answer is a literal in its supporting SQL`, `latency` and `completion tokens` use episodes "
+             "where the trace has a value (trace files from before the evidence rule have no literal flag). "
              "A cell like `1.20 (80/120)` means 80 of 120 episodes. `n/a` means no episode had a value.")
     L.append("")
     for split, info in results["splits"].items():

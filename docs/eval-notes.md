@@ -55,7 +55,9 @@ All per-episode formulas are in `frugal_analyst/metrics.py`. Arrows: up is bette
 | Key | Dir | Definition |
 |---|---|---|
 | accuracy | up | `correct` |
-| answered_rate, grounded_rate | up | `answered`, `grounded` |
+| answered_rate, grounded_rate | up | `answered`, `grounded`. Since the evidence rule, `grounded` means a successful query read a data table. |
+| unread_answer_rate | down | `answered` and not `grounded`: an answer with no query that read a data table. Defined for old and new traces. |
+| answer_in_sql_literal_rate | down | the `answer_in_sql_literal` flag (see below). Old traces have no flag, so they are left out and the count is shown. |
 | tool_call_validity | up | `1 - sum(failed_calls) / sum(tool_calls)` over all episodes. Derived from AuditKit's means (same n, so ratio of means = ratio of sums). `n/a` if no episode made a call. |
 | no_failed_call_rate | up | share of episodes with `failed_calls == 0`. An episode with no calls counts as 0 failed. |
 | reward, efficiency | up | stored `reward`, `efficiency` |
@@ -67,12 +69,46 @@ All per-episode formulas are in `frugal_analyst/metrics.py`. Arrows: up is bette
 | latency_s, completion_tokens | down | mean over episodes where the value is not null. The count is shown. |
 
 Breakdowns by level and by domain: accuracy, reward and tool calls, from AuditKit's per-episode values.
-No episode is excluded from any denominator, except for the three conditional metrics above.
+No episode is excluded from any denominator, except for the four conditional metrics above.
+
+There is no "supported and correct" rate. `correct` implies `supported`, so that rate equals accuracy.
+
+## Evidence rule (reward change)
+
+The old gated reward gave 1.0 to `SELECT 1` then the gold answer, to `SELECT '<gold>'`, and to
+`SELECT '<gold>' FROM t LIMIT 1`. Now an answer is correct only if a query that read a data table returned it as a
+cell, and the query did not type it into its top-level select list. `docs/spec.md` has the full rule.
+
+`scripts/reward_audit.py` gives the evidence on the val split (40 tasks). Gated mean reward: oracle 1.0, oracle plus one
+`LIMIT 5` preview 0.8442, naive 0.6431, `SELECT 1` then gold 0.05, `SELECT '<gold>'` 0.05,
+`SELECT '<gold>' FROM t LIMIT 1` 0.1, gold with no query 0.0, honest wrong attempt 0.1.
+A literal in any select list is caught at any depth: CTE, `FROM` subquery, `VALUES`, scalar subquery and `CASE`
+result each score 0.1. The full table is in `outputs/eval/reward_audit.md`.
+
+False positives: 0 of 660 oracle paths and 0 of 660 naive paths lose `supported` (all four splits). The test splits
+were checked once as a sanity check of the rule. Nothing was tuned on them.
+
+Known gaps, still open:
+- An answer computed from other literals passes. Audit row "answer built by arithmetic or concatenation":
+  `SELECT (360.0 / 2)` for gold 180, or `'Gar' || 'den'`, from a real table scores 0.9550 gated (correct on 38 of 40 val tasks;
+  the other 2 fail only because the divisor `2` equals the gold answer `2`). The flag does not see this case.
+- A filter value echoed back through a column passes (`SELECT grade_level FROM students WHERE grade_level = 10`).
+  It looks the same as the 2 honest train tasks whose answer equals a `WHERE` value. The `answer_in_sql_literal` flag
+  fires on it. The flag also fires on those 2 of 400 honest train oracle paths and on 0 val or test oracle paths.
+  So read the flag rate as a warning sign during GRPO and evaluation, not as proof of a cheat.
+
+`scripts/rescore_traces.py` replayed the 880 traces in `outputs/traces/` (8 files). Output text, ok flags and row counts
+all match. 16 calls in 13 traces differ in VM steps only, so the run used `--allow-vm-drift`. One result changed:
+`distilled` on `test_id`, task `retail-L3-0041`. Its only query used a guessed status code, returned no rows, and the
+model still answered the gold category. The old reward gave 1.0, the new reward gives 0.1. `distilled` accuracy on
+`test_id` goes from 1.000 to 0.992 (119 of 120). No other `correct`, `grounded` or `reward` value changed.
 
 ## Checks the script runs
 
 1. Strict validation of every record (`metrics.validate_trace`). Errors name file and line. Nothing is skipped.
    Beyond the field types, it checks `cost.tool_calls` equals the number of `tool_call` steps, and `correct` implies `answered` and `grounded`.
+   For traces that have `supported`: `correct` implies `supported`, `supported` implies `answered` and `grounded`,
+   and `answer_in_sql_literal` implies `supported`. Old traces without these fields stay valid.
 2. Duplicate `task_id` inside one (model, split) group is an error.
 3. Coverage: ids missing per model are listed. Paired comparisons use the shared ids only, and `paired n` shows the count.
    The per-model tables still use all of that model's episodes.

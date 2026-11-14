@@ -213,7 +213,7 @@ def test_logs_metrics_when_trl_passes_log_metric(task):
 # ---------------------------------------------------------------------------
 
 
-def run_scripted_rollout(task, turns):
+def run_scripted_rollout(task, turns, max_steps=5):
     from agenttune.agentic.rollout_engines.base import RolloutEngine
     from agenttune.agentic.rollout_engines.rollout_factory import create_rollout_fn
 
@@ -226,8 +226,20 @@ def run_scripted_rollout(task, turns):
             text = turns[turn] if turn < len(turns) else ""
             return {"completions": [text], "logprobs": [None], "metadata": {}}
 
-    rollout = create_rollout_fn(rollout_engine=Replay(), tools=list(TOOLS), max_steps=5)
+    rollout = create_rollout_fn(rollout_engine=Replay(), tools=list(TOOLS), max_steps=max_steps)
     return rollout([build_prompt_messages(task)])
+
+
+def test_max_steps_k_runs_k_calls_and_still_answers(task):
+    # AgentTune's max_steps counts executed tool rounds. After the last round it
+    # always generates one more turn, so k calls need max_steps = k, not k + 1.
+    turns, _ = oracle_turns(task)
+    k = len(task.oracle_calls)
+    calls, final = calls_from_trajectory(run_scripted_rollout(task, turns, max_steps=k)["trajectories"][0])
+    assert len(calls) == k and final == f"ANSWER: {task.gold_answer}"
+    # One step fewer: the k-th call is written but not run, and there is no answer.
+    calls, final = calls_from_trajectory(run_scripted_rollout(task, turns, max_steps=k - 1)["trajectories"][0])
+    assert len(calls) == k - 1 and not (final or "").startswith("ANSWER:")
 
 
 def test_trajectory_from_real_rollout_loop(task):

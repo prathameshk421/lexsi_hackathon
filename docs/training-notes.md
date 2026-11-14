@@ -138,7 +138,8 @@ its last turn after the step limit; the trajectory can.
 
 | Limit | Where it is set | Default | Our setting |
 |---|---|---|---|
-| Tool rounds per episode | `create_rollout_fn(max_steps=...)`; `TrlAgenticGrpo` passes `max_steps_per_turn` (agentic_grpo.py:459) | 20 | `--max-tool-steps` (GRPO 4, runner 5) |
+| Tool rounds per episode | `create_rollout_fn(max_steps=...)`; `TrlAgenticGrpo` passes `max_steps_per_turn` (agentic_grpo.py:459) | 20 | `--max-tool-steps` 4 for SFT replay, GRPO and runner (section 7c) |
+| top_p, GRPO | `GRPOConfig.top_p` -> `trainer.generation_config` (trl grpo_trainer.py:912-927), passed to `generate()` (rollout_factory.py:2038-2056); AgentTune sets 0.95 (agentic_grpo.py:423) | 0.95 | `--top-p 0.95` |
 | New tokens per model turn, GRPO | `getattr(trainer, "_max_new_tokens", 256)` (rollout_factory.py:2049) | 256 | `trainer._max_new_tokens = --max-completion-length` |
 | Temperature, GRPO | `getattr(trainer, "_temperature", 0.7)` (rollout_factory.py:2050), `do_sample=True` always | 0.7 | `trainer._temperature = --temperature` |
 | New tokens per turn, runner | `gen_cfg["max_new_tokens"]` (transformers_engine.py:466) | 512 | `--max-new-tokens 256` |
@@ -396,3 +397,119 @@ What this shows:
   with the engine's extra log-prob pass) says nothing about GPU speed.
 - Traces were written through `build_trace`, with `latency_s` and
   `completion_tokens` filled.
+
+## 7. After the first GRPO run: RL-only templates, guard, stop rule
+
+The first GRPO run started from the SFT adapter trained on all 400 train
+tasks. Every rollout got reward 1.0 and the gradient was 0, so we cancelled it.
+test_id and train share all 38 train-domain templates, and SFT copied them.
+
+### 7a. RL-only templates
+
+Rule (`RL_ONLY_TEMPLATES`, `is_rl_only` in frugal_analyst/tasks.py): in each
+train domain, the last template of each level in `TEMPLATES` order is RL-only.
+The rule reads only the template list. It does not touch generation, so the
+four split files and `data/teacher/train.jsonl` keep their task content
+(tests/test_rl_split.py rebuilds them and compares bytes).
+
+| | Count |
+|---|---|
+| RL-only templates | 12 (4 domains x 3 levels) |
+| Train tasks from them | 126 of 400 (42 per level) |
+| test_id tasks from them | 38 of 120 |
+| `data/tasks/train_sft.jsonl` and `data/teacher/train_sft.jsonl` | 274 tasks (L1 84, L2 86, L3 104) |
+| `data/tasks/train_rl.jsonl` | 168 = 126 RL-only + 42 SFT-seen |
+
+The 42 SFT-seen tasks (one per 3 RL-only tasks) show if GRPO makes the model
+forget. They are the train_sft tasks with the smallest `zlib.crc32(task_id)`.
+7 of the 12 RL-only templates have a text (top-1) answer.
+
+### 7b. GRPO settings and the no-signal guard
+
+`TrlAgenticGrpo` keeps a kwarg only if it is in `GRPOConfig.__init__` or
+`GRPOTrainer.__init__` (`_split_kwargs`, agentic_grpo.py:78-103). `top_p`,
+`scale_rewards`, `loss_type` and `epsilon_high` are all `GRPOConfig` fields in
+trl 1.7.1 (grpo_config.py:495, 748, 760, 664). train_grpo.py passes each one,
+checks it in the resolved config, and also checks
+`trainer.generation_config.top_p`, because the rollout samples with that config.
+
+`frac_reward_zero_std` (trl grpo_trainer.py:2338-2359, 2401) is the share of
+rows whose reward std is 0. With `scale_rewards="group"` or `"none"` it is per
+group. With `"batch"` it uses the batch std, so it no longer says if a group
+has signal. So the reward wrapper `with_group_spread_metric` logs our own
+`frugal/frac_groups_no_spread` (groups are runs of `num_generations` rewards).
+`NoSignalGuard` reads it (or TRL's metric as a fallback) from each log line.
+If all of the first N steps (`--stop-if-no-signal`, default 3) are 1.0, it
+sets `control.should_training_stop`. The script then writes
+`frugal_grpo_meta.json` with `stopped_no_signal: true`, saves no adapter, and
+exits with code 4. `reward_log.jsonl` has `reward`, `frac_reward_zero_std`,
+`frugal/frac_groups_no_spread`, `frugal/correct` (share of correct
+rollouts), `frugal/tool_calls` and `frugal/efficiency` per step.
+
+Seen on CPU (SmolLM2-135M, sft60 adapter, 1 prompt x 2 generations,
+`--temperature 0.01`, `--stop-if-no-signal 1`): both rollouts scored 0.1,
+the guard stopped after step 1, exit code 4, with `reward_log.jsonl`,
+`trajectories.jsonl` and `frugal_grpo_meta.json` on disk. The same run printed
+`top_p = 0.9, scale_rewards = batch, loss_type = dr_grpo, epsilon_high = 0.28,
+generation_config.top_p = 0.9` in the resolved config.
+
+### 7c. `max_steps` counts executed tool rounds
+
+In `_execute_trajectory` the loop runs while there are calls and
+`iteration_num < max_steps` (rollout_factory.py:2311). It breaks after
+`max_steps` rounds (2415-2417). Then, because the last message is a folded
+tool result, it always generates one more turn (2491-2521). So an episode with
+k calls (one per turn) reaches its answer turn with `max_steps = k`; it does
+not need k + 1. With `max_steps = k - 1` the k-th call is written but not run,
+and there is no answer turn (tests/test_trajectory.py,
+`test_max_steps_k_runs_k_calls_and_still_answers`). For episodes up to 4
+calls, 4 is enough. SFT replay, GRPO and the runner now all default to 4
+(`DEFAULT_MAX_TOOL_STEPS`). The oracle needs at most 3.
+
+### 7d. Stop the turn after a complete tool call (runner)
+
+`trajectory.ends_with_tool_call(text)` is True when the text ends with one
+complete JSON list of calls, followed only by whitespace or a closing code
+fence. The runner's engine (`runner.make_engine`) subclasses AgentTune's
+`TransformersRolloutEngine`. Its `generate()` calls `self.model.generate(...)`
+with fixed arguments (transformers_engine.py:520-527) and takes no stopping
+criteria, so for each turn we wrap `model.generate` on the instance, add a
+`StoppingCriteria`, and remove the wrapper after the turn. The engine decodes
+only the tokens up to the stop (transformers_engine.py:529-545). The loop
+stores that text, stripped, as the assistant turn (rollout_factory.py:2133-2136,
+2437-2450). So the turn kept in the context ends at the call, and the
+template closes it as in the SFT data. tests/test_tool_call_stop.py checks
+this with a scripted tiny model: with the stop, the fake text is not in the
+second prompt; without it (`--no-stop-after-tool-call`), it is.
+
+Each trace file gets `<name>.run.json` with the harness settings and the
+count of turns the rule stopped.
+
+Checks on existing files:
+
+- `distilled_test_id.jsonl` and `distilled_test_ood.jsonl` (the SFT model
+  trained on all 400 tasks): 0 of 220 traces have any model text between a
+  tool call and its tool output (532 executed calls checked). For that model
+  the rule is a no-op on the text.
+- `zero-shot_test_id.jsonl`: 120 of 120 traces have text there;
+  `zero-shot_test_ood.jsonl`: 100 of 100. Examples: `"\nTool result: 1\nANSWER: 1"`.
+- SmolLM2-135M with the sft60 adapter, 3 test_id tasks, real
+  `model.generate`: 6 of 9 turns stopped by the rule (the 6 call turns).
+  Same raw text, same steps, same scores as with `--no-stop-after-tool-call`.
+  `completion_tokens` is 2 lower per episode: the end-of-turn token after each
+  call is no longer generated.
+
+Tiny Aya tokenises `"}}]\n"` as `"}}"` then `"]\n"`, so the rule fires on the
+`"]\n"` token. Its vocabulary also has 87 tokens where `]` is followed by other
+text (for example `"]Bucket"`, `"}}]{"`). If the model emits one of these right
+after a call, the text does not end with the list and the rule does not fire
+for that turn.
+
+GRPO does not use this engine. In the trainer path AgentTune calls
+`unwrapped_model.generate(**generate_kwargs)` itself (rollout_factory.py:2047-2061)
+with `generation_config=trainer.generation_config` and no stopping criteria.
+The same per-call wrapper around `trainer.model`'s `generate` inside our
+rollout function would work there, and the turn-context fix already handles
+a turn without an end token (train_grpo.py, `with_chat_turn_context`). It is
+not added: SFT teaches the model to end the turn after the list, and the
+distilled traces above show no text after a call.
