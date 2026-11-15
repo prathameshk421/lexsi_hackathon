@@ -21,6 +21,7 @@ Task ids: 120 in total, 120 shared by all models.
 | `oracle` | 120 | 1.000 | 1.000 | 1.000 | 0.000 | 0.000 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 | 2.35 | 2.8 | 10407 | 1.00 | 1.00 | 1.000 | n/a | n/a |
 | `distilled-all` | 120 | 0.992 | 1.000 | 1.000 | 0.000 | 0.000 | 1.000 | 1.000 | 0.992 | 1.000 | 1.000 (119/120) | 2.34 | 2.7 | 10208 | 1.00 | 0.99 | 0.992 | 5.33 | 116.12 |
 | `distilled-mixed` | 120 | 0.775 | 0.958 | 1.000 | 0.000 | 0.008 | 0.971 | 0.958 | 0.735 | 0.828 | 0.843 (93/120) | 2.89 | 7.8 | 9377 | 1.25 | 0.94 | 0.400 | 6.40 | 140.53 |
+| `grpo-long` | 120 | 0.875 | 1.000 | 1.000 | 0.000 | 0.000 | 0.981 | 0.967 | 0.887 | 0.989 | 0.999 (105/120) | 2.23 | 2.0 | 10201 | 0.96 | 1.14 | 0.875 | 5.26 | 115.60 |
 | `grpo-mixed` | 120 | 0.767 | 0.967 | 1.000 | 0.000 | 0.025 | 0.967 | 0.942 | 0.740 | 0.861 | 0.873 (92/120) | 2.80 | 7.3 | 9881 | 1.20 | 0.96 | 0.467 | 6.29 | 139.10 |
 | `zero-shot-stop` | 120 | 0.025 | 0.275 | 0.050 | 0.250 | 0.000 | 0.984 | 0.992 | 0.074 | 1.000 | 1.000 (3/120) | 1.07 | 0.0 | 278 | 0.47 | 0.03 | 0.025 | 7.13 | 181.88 |
 
@@ -36,6 +37,7 @@ Breakdown by level: accuracy ↑ / mean reward ↑ / mean tool calls ↓ (n)
 | `oracle` | 1.000 / 1.000 / 2.00 (n=40) | 1.000 / 1.000 / 2.00 (n=38) | 1.000 / 1.000 / 3.00 (n=42) |
 | `distilled-all` | 1.000 / 1.000 / 2.00 (n=40) | 1.000 / 1.000 / 2.00 (n=38) | 0.976 / 0.979 / 2.98 (n=42) |
 | `distilled-mixed` | 0.800 / 0.753 / 2.48 (n=40) | 0.789 / 0.732 / 2.79 (n=38) | 0.738 / 0.720 / 3.38 (n=42) |
+| `grpo-long` | 1.000 / 0.999 / 2.00 (n=40) | 1.000 / 1.000 / 2.00 (n=38) | 0.643 / 0.678 / 2.67 (n=42) |
 | `grpo-mixed` | 0.800 / 0.775 / 2.35 (n=40) | 0.816 / 0.767 / 2.63 (n=38) | 0.690 / 0.681 / 3.38 (n=42) |
 | `zero-shot-stop` | 0.075 / 0.121 / 1.07 (n=40) | 0.000 / 0.050 / 1.03 (n=38) | 0.000 / 0.050 / 1.10 (n=42) |
 
@@ -51,6 +53,7 @@ Breakdown by domain: accuracy ↑ / mean reward ↑ / mean tool calls ↓ (n)
 | `oracle` | 1.000 / 1.000 / 2.40 (n=30) | 1.000 / 1.000 / 2.30 (n=30) | 1.000 / 1.000 / 2.30 (n=30) | 1.000 / 1.000 / 2.40 (n=30) |
 | `distilled-all` | 1.000 / 1.000 / 2.40 (n=30) | 1.000 / 1.000 / 2.30 (n=30) | 0.967 / 0.970 / 2.27 (n=30) | 1.000 / 1.000 / 2.40 (n=30) |
 | `distilled-mixed` | 0.700 / 0.672 / 2.87 (n=30) | 0.967 / 0.892 / 2.73 (n=30) | 0.900 / 0.860 / 2.70 (n=30) | 0.533 / 0.515 / 3.27 (n=30) |
+| `grpo-long` | 0.800 / 0.820 / 2.27 (n=30) | 0.900 / 0.910 / 2.10 (n=30) | 0.933 / 0.939 / 2.20 (n=30) | 0.867 / 0.879 / 2.37 (n=30) |
 | `grpo-mixed` | 0.733 / 0.718 / 2.70 (n=30) | 0.967 / 0.898 / 2.70 (n=30) | 0.833 / 0.826 / 2.53 (n=30) | 0.533 / 0.517 / 3.27 (n=30) |
 | `zero-shot-stop` | 0.100 / 0.145 / 1.13 (n=30) | 0.000 / 0.050 / 1.03 (n=30) | 0.000 / 0.050 / 1.10 (n=30) | 0.000 / 0.050 / 1.00 (n=30) |
 
@@ -66,6 +69,7 @@ Breakdown by template group (rl_only: never in the SFT data): accuracy ↑ / mea
 | `oracle` | 1.000 / 1.000 / 2.32 (n=38) | 1.000 / 1.000 / 2.37 (n=82) |
 | `distilled-all` | 0.974 / 0.976 / 2.29 (n=38) | 1.000 / 1.000 / 2.37 (n=82) |
 | `distilled-mixed` | 0.447 / 0.460 / 2.87 (n=38) | 0.927 / 0.862 / 2.90 (n=82) |
+| `grpo-long` | 0.789 / 0.809 / 2.13 (n=38) | 0.915 / 0.923 / 2.28 (n=82) |
 | `grpo-mixed` | 0.421 / 0.437 / 2.82 (n=38) | 0.927 / 0.880 / 2.79 (n=82) |
 | `zero-shot-stop` | 0.026 / 0.075 / 1.11 (n=38) | 0.024 / 0.073 / 1.05 (n=82) |
 
@@ -83,6 +87,7 @@ Task ids: 100 in total, 100 shared by all models.
 | `oracle` | 100 | 1.000 | 1.000 | 1.000 | 0.000 | 0.000 | 1.000 | 1.000 | 1.000 | 1.000 | 1.000 | 2.40 | 2.7 | 8737 | 1.00 | 1.00 | 1.000 | n/a | n/a |
 | `distilled-all` | 100 | 0.580 | 0.920 | 0.920 | 0.000 | 0.010 | 0.835 | 0.760 | 0.605 | 0.952 | 0.954 (58/100) | 2.43 | 1.4 | 8042 | 1.04 | 0.99 | 0.480 | 6.29 | 141.36 |
 | `distilled-mixed` | 100 | 0.490 | 0.860 | 0.940 | 0.000 | 0.000 | 0.863 | 0.760 | 0.476 | 0.822 | 0.762 (49/100) | 2.99 | 4.3 | 7512 | 1.28 | 1.03 | 0.180 | 7.01 | 155.47 |
+| `grpo-long` | 100 | 0.500 | 0.880 | 0.880 | 0.000 | 0.000 | 0.841 | 0.880 | 0.538 | 0.946 | 0.974 (50/100) | 2.27 | 1.0 | 8740 | 0.96 | 1.32 | 0.500 | 5.80 | 130.89 |
 | `grpo-mixed` | 100 | 0.500 | 0.860 | 0.940 | 0.000 | 0.000 | 0.863 | 0.760 | 0.483 | 0.822 | 0.762 (50/100) | 2.99 | 4.3 | 7464 | 1.28 | 1.02 | 0.190 | 7.04 | 155.71 |
 | `zero-shot-stop` | 100 | 0.000 | 0.240 | 0.000 | 0.240 | 0.000 | 0.971 | 0.990 | 0.050 | 0.999 | n/a | 1.03 | 0.0 | 1 | 0.44 | 0.00 | 0.000 | 7.18 | 185.51 |
 
@@ -98,6 +103,7 @@ Breakdown by level: accuracy ↑ / mean reward ↑ / mean tool calls ↓ (n)
 | `oracle` | 1.000 / 1.000 / 2.00 (n=30) | 1.000 / 1.000 / 2.00 (n=30) | 1.000 / 1.000 / 3.00 (n=40) |
 | `distilled-all` | 0.867 / 0.880 / 2.00 (n=30) | 0.733 / 0.734 / 2.60 (n=30) | 0.250 / 0.301 / 2.62 (n=40) |
 | `distilled-mixed` | 0.833 / 0.767 / 2.53 (n=30) | 0.667 / 0.594 / 3.10 (n=30) | 0.100 / 0.168 / 3.25 (n=40) |
+| `grpo-long` | 0.900 / 0.910 / 2.00 (n=30) | 0.667 / 0.684 / 2.13 (n=30) | 0.075 / 0.149 / 2.58 (n=40) |
 | `grpo-mixed` | 0.833 / 0.767 / 2.53 (n=30) | 0.700 / 0.620 / 3.10 (n=30) | 0.100 / 0.168 / 3.25 (n=40) |
 | `zero-shot-stop` | 0.000 / 0.050 / 1.00 (n=30) | 0.000 / 0.050 / 1.00 (n=30) | 0.000 / 0.050 / 1.07 (n=40) |
 
@@ -113,6 +119,7 @@ Breakdown by domain: accuracy ↑ / mean reward ↑ / mean tool calls ↓ (n)
 | `oracle` | 1.000 / 1.000 / 2.40 (n=100) |
 | `distilled-all` | 0.580 / 0.605 / 2.43 (n=100) |
 | `distilled-mixed` | 0.490 / 0.476 / 2.99 (n=100) |
+| `grpo-long` | 0.500 / 0.538 / 2.27 (n=100) |
 | `grpo-mixed` | 0.500 / 0.483 / 2.99 (n=100) |
 | `zero-shot-stop` | 0.000 / 0.050 / 1.03 (n=100) |
 
@@ -128,6 +135,7 @@ Breakdown by template group (rl_only: never in the SFT data): accuracy ↑ / mea
 | `oracle` | 1.000 / 1.000 / 2.40 (n=100) |
 | `distilled-all` | 0.580 / 0.605 / 2.43 (n=100) |
 | `distilled-mixed` | 0.490 / 0.476 / 2.99 (n=100) |
+| `grpo-long` | 0.500 / 0.538 / 2.27 (n=100) |
 | `grpo-mixed` | 0.500 / 0.483 / 2.99 (n=100) |
 | `zero-shot-stop` | 0.000 / 0.050 / 1.03 (n=100) |
 
@@ -167,6 +175,10 @@ Method: Per-episode values come from AuditKit (ak.evaluate with model='precomput
 | `distilled-mixed` | 120 | mean reward ↑ | 0.130 to 0.735 | +0.604 | [+0.527, +0.677] | yes | better (AuditKit p=0.001) |
 | `distilled-mixed` | 120 | mean efficiency ↑ | 0.889 to 0.828 | -0.061 | [-0.102, -0.018] | yes | worse (AuditKit p=0.006) |
 | `distilled-mixed` | 120 | mean tool calls ↓ | 2.600 to 2.892 | +0.292 | [+0.000, +0.575] | no | no clear change (AuditKit p=0.055) |
+| `grpo-long` | 120 | accuracy ↑ | 0.083 to 0.875 | +0.792 | [+0.717, +0.867] | yes | better (AuditKit p=0.001) |
+| `grpo-long` | 120 | mean reward ↑ | 0.130 to 0.887 | +0.756 | [+0.690, +0.818] | yes | better (AuditKit p=0.001) |
+| `grpo-long` | 120 | mean efficiency ↑ | 0.889 to 0.989 | +0.099 | [+0.070, +0.129] | yes | better (AuditKit p=0.001) |
+| `grpo-long` | 120 | mean tool calls ↓ | 2.600 to 2.233 | -0.367 | [-0.608, -0.125] | yes | better (AuditKit p=0.004) |
 | `grpo-mixed` | 120 | accuracy ↑ | 0.083 to 0.767 | +0.683 | [+0.592, +0.775] | yes | better (AuditKit p=0.001) |
 | `grpo-mixed` | 120 | mean reward ↑ | 0.130 to 0.740 | +0.609 | [+0.531, +0.683] | yes | better (AuditKit p=0.001) |
 | `grpo-mixed` | 120 | mean efficiency ↑ | 0.889 to 0.861 | -0.028 | [-0.070, +0.013] | no | no clear change (AuditKit p=0.195) |
@@ -208,6 +220,10 @@ Method: Per-episode values come from AuditKit (ak.evaluate with model='precomput
 | `distilled-mixed` | 100 | mean reward ↑ | 0.125 to 0.476 | +0.351 | [+0.277, +0.428] | yes | better (AuditKit p=0.001) |
 | `distilled-mixed` | 100 | mean efficiency ↑ | 0.878 to 0.822 | -0.056 | [-0.099, -0.009] | yes | worse (AuditKit p=0.009) |
 | `distilled-mixed` | 100 | mean tool calls ↓ | 2.300 to 2.990 | +0.690 | [+0.390, +0.990] | yes | worse (AuditKit p=0.001) |
+| `grpo-long` | 100 | accuracy ↑ | 0.080 to 0.500 | +0.420 | [+0.330, +0.520] | yes | better (AuditKit p=0.001) |
+| `grpo-long` | 100 | mean reward ↑ | 0.125 to 0.538 | +0.412 | [+0.332, +0.495] | yes | better (AuditKit p=0.001) |
+| `grpo-long` | 100 | mean efficiency ↑ | 0.878 to 0.946 | +0.068 | [+0.027, +0.112] | yes | better (AuditKit p=0.003) |
+| `grpo-long` | 100 | mean tool calls ↓ | 2.300 to 2.270 | -0.030 | [-0.320, +0.250] | no | no clear change (AuditKit p=0.858) |
 | `grpo-mixed` | 100 | accuracy ↑ | 0.080 to 0.500 | +0.420 | [+0.330, +0.510] | yes | better (AuditKit p=0.001) |
 | `grpo-mixed` | 100 | mean reward ↑ | 0.125 to 0.483 | +0.358 | [+0.283, +0.434] | yes | better (AuditKit p=0.001) |
 | `grpo-mixed` | 100 | mean efficiency ↑ | 0.878 to 0.822 | -0.056 | [-0.099, -0.009] | yes | worse (AuditKit p=0.009) |
@@ -227,6 +243,8 @@ Method: Per-episode values come from AuditKit (ak.evaluate with model='precomput
 | `outputs/traces/distilled-mixed_test_ood.jsonl` | 100 | `6bd0884722fbf320345ce234ab99af500312710aa0dbb20fdeabd7f8438ff42f` |
 | `outputs/traces/distilled_test_id.jsonl` | 120 | `a5614b4ef77b3387eef78655e6d27240b9362cb993c704c50c13be5bc2fafafb` |
 | `outputs/traces/distilled_test_ood.jsonl` | 100 | `8acf8b54b2e3231f9d7efbc0590fbdf13823eab35517d57e20999b5040fe9ce3` |
+| `outputs/traces/grpo-long_test_id.jsonl` | 120 | `fc1aa2895b7a9a984454a027f86764acc56dd69263f0c996c9fe3da9316beac4` |
+| `outputs/traces/grpo-long_test_ood.jsonl` | 100 | `dcbe140d30d386e79a60fb20e083d131501087c057839b6dc1327d16115c6f65` |
 | `outputs/traces/grpo-mixed_test_id.jsonl` | 120 | `e1126077fa48633a99eb9633c71996ea2c8c91ca60bf282208fe037fab2829f4` |
 | `outputs/traces/grpo-mixed_test_ood.jsonl` | 100 | `6509c00a4df12fe0db048b86d3022102659d87145c367dd329fbac25aee258b9` |
 | `outputs/traces/grpo-ungated_test_id.jsonl` | 120 | `1dbc08ada9693eadfa529488832b4fbb05665347c8a7e675c7f79404da7c9058` |
