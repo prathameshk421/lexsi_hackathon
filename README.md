@@ -135,6 +135,8 @@ The trace file is the only interface between training, evaluation and the demo. 
 
 Toolkit licences: AgentTune uses the Lexsi Labs Source Available License (LSAL) v1.1, AuditKit uses LSAL v1.2 (from the installed package metadata).
 
+Our code in this repository is under the MIT licence ([`LICENSE`](LICENSE)). It does not include the toolkits or the base model; those keep their own licences. The adapters and the dataset (traces hold model output) use CC-BY-NC-4.0, the same as the base model.
+
 ## Data, tasks and environment
 
 ### Source
