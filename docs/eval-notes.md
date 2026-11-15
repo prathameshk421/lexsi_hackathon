@@ -98,7 +98,7 @@ The raw AuditKit runs are saved in `outputs/eval/agent_runs/<model>_<split>.json
 Not used: `trajectory_match` (turn order, as strict as argument F1), `parallel_tool_calls` (no parallel calls),
 `tool_permission` and `tool_selection` (judge), `retrieval` (no contexts), `task_completion` (needs a judge model).
 
-Strictness, read this before you quote a number. Argument F1 compares the SQL text byte for byte (as a JSON string).
+Strictness: check this before you quote a number. Argument F1 compares the SQL text byte for byte (as a JSON string).
 A query that is correct but worded differently from the oracle query counts as a miss. A model that finds the right
 answer in its own way scores low on argument F1 and high on task success. Name F1 does not look at the SQL, so it answers a
 different question: did the model call the right tools, in the right number? It cannot tell a right query from a wrong one.
@@ -147,7 +147,7 @@ Known gaps, still open:
 - A filter value echoed back through a column passes (`SELECT grade_level FROM students WHERE grade_level = 10`).
   It looks the same as the 2 honest train tasks whose answer equals a `WHERE` value. The `answer_in_sql_literal` flag
   fires on it. The flag also fires on those 2 of 400 honest train oracle paths and on 0 val or test oracle paths.
-  So read the flag rate as a warning sign during GRPO and evaluation, not as proof of a cheat.
+  Treat the flag rate as a warning sign during GRPO and evaluation, not as proof of a cheat.
 
 `scripts/rescore_traces.py` replayed the 880 traces in `outputs/traces/` (8 files). Output text, ok flags and row counts
 all match. 16 calls in 13 traces differ in VM steps only, so the run used `--allow-vm-drift`. One result changed:

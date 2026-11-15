@@ -32,7 +32,7 @@ Dropdowns show `plain name [label]`. The Compare and Results tabs have a "What a
 The default pair in Compare is `zero-shot` against `grpo`, else `zero-shot` against `distilled`.
 Else it is the worst and best main model by mean reward.
 
-## Honest numbers
+## How the numbers are shown
 
 - Efficiency counts only for a correct answer in the reward. A wrong run shows "n/a" for efficiency, an outline cost bar and "no correct answer" next to its ratio.
 - The Results chart opens on task success. The choices start with task success, correct and optimal, tool calls and latency.

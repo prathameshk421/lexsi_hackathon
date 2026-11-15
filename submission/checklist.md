@@ -41,12 +41,12 @@ Do not tick Agentic distillation (3) or Reward design and reward-hacking defence
 
 ## Public and final checks (from the reminder mail)
 
-- [ ] The HF models collection holds every adapter: 3 SFT and 3 GRPO (see `submission/links.md`).
+- [x] The HF models collection holds all 7 adapters: 3 SFT and 4 GRPO, including `grpo-long` (see `submission/links.md`).
 - [ ] The HF datasets collection holds the task splits, teacher traces, all evaluation traces, GRPO logs and rollouts, and job logs.
 - [ ] Both collections are public, and every repo inside them is public and un-gated.
-- [ ] The GitHub repo is public. (The team brief says it was private when last checked.)
+- [x] The GitHub repo is public (checked signed out on Nov 15).
 - [ ] The write-up is public.
-- [ ] Every placeholder `{{...}}` in `README.md`, `submission/links.md` and this file is replaced.
+- [x] Every link placeholder in `README.md`, `submission/links.md` and this file is replaced.
 - [ ] The registered email has no typo.
 - [ ] Each link opens in a signed-out browser window (`submission/links.md`).
 - [ ] No secret (for example `HF_TOKEN`) is in any public file.

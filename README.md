@@ -128,7 +128,7 @@ The trace file is the only interface between training, evaluation and the demo. 
 | Role | Model | Details | Licence |
 |---|---|---|---|
 | Core model | [`CohereLabs/tiny-aya-global`](https://huggingface.co/CohereLabs/tiny-aya-global) | 3.35B parameters, 8K context, base model `CohereLabs/tiny-aya-base`. bf16, no quantisation. Latest revision at job time; no revision pin. | CC-BY-NC-4.0 (model card), plus Cohere Labs' Acceptable Use Policy. Gated. |
-| Adapters (ours) | LoRA on all 7 linear projections (`q,k,v,o,gate,up,down`) | r=16, alpha=32, dropout 0.05. GRPO adapters train on top of the merged SFT adapter, so inference merges both in order. The `grpo-long` adapter trains on top of the merged SFT and `grpo` adapters, so inference merges all three in order. | CC-BY-NC-4.0, set on each adapter repo, the same as the base model. Use with the base model follows the base model's terms. |
+| Adapters (ours) | LoRA on all 7 linear projections (`q,k,v,o,gate,up,down`) | r=16, alpha=32, dropout 0.05. The `grpo` adapter trains on top of the merged SFT adapter. The `grpo-long` adapter trains on top of the merged SFT and `grpo` adapters. Inference merges them in that order. | CC-BY-NC-4.0, set on each adapter repo, the same as the base model. Use with the base model follows the base model's terms. |
 | Teacher | None (scripted oracle in `frugal_analyst/policies.py`) | Replays the efficient tool path stored with each task. | Our code. |
 | Local smoke tests only | [`HuggingFaceTB/SmolLM2-135M-Instruct`](https://huggingface.co/HuggingFaceTB/SmolLM2-135M-Instruct) | CPU checks of the code paths. No reported number uses it. | See the model card. |
 | Closed-model baseline | None | Not run. | |
@@ -224,7 +224,7 @@ Gated reward (default):
 | At least one valid tool call, no grounded answer | 0.05 |
 | Otherwise | 0.0 |
 
-Ungated reward (ablation): `0.5 * correct + 0.5 * efficiency_naive`, where zero calls get full efficiency. Note: `correct` uses the same evidence rule in both modes. So the ablation removes the gate on efficiency, not the evidence rule.
+Ungated reward (ablation): `0.5 * correct + 0.5 * efficiency_naive`, where zero calls get full efficiency. `correct` uses the same evidence rule in both modes. So the ablation removes the gate on efficiency, not the evidence rule.
 
 ## Method and experiments
 
@@ -573,7 +573,7 @@ Python 3.12 and `uv`. A GPU is needed only for training and model evaluation. Th
 uv venv --python 3.12 .venv
 uv pip install --python .venv/bin/python pytest auditkit gradio pandas
 uv pip install --python .venv/bin/python -r requirements-train.txt   # training only
-.venv/bin/python -m pytest -q                                         # 402 tests pass
+.venv/bin/python -m pytest -q                                         # 411 tests pass
 .venv/bin/python scripts/gen_data.py --seed 0
 .venv/bin/python app/app.py                                           # http://127.0.0.1:7860
 ```
@@ -603,8 +603,8 @@ None. All code was written during the hackathon (stated by the team lead). An ol
 
 - For a small model, imitation of a good trajectory does most of the work. RL on top needs tasks where the model sometimes fails, or it gets no signal. Even with such tasks, 0.900 to 1.000 of the groups had no spread after about 50 steps.
 - RL with a cost reward cut tool calls clearly (2.44 to 2.27 held-out). It did not clearly raise accuracy, and it cost 6 points on templates that SFT had taught.
-- A reward that only matches the final answer pays for guesses. Re-running the queries and checking the evidence cost little and closed most cheats we could script.
-- Harness details matter as much as training. Stopping the turn after a tool call cut base-model accuracy from 0.083 to 0.025.
+- A reward that only matches the final answer pays for guesses. Re-running the queries and checking the evidence cost little. It stopped the 9 cheats in our offline audit. Two known gaps stay open.
+- Harness details change results. Stopping the turn after a tool call cut base-model accuracy from 0.083 to 0.025.
 
 ## Teammates
 

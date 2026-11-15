@@ -1,6 +1,6 @@
 # Submission links
 
-Replace each placeholder with the final URL. Then do the signed-out check below. A link that is not yet public is not final.
+These are the final URLs. All of them opened signed out on Nov 15. Run the check below again after any change.
 
 ## Links for the form
 

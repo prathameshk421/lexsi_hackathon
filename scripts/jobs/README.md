@@ -6,7 +6,7 @@ the image needs no git), runs `scripts/gen_data.py --seed 0`, runs one step, and
 uploads the step folder (adapter, traces, `job.log`, `job_info.txt`) to the Hub
 repo you name. It uploads in a `finally` block, so a failed step still leaves its log.
 
-Nothing here has been launched. All numbers below are estimates, not measurements.
+These commands ran for the submission. Measured run times and costs are in `submission/reproduce.md`. The cost estimate below was made before the runs.
 
 ## One-time setup (you do this)
 
