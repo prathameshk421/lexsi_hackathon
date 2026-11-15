@@ -90,7 +90,7 @@ def test_replay_assembles_two_sides(trace_dir):
     text = re.sub(r"<[^>]+>", "", html)  # SQL keywords are wrapped in colour spans
     assert "SELECT COUNT(*)\nFROM orders" in text  # SQL is shown with one clause per line
     assert '<span class="sq-k">SELECT</span>' in html
-    assert "Both answers are correct." not in html and "Only <b>SFT + GRPO (final)</b> is correct." in html  # the story
+    assert "Both answers are correct." not in html and "Only <b>SFT + GRPO, 50 steps</b> is correct." in html  # the story
     assert "optimal 2" in html
 
 
@@ -540,10 +540,10 @@ def test_results_missing_file_falls_back_to_traces(trace_dir, tmp_path):
     assert by_model["zero-shot"]["n"] == 3
     assert by_model["zero-shot"]["accuracy"] == pytest.approx(2 / 3, abs=1e-3)  # computed from the trace fields
     assert by_model["grpo"]["tool_calls"] == 2
-    assert "computed from traces" in v["headline"] and "Zero-shot (base model) to SFT + GRPO (final)" in v["headline"]
+    assert "computed from traces" in v["headline"] and "Zero-shot (base model) to SFT + GRPO, 50 steps" in v["headline"]
     assert len(logic.results_table(v)) == 2
     chart = logic.results_chart(v, "Task success")
-    assert list(chart["name"]) == ["Zero-shot (base model)", "SFT + GRPO (final)"]
+    assert list(chart["name"]) == ["Zero-shot (base model)", "SFT + GRPO, 50 steps"]
 
 
 def test_results_nothing_at_all(tmp_path):
@@ -577,7 +577,7 @@ def test_results_file_in_the_eval_agent_shape(trace_dir, tmp_path):
     f.write_text(json.dumps(doc))
     v = logic.results_view("all", trace_dir, f)
     assert v["source"] == "results" and len(v["rows"]) == 4
-    assert "Seen domains: Zero-shot (base model) to SFT + GRPO (final)" in v["headline"] and "better" in v["headline"]
+    assert "Seen domains: Zero-shot (base model) to SFT + GRPO, 50 steps" in v["headline"] and "better" in v["headline"]
     assert "+0.300 to +0.500" in v["headline"]  # the interval comes from the file
     assert "Tool calls" in v["metrics"]
     one = logic.results_view("test_ood", trace_dir, f)
@@ -615,14 +615,14 @@ def test_default_pair_is_zero_shot_vs_grpo_and_models_come_before_scripted(five_
     assert (st["a"], st["b"]) == ("zero-shot", "grpo")
     # dropdown order: baseline, SFT, GRPO, then scripted reference policies, with plain names and the label
     assert st["labels"] == [("Zero-shot (base model) [zero-shot]", "zero-shot"), ("SFT, 274 tasks [distilled]", "distilled"),
-                            ("SFT + GRPO (final) [grpo]", "grpo"), ("Oracle (scripted) [oracle]", "oracle"),
+                            ("SFT + GRPO, 50 steps [grpo]", "grpo"), ("Oracle (scripted) [oracle]", "oracle"),
                             ("Naive (scripted) [naive]", "naive")]
     v = logic.results_view("test_id", five_label_dir, five_label_dir / "none.json")
     assert [r["raw"] for r in v["rows"]] == ["zero-shot", "distilled", "grpo", "oracle", "naive"]
     assert [r["model"] for r in v["rows"]][-2:] == ["Oracle (scripted)", "Naive (scripted)"]
     assert [r["kind"] for r in v["rows"]] == ["model"] * 3 + ["scripted reference"] * 2
     assert "scripted reference policies, not models" in v["note"]
-    assert "Zero-shot (base model) to SFT + GRPO (final)" in v["headline"]
+    assert "Zero-shot (base model) to SFT + GRPO, 50 steps" in v["headline"]
     chart = logic.results_chart(v, "Efficiency, correct answers only")
     assert list(chart["name"])[-1] == "Naive (scripted)" and list(chart["group"]).count("scripted reference") == 2
     html = logic.replay_view("test_id", "naive", "grpo", "retail-L1-0001", five_label_dir)
@@ -769,12 +769,12 @@ def test_default_pair_prefers_baseline_against_final_then_sft():
 
 
 def test_display_names_come_from_one_table_with_fallback():
-    assert fa_data.display_label("grpo") == "SFT + GRPO (final)"
+    assert fa_data.display_label("grpo") == "SFT + GRPO, 50 steps"
     assert fa_data.display_label("zero-shot") == "Zero-shot (base model)"
     assert fa_data.display_label("distilled-all") == "SFT, all 400 tasks (reference)"
     assert fa_data.display_label("oracle") == "Oracle (scripted)"
     assert fa_data.display_label("my-new-run") == "my-new-run"  # unknown labels stay as they are
-    assert fa_data.choice_label("grpo") == "SFT + GRPO (final) [grpo]" and fa_data.choice_label("x-1") == "x-1"
+    assert fa_data.choice_label("grpo") == "SFT + GRPO, 50 steps [grpo]" and fa_data.choice_label("x-1") == "x-1"
     for label in ("zero-shot", "distilled", "grpo", "grpo-ungated", "distilled-mixed", "grpo-mixed", "zero-shot-stop",
                   "distilled-all", "oracle", "naive"):
         assert fa_data.run_note(label), label
@@ -784,7 +784,7 @@ def test_display_names_come_from_one_table_with_fallback():
     assert order == ["zero-shot", "distilled", "grpo", "zero-shot-stop", "distilled-all", "unknown", "naive"]
     legend = render.runs_legend_html([(fa_data.display_label(l), l, fa_data.run_note(l)) for l in ("grpo", EVIL)])
     tags_are_own(legend, {"div", "details", "summary", "dl", "dt", "dd", "span"})
-    assert "What are these runs" in legend and "The final model." in legend
+    assert "What are these runs" in legend and "50 GRPO steps" in legend
 
 
 def test_wrong_answer_shows_efficiency_not_applicable(trace_dir):
@@ -854,14 +854,14 @@ def test_results_headline_says_no_clear_change_and_shows_groups(tmp_path):
     f.write_text(json.dumps(_results_doc()))
     v = logic.results_view("all", tmp_path / "no-traces", f)
     head = v["headline"]
-    assert "Seen domains: Zero-shot (base model) to SFT + GRPO (final)" in head and "40 paired tasks" in head
+    assert "Seen domains: Zero-shot (base model) to SFT + GRPO, 50 steps" in head and "40 paired tasks" in head
     assert '<span class="fa-judge fa-judge-good">better</span>' in head
     assert '<span class="fa-judge fa-judge-none">no clear change</span>' in head
     assert "+0.600 to +0.800" in head and "AuditKit p = 0.001" in head
     assert "Latency (s)" in head and "No interval was computed" in head  # mean from the file, no interval claimed
     detail = re.sub(r"\s+", " ", re.sub(r"<[^>]+>", " ", v["detail"]))
     assert "Task success by template group" in detail and "RL-only templates (10 tasks)" in detail
-    assert "SFT + GRPO (final) 0.500 0.900" in detail
+    assert "SFT + GRPO, 50 steps 0.500 0.900" in detail
     assert "Key comparisons" in detail and "2,000 resamples" in detail and "+0.600 to +0.800" in detail
     # an extra comparison file (GRPO against SFT) adds its rows; a file with another baseline is not mixed in
     extra = {"comparisons": {"test_id": {"baseline": "distilled", "pairs": [{"model": "grpo", "metrics": {"accuracy": {
@@ -869,7 +869,7 @@ def test_results_headline_says_no_clear_change_and_shows_groups(tmp_path):
     e = tmp_path / "vs_sft.json"
     e.write_text(json.dumps(extra))
     v2 = logic.results_view("all", tmp_path / "no-traces", f, {"vs_sft": e, "mixed": tmp_path / "missing.json"})
-    assert "What GRPO adds on top of SFT (distilled to grpo)" in v2["detail"]
+    assert "What 50 GRPO steps add on top of SFT (distilled to grpo)" in v2["detail"]
     tags_are_own(v2["detail"], {"div", "h3", "p", "table", "thead", "tbody", "tr", "th", "td"})
 
 

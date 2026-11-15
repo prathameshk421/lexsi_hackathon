@@ -8,7 +8,7 @@ Replace each placeholder with the final URL. Then do the signed-out check below.
 |---|---|---|
 | HF model collection link (page 2) | yes | https://huggingface.co/collections/prathameshk421/frugal-analyst-models-and-adapters-6af8aee6fad812f5859dc8f9 |
 | HF dataset collection link (page 2) | yes | https://huggingface.co/collections/prathameshk421/frugal-analyst-datasets-traces-and-logs-6af8aee8307f37a24ac0d10d |
-| Hugging Face article link (page 2) | yes | `{{HF_ARTICLE}}`. If HF articles are not open to us, the submit page accepts the GitHub README: `https://github.com/prathameshk421/lexsi_hackathon#readme` |
+| Hugging Face article link (page 2) | yes | https://github.com/prathameshk421/lexsi_hackathon#readme (the submit page accepts a GitHub README as the write-up). |
 | GitHub repo link (page 2) | yes | https://github.com/prathameshk421/lexsi_hackathon |
 
 ## What each collection must hold
@@ -17,7 +17,7 @@ Replace each placeholder with the final URL. Then do the signed-out check below.
 |---|---|
 | Models (https://huggingface.co/collections/prathameshk421/frugal-analyst-models-and-adapters-6af8aee6fad812f5859dc8f9) | 7 adapter repos, one per run: [`grpo-long`](https://huggingface.co/aarush323/frugal-analyst-tiny-aya-grpo-long) (final, 200 GRPO steps, under the teammate account `aarush323`), [`grpo`](https://huggingface.co/prathameshk421/frugal-analyst-tiny-aya-grpo) (50 steps), [`distilled`](https://huggingface.co/prathameshk421/frugal-analyst-tiny-aya-sft), [`grpo-ungated`](https://huggingface.co/prathameshk421/frugal-analyst-tiny-aya-grpo-ungated), [`distilled-all`](https://huggingface.co/prathameshk421/frugal-analyst-tiny-aya-sft-all-templates), [`distilled-mixed`](https://huggingface.co/prathameshk421/frugal-analyst-tiny-aya-sft-mixed-teacher), [`grpo-mixed`](https://huggingface.co/prathameshk421/frugal-analyst-tiny-aya-grpo-mixed-teacher). Each model card has a loading note: merge the SFT adapter first, then the GRPO adapter. The `grpo-long` card says: merge `prathameshk421/frugal-analyst-tiny-aya-sft`, then `prathameshk421/frugal-analyst-tiny-aya-grpo`, then `aarush323/frugal-analyst-tiny-aya-grpo-long`. No base weights. |
 | Datasets (https://huggingface.co/collections/prathameshk421/frugal-analyst-datasets-traces-and-logs-6af8aee8307f37a24ac0d10d) | https://huggingface.co/datasets/prathameshk421/frugal-analyst-data: task splits (`data/tasks/*.jsonl`), teacher traces (`data/teacher/*.jsonl`), all 22 evaluation trace files and their `.run.json` files (`outputs/traces/`, including the 2 of `grpo-long`), GRPO `reward_log.jsonl` and `trajectories.jsonl` of each GRPO run (the `grpo-long` files come from `aarush323/frugal-analyst-runs`), `job_info.txt` and `job.log` of each job, and `docs/results/*`. |
-| Demo (optional) | `{{HF_SPACE}}` |
+| Demo (optional) | Not hosted. Hugging Face now needs a PRO plan for Gradio Spaces on free CPU. Run it locally with `python app/app.py`, or build a Space folder with `space/build_space.py`. |
 
 That is 7 adapters in total. The `grpo-long` repo lives under another account, so add it to the models collection by hand and check that the collection lists it. The smoke adapters (`smoke-sft`, `smoke2-sft`, `smoke-grpo`, `smoke2-grpo`) are optional.
 
@@ -42,7 +42,6 @@ Open each link in a private browser window, not signed in to GitHub or Hugging F
 - [ ] `aarush323/frugal-analyst-runs` is public, or its `grpo-long` files are copied into the traces dataset.
 - [ ] https://huggingface.co/collections/prathameshk421/frugal-analyst-datasets-traces-and-logs-6af8aee8307f37a24ac0d10d opens and lists the traces dataset.
 - [ ] https://huggingface.co/datasets/prathameshk421/frugal-analyst-data opens with no access request form, and the files can be downloaded.
-- [ ] `{{HF_ARTICLE}}` (or the README) opens.
-- [ ] `{{HF_SPACE}}` starts, if we link it.
+- [ ] https://github.com/prathameshk421/lexsi_hackathon#readme opens signed out.
 - [ ] No file in any public repo holds a token or a private path with secrets.
 - [ ] Each link in the form matches the link in this file, letter for letter.

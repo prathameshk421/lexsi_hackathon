@@ -596,7 +596,7 @@ def headline_from_rows(rows: list[dict]):
         model, ctx = _row_model(r["group"])
         if model:
             by_model.setdefault(model, {})[ctx] = r
-    for before, after in (("zero-shot", "grpo"), ("zero-shot", "distilled")):
+    for before, after in (("zero-shot", "grpo-long"), ("zero-shot", "grpo"), ("zero-shot", "distilled")):
         if before in by_model and after in by_model:
             shared = [c for c in by_model[before] if c in by_model[after]]
             if not shared:
@@ -817,7 +817,7 @@ def _eval_headline(obj: dict, chosen: list[str]) -> str:
         source = f"{int(n)} paired tasks" if _is_num(n) else "paired tasks"
         note = ""
         sft = _dig(obj, "splits", sp, "models", "distilled", "metrics", "accuracy")
-        if after == "grpo" and _is_num(sft):
+        if after in ("grpo", "grpo-long") and _is_num(sft):
             note = f"For reference, SFT alone [distilled] reaches task success {sft:.3f} on the same tasks."
         title = f"{split_label(sp)}: {display_label(base)} to {display_label(after)}"
         blocks.append(render.headline_html(display_label(base), display_label(after), cards, source, title=title, note=note))
@@ -870,8 +870,10 @@ def _groups_html(obj: dict, chosen: list[str]) -> str:
 # (results file, baseline, candidate, metrics, what the comparison asks). "main" is results.json.
 COMPARISONS = [
     ("main", "zero-shot", "distilled", ("accuracy",), "SFT against the base model"),
-    ("main", "zero-shot", "grpo", ("accuracy",), "Final model against the base model"),
-    ("vs_sft", "distilled", "grpo", ("accuracy", "tool_calls"), "What GRPO adds on top of SFT"),
+    ("main", "zero-shot", "grpo-long", ("accuracy",), "Final model against the base model"),
+    ("main", "zero-shot", "grpo", ("accuracy",), "50-step GRPO model against the base model"),
+    ("vs_sft", "distilled", "grpo-long", ("accuracy", "tool_calls"), "What 200 GRPO steps add on top of SFT"),
+    ("vs_sft", "distilled", "grpo", ("accuracy", "tool_calls"), "What 50 GRPO steps add on top of SFT"),
     ("mixed", "distilled-mixed", "grpo-mixed", ("accuracy", "tool_calls"), "GRPO on the mixed-teacher SFT model"),
 ]
 COMPARISON_NOTE = (
@@ -920,7 +922,11 @@ def findings_text(results_path=None, extra_paths=None) -> str:
     """One plain result line for the top of the page, built from the results files. Empty if they are missing."""
     try:
         obj = read_results(results_path)
-        _, pair = _pair_entry(obj, "test_ood", "grpo", baseline=data.BASELINE_LABEL)
+        final, pair = "grpo", None
+        for final in ("grpo-long", "grpo"):  # the final model, if its traces exist
+            _, pair = _pair_entry(obj, "test_ood", final, baseline=data.BASELINE_LABEL)
+            if pair is not None:
+                break
         m = _dig(pair, "metrics", "accuracy")
         sft = _dig(obj, "splits", "test_ood", "models", "distilled", "metrics", "accuracy")
         n = _dig(pair, "n_paired")
@@ -931,7 +937,7 @@ def findings_text(results_path=None, extra_paths=None) -> str:
         text += f" to {sft:.3f} after SFT and {m['candidate_mean']:.3f} after SFT + GRPO." if _is_num(sft) else \
             f" to {m['candidate_mean']:.3f} after SFT + GRPO."
         extras = read_extras(extra_paths if extra_paths is not None else (data.EXTRA_RESULTS if results_path is None else {}))
-        _, extra = _pair_entry(extras.get("vs_sft"), "test_ood", "grpo", baseline="distilled")
+        _, extra = _pair_entry(extras.get("vs_sft"), "test_ood", final, baseline="distilled")
         g = _dig(extra, "metrics", "accuracy")
         if isinstance(g, dict) and _verdict_of(g):
             ci = (f" (95% interval {g['ci_low']:+.3f} to {g['ci_high']:+.3f})"
