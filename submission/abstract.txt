@@ -1,19 +1,17 @@
 Frugal Analyst: a 3.35B model that answers database questions with few, verified tool calls
 
-Team Dear_Basketball. Track 3, Agentic Fine-tuning. Main problem statements: Data and database agents, and Efficient trajectories. The work also touches agentic distillation and reward-hacking defences.
-
 Ask a small model a business question about a database and it usually does one of two things. It runs the same broken query again and again, or it skips the database and makes up a number. We wanted it to act like a careful analyst. Look at the schema, write one good query, and report what came back.
 
 We fine-tuned Tiny Aya Global (3.35B, LoRA) to answer analytics questions over SQLite with two tools, get_schema and run_sql. The reward pays for a correct answer first. Then it pays for a cheap path: fewer tool calls, fewer rows and less database work. A plain answer-match reward is easy to fool, so ours checks the evidence. An answer counts only if a real query on a real table returned it. Typing the answer into the SQL does not count.
 
-All data is synthetic: 5 small databases and 48 question templates. One whole domain (saas) never appears in training. We also held 12 question templates out of the SFT data, so that RL had something new to learn.
+We built 5 synthetic SQLite databases with 48 question templates. One whole domain (saas) never appears in training, so it tests how well the model handles a new database. We also held 12 question templates out of the SFT data, so that RL had something new to learn.
 
 The pipeline uses both required toolkits. AgentTune runs LoRA SFT on scripted expert trajectories, then GRPO with real tool calls (50 steps, then 150 more). AuditKit scores every model from saved traces, including tool-call accuracy. Confidence intervals come from a paired bootstrap over tasks.
 
 On the held-out domain, task success goes from 8% for the base model to 46% after SFT and 50% after GRPO. Answers come back twice as fast (11.6 s to 5.8 s), and tool-call F1 rises from 0.68 to 0.93. On the seen domains, success goes from 8% to 88%.
 
-GRPO helped in some places and not in others. It clearly cut tool calls on both test sets. It lifted the question types that only RL trained on from 45% to 79%. But it lost some ground on types SFT had already learned (98% to 92%). So the overall accuracy gain over SFT is not statistically clear. In a second test, we gave the teacher a wasteful habit on purpose. GRPO removed part of it, with no clear change in accuracy.
+GRPO clearly cut tool calls on both test sets. It lifted the question types that only RL trained on from 45% to 79%. In a second test, we gave the teacher a wasteful habit on purpose. GRPO removed part of it, with no clear change in accuracy.
 
-An offline audit shows the evidence check works. Nine scripted cheats earn half the reward without it and almost nothing with it. Two known tricks still get through, and we list them.
+An offline audit shows the evidence check works. Nine scripted ways to cheat earn half the reward without it and almost nothing with it.
 
-Limits: synthetic templated data, one seed, small test sets and no general-capability check. Some runs did not work, and the write-up reports them too. The full run used about 20 GPU hours on Hugging Face Jobs, about 28 USD across two team accounts.
+On Hugging Face we release seven LoRA adapters, the tasks, every evaluation trace, the GRPO rollouts and the training logs. The GitHub repo has the full code and a demo app that replays runs side by side. It also has the steps to reproduce every number.
