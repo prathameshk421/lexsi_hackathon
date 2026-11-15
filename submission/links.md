@@ -39,7 +39,7 @@ Open each link in a private browser window, not signed in to GitHub or Hugging F
 - [ ] https://github.com/prathameshk421/lexsi_hackathon opens, shows the README, and the code is visible.
 - [ ] https://huggingface.co/collections/prathameshk421/frugal-analyst-models-and-adapters-6af8aee6fad812f5859dc8f9 opens and lists the 7 adapter repos.
 - [ ] Each adapter repo opens with no access request form (un-gated) and shows its model card. This includes https://huggingface.co/aarush323/frugal-analyst-tiny-aya-grpo-long.
-- [ ] `aarush323/frugal-analyst-runs` is public, or its `grpo-long` files are copied into the traces dataset.
+- [x] The `grpo-long` rollouts and job logs are copied into the traces dataset (`training_logs/grpo-long/`, `job_logs/grpo-long/`). The job output repos stay private.
 - [ ] https://huggingface.co/collections/prathameshk421/frugal-analyst-datasets-traces-and-logs-6af8aee8307f37a24ac0d10d opens and lists the traces dataset.
 - [ ] https://huggingface.co/datasets/prathameshk421/frugal-analyst-data opens with no access request form, and the files can be downloaded.
 - [ ] https://github.com/prathameshk421/lexsi_hackathon#readme opens signed out.
