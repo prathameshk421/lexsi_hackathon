@@ -73,6 +73,6 @@ Do not tick Agentic distillation (3) or Reward design and reward-hacking defence
 | Artifacts | yes | "Artifacts" |
 | Documentation and reproduction | yes | "Reproduction" and `submission/reproduce.md` |
 | Declaration of outside work | yes | "Declaration of work outside the hackathon" |
-| Teammates tagged | yes | "Teammates" (handles: team member fills this) |
+| Teammates tagged | yes | "Teammates" section, with HF and Discord handles for all 3 members |
 | General capability benchmark (Track 3) | optional | Not run. Stated in Limitations and With more credits. |
 | Closed-model baseline, cost per 1k vs API | optional | Not run. Our own cost per 1,000 tasks is given. |
