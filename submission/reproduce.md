@@ -1,6 +1,6 @@
 # Reproduce Frugal Analyst
 
-Run every command from the repo root. Run times and costs are from our own jobs (job list of 2026-11-14). Costs are estimates from run time and the flavor price; the billing page may differ, because it also bills start-up time.
+Run every command from the repo root. Run times and costs are from our own jobs (job list of 2026-11-14, plus the three `grpo-long` jobs from a teammate's account). Costs are estimates from run time and the flavor price; the billing page may differ, because it also bills start-up time.
 
 ## 1. Environment (local, no GPU)
 
@@ -134,7 +134,23 @@ hf jobs uv run --flavor l40sx1 --timeout 4h --secrets HF_TOKEN \
 | grpo-mixed (failed try) | a10g-small | 23 min 39 s | 0.39 |
 | grpo-mixed | l40sx1 | 1 h 33 min | 2.81 |
 
-Note on the last two commands: our job list stores the `grpo-ungated` and `grpo-mixed` command lines cut after `--rew`. The flags before that point are the ones shown. The reward mode comes from the run name, and the training log agrees: for `grpo-ungated`, mean reward 0.736 equals `0.5 * correct + 0.5 * efficiency` (0.531 and 0.942). We do not know if `--stop-if-no-signal` was given for these two runs. Its default is 3.
+The second GRPO stage `grpo-long` (the final model) trains 150 more steps on top of the merged SFT and `grpo` adapters. We ran it on a teammate's account, so its init adapters were the public repos. Use your own `$COMMON` and adapter paths.
+
+```bash
+# grpo-long: gated reward, 150 more steps, lr 5e-5, L40S
+hf jobs uv run --flavor l40sx1 --timeout 12h --secrets HF_TOKEN \
+    scripts/jobs/frugal_job.py --step grpo --run-name grpo-long \
+    --init-adapter prathameshk421/frugal-analyst-tiny-aya-sft:.,prathameshk421/frugal-analyst-tiny-aya-grpo:. $COMMON \
+    --extra "--tasks data/tasks/train_rl.jsonl --max-steps 150 --num-generations 4 --batch-size 4 --grad-accum 4 --lr 5e-5 --beta 0 --temperature 1.0 --scale-rewards batch --epsilon-high 0.28 --max-completion-length 256 --max-tool-steps 4 --reward-mode gated --stop-if-no-signal 3"
+```
+
+| Run | Flavor | Our time | Est. USD |
+|---|---|---|---|
+| grpo-long | l40sx1 | 22,780 s (6 h 20 min) | 11.39 |
+
+We took the flag values from the team's training notes for this run. We did not check `--stop-if-no-signal` and `--timeout` for it. The script default for the first is 3. The smoke job for this stage took about 116 s on an A10G (0.03 USD).
+
+Note on the `grpo-ungated` and `grpo-mixed` commands: our job list stores the `grpo-ungated` and `grpo-mixed` command lines cut after `--rew`. The flags before that point are the ones shown. The reward mode comes from the run name, and the training log agrees: for `grpo-ungated`, mean reward 0.736 equals `0.5 * correct + 0.5 * efficiency` (0.531 and 0.942). We do not know if `--stop-if-no-signal` was given for these two runs. Its default is 3.
 
 ### 3e. Evaluation (a10g-small, both test splits, 220 tasks)
 
@@ -159,7 +175,14 @@ hf jobs uv run --flavor a10g-small --timeout 3h --secrets HF_TOKEN \
 hf jobs uv run --flavor a10g-small --timeout 3h --secrets HF_TOKEN \
     scripts/jobs/frugal_job.py --step eval --run-name eval-grpo-mixed --trace-label grpo-mixed \
     --adapters YOU/frugal-runs:sft-mixed/adapter,YOU/frugal-runs:grpo-mixed/adapter $COMMON
+
+# grpo-long: the final model. Merge three adapters in order: SFT, grpo, grpo-long.
+hf jobs uv run --flavor a10g-small --timeout 3h --secrets HF_TOKEN \
+    scripts/jobs/frugal_job.py --step eval --run-name eval-grpo-long --trace-label grpo-long \
+    --adapters prathameshk421/frugal-analyst-tiny-aya-sft:.,prathameshk421/frugal-analyst-tiny-aya-grpo:.,aarush323/frugal-analyst-runs:grpo-long/adapter $COMMON
 ```
+
+The run name `eval-grpo-long` is our suggestion. We did not check the name of the teammate's job.
 
 | Run | Our time | Est. USD |
 |---|---|---|
@@ -169,18 +192,30 @@ hf jobs uv run --flavor a10g-small --timeout 3h --secrets HF_TOKEN \
 | eval-grpo-ungated | 26 min 42 s | 0.45 |
 | eval-distilled-mixed | 26 min 40 s | 0.44 |
 | eval-grpo-mixed | 26 min 33 s | 0.44 |
+| eval-grpo-long | 21 min 46 s (1,306 s) | 0.36 |
 
 Every evaluation uses greedy decoding, at most 4 executed tool calls, 256 new tokens per turn and seed 0. Each trace file gets a `.run.json` file with these settings.
 
 ### Total
 
-29 jobs, 13.56 GPU hours, about 16.64 USD. This includes 8 smoke jobs, 5 failed jobs (2 of them smoke jobs) and 2 cancelled jobs. The main pipeline alone (zero-shot-v2, sft-rlsplit, grpo-rlsplit and their two evaluations) is about 6.18 USD.
+32 jobs, 20.28 GPU hours, about 28.43 USD. This includes 9 smoke jobs, 5 failed jobs (2 of them smoke jobs) and 2 cancelled jobs.
+
+Two accounts paid. The account `prathameshk421` paid for 29 jobs (13.56 hours, 16.64 USD). The teammate account `aarush323` paid for the 3 `grpo-long` jobs (6.72 hours, about 11.8 USD): training 11.39 USD, evaluation 0.36 USD and one smoke job 0.03 USD. Each account stayed under the 20 USD ceiling. The combined cost is above it.
+
+The first main pipeline (zero-shot-v2, sft-rlsplit, grpo-rlsplit and their two evaluations) is about 6.18 USD. With the `grpo-long` stage, the pipeline for the final model is about 18.0 USD.
 
 ## 4. Get the traces back
 
 ```bash
 hf download YOU/frugal-runs --local-dir outputs/hub-runs
 cp outputs/hub-runs/*/traces/*.jsonl outputs/hub-runs/*/traces/*.run.json outputs/traces/
+```
+
+The `grpo-long` traces are in the teammate's output repo. Download and copy them the same way:
+
+```bash
+hf download aarush323/frugal-analyst-runs --local-dir outputs/hub-runs-long
+cp outputs/hub-runs-long/*/traces/*.jsonl outputs/hub-runs-long/*/traces/*.run.json outputs/traces/
 ```
 
 The evaluation scripts hash every input file. Compare the hashes in `docs/results/*.md` (section "Inputs") with your files.
@@ -197,7 +232,8 @@ The evaluation scripts hash every input file. Compare the hashes in `docs/result
 # GRPO against SFT, the effect of RL alone (docs/results/results_vs_sft.md)
 .venv/bin/python scripts/eval_auditkit.py --baseline distilled --out outputs/eval_vs_sft/ \
     --traces outputs/traces/zero-shot_test_*.jsonl outputs/traces/distilled_test_*.jsonl \
-             outputs/traces/grpo_test_*.jsonl outputs/traces/grpo-ungated_test_*.jsonl
+             outputs/traces/grpo_test_*.jsonl outputs/traces/grpo-ungated_test_*.jsonl \
+             outputs/traces/grpo-long_test_*.jsonl
 
 # mixed-teacher experiment (docs/results/results_mixed.md)
 .venv/bin/python scripts/eval_auditkit.py --baseline distilled-mixed --out outputs/eval_mixed/ \

@@ -18,7 +18,7 @@ Pipeline: zero-shot baseline, SFT on teacher traces, GRPO with a gated reward. A
 - AgentTune is required for training. AuditKit is required for evaluation. Use both in the real pipeline.
 - If a toolkit has a bug, report it to a human. Do not replace the toolkit silently.
 - Deadline: Nov 15, 2026, 11:59 PM AoE. That is Monday Nov 16, 2026, 5:29 PM IST. Only the last submission counts.
-- Compute: Hugging Face Jobs. Budget ceiling is 20 USD. Spend only what the work needs.
+- Compute: Hugging Face Jobs, paid from team members' credits (about 20 USD per account). A human sets the budget for each new run. Spend only what the work needs.
 - Run a smoke job before any real job. Never start a GPU job unless a human says so.
 - All HF models, adapters, datasets, logs and traces are public and un-gated.
 - Work must be our own, written during the hackathon.
