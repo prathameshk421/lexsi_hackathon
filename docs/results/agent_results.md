@@ -19,6 +19,7 @@ Task ids: 120 in total, 120 shared by all models.
 | `oracle` | 120 | 0 | 1.000 | 1.000 | 1.000 | 1.000 | 0.000 | 1.000 | 1.000 | 1.000 |
 | `distilled-all` | 120 | 0 | 1.000 | 0.997 | 0.998 | 0.995 | 0.000 | 1.000 | 1.000 | 0.992 |
 | `distilled-mixed` | 120 | 0 | 0.835 | 0.992 | 0.895 | 0.764 | 0.010 | 1.000 | 1.000 | 0.775 |
+| `grpo-long` | 120 | 0 | 0.998 | 0.958 | 0.974 | 0.850 | 0.002 | 1.000 | 1.000 | 0.875 |
 | `grpo-mixed` | 120 | 0 | 0.865 | 0.992 | 0.913 | 0.782 | 0.008 | 1.000 | 1.000 | 0.767 |
 | `zero-shot-stop` | 120 | 0 | 1.000 | 0.469 | 0.629 | 0.608 | 0.003 | 1.000 | 1.000 | 0.025 |
 
@@ -34,6 +35,7 @@ Breakdown by template group (rl_only: never in the SFT data): name F1 ↑ / argu
 | `oracle` | 1.000 / 1.000 / 1.000 (n=38) | 1.000 / 1.000 / 1.000 (n=82) |
 | `distilled-all` | 0.995 / 0.984 / 0.974 (n=38) | 1.000 / 1.000 / 1.000 (n=82) |
 | `distilled-mixed` | 0.873 / 0.545 / 0.447 (n=38) | 0.905 / 0.866 / 0.927 (n=82) |
+| `grpo-long` | 0.954 / 0.710 / 0.789 (n=38) | 0.983 / 0.914 / 0.915 (n=82) |
 | `grpo-mixed` | 0.885 / 0.557 / 0.421 (n=38) | 0.926 / 0.887 / 0.927 (n=82) |
 | `zero-shot-stop` | 0.644 / 0.603 / 0.026 (n=38) | 0.622 / 0.611 / 0.024 (n=82) |
 
@@ -51,6 +53,7 @@ Task ids: 100 in total, 100 shared by all models.
 | `oracle` | 100 | 0 | 1.000 | 1.000 | 1.000 | 1.000 | 0.000 | 1.000 | 1.000 | 1.000 |
 | `distilled-all` | 100 | 0 | 0.937 | 0.937 | 0.923 | 0.666 | 0.035 | 0.940 | 1.000 | 0.580 |
 | `distilled-mixed` | 100 | 0 | 0.830 | 0.993 | 0.890 | 0.546 | 0.040 | 0.910 | 1.000 | 0.490 |
+| `grpo-long` | 100 | 0 | 0.965 | 0.910 | 0.925 | 0.628 | 0.058 | 0.890 | 1.000 | 0.500 |
 | `grpo-mixed` | 100 | 0 | 0.830 | 0.993 | 0.890 | 0.546 | 0.040 | 0.910 | 1.000 | 0.500 |
 | `zero-shot-stop` | 100 | 0 | 0.998 | 0.440 | 0.604 | 0.598 | 0.005 | 0.990 | 1.000 | 0.000 |
 
@@ -76,6 +79,8 @@ Method: Per-episode values come from AuditKit (AgentEvalRunner, recorded mode). 
 | `distilled-all` | argument F1 ↑ | 120 | 0.463 to 0.995 | +0.532 | [+0.498, +0.563] | yes | better |
 | `distilled-mixed` | name F1 ↑ (headline) | 120 | 0.715 to 0.895 | +0.181 | [+0.150, +0.209] | yes | better |
 | `distilled-mixed` | argument F1 ↑ | 120 | 0.463 to 0.764 | +0.302 | [+0.248, +0.354] | yes | better |
+| `grpo-long` | name F1 ↑ (headline) | 120 | 0.715 to 0.974 | +0.259 | [+0.232, +0.285] | yes | better |
+| `grpo-long` | argument F1 ↑ | 120 | 0.463 to 0.850 | +0.387 | [+0.336, +0.436] | yes | better |
 | `grpo-mixed` | name F1 ↑ (headline) | 120 | 0.715 to 0.913 | +0.198 | [+0.168, +0.227] | yes | better |
 | `grpo-mixed` | argument F1 ↑ | 120 | 0.463 to 0.782 | +0.319 | [+0.264, +0.371] | yes | better |
 | `zero-shot-stop` | name F1 ↑ (headline) | 120 | 0.715 to 0.629 | -0.086 | [-0.114, -0.058] | yes | worse |
@@ -99,6 +104,8 @@ Method: Per-episode values come from AuditKit (AgentEvalRunner, recorded mode). 
 | `distilled-all` | argument F1 ↑ | 100 | 0.479 to 0.666 | +0.186 | [+0.128, +0.244] | yes | better |
 | `distilled-mixed` | name F1 ↑ (headline) | 100 | 0.677 to 0.890 | +0.213 | [+0.175, +0.253] | yes | better |
 | `distilled-mixed` | argument F1 ↑ | 100 | 0.479 to 0.546 | +0.067 | [+0.022, +0.114] | yes | better |
+| `grpo-long` | name F1 ↑ (headline) | 100 | 0.677 to 0.925 | +0.248 | [+0.222, +0.275] | yes | better |
+| `grpo-long` | argument F1 ↑ | 100 | 0.479 to 0.628 | +0.149 | [+0.091, +0.210] | yes | better |
 | `grpo-mixed` | name F1 ↑ (headline) | 100 | 0.677 to 0.890 | +0.213 | [+0.175, +0.253] | yes | better |
 | `grpo-mixed` | argument F1 ↑ | 100 | 0.479 to 0.546 | +0.067 | [+0.022, +0.114] | yes | better |
 | `zero-shot-stop` | name F1 ↑ (headline) | 100 | 0.677 to 0.604 | -0.073 | [-0.101, -0.047] | yes | worse |
@@ -114,6 +121,8 @@ Method: Per-episode values come from AuditKit (AgentEvalRunner, recorded mode). 
 | `outputs/traces/distilled-mixed_test_ood.jsonl` | 100 | `6bd0884722fbf320345ce234ab99af500312710aa0dbb20fdeabd7f8438ff42f` |
 | `outputs/traces/distilled_test_id.jsonl` | 120 | `a5614b4ef77b3387eef78655e6d27240b9362cb993c704c50c13be5bc2fafafb` |
 | `outputs/traces/distilled_test_ood.jsonl` | 100 | `8acf8b54b2e3231f9d7efbc0590fbdf13823eab35517d57e20999b5040fe9ce3` |
+| `outputs/traces/grpo-long_test_id.jsonl` | 120 | `fc1aa2895b7a9a984454a027f86764acc56dd69263f0c996c9fe3da9316beac4` |
+| `outputs/traces/grpo-long_test_ood.jsonl` | 100 | `dcbe140d30d386e79a60fb20e083d131501087c057839b6dc1327d16115c6f65` |
 | `outputs/traces/grpo-mixed_test_id.jsonl` | 120 | `e1126077fa48633a99eb9633c71996ea2c8c91ca60bf282208fe037fab2829f4` |
 | `outputs/traces/grpo-mixed_test_ood.jsonl` | 100 | `6509c00a4df12fe0db048b86d3022102659d87145c367dd329fbac25aee258b9` |
 | `outputs/traces/grpo-ungated_test_id.jsonl` | 120 | `1dbc08ada9693eadfa529488832b4fbb05665347c8a7e675c7f79404da7c9058` |

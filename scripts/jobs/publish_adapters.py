@@ -42,9 +42,12 @@ def main() -> None:
     p = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     p.add_argument("--source", required=True, help="private model repo with the run folders")
     p.add_argument("--owner", required=True, help="user or org that gets the public repos")
+    p.add_argument("--only", action="append", default=[], metavar="RUN=NAME",
+                   help="publish only these runs, for example grpo-long=frugal-analyst-tiny-aya-grpo-long")
     args = p.parse_args()
     api = HfApi()
-    for run, name in ADAPTERS.items():
+    adapters = dict(x.split("=", 1) for x in args.only) if args.only else ADAPTERS
+    for run, name in adapters.items():
         repo_id = f"{args.owner}/{name}"
         with tempfile.TemporaryDirectory() as tmp:
             snapshot_download(repo_id=args.source, repo_type="model", local_dir=tmp,

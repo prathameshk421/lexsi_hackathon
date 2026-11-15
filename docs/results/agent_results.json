@@ -37,6 +37,16 @@
       "sha256": "8acf8b54b2e3231f9d7efbc0590fbdf13823eab35517d57e20999b5040fe9ce3"
     },
     {
+      "path": "outputs/traces/grpo-long_test_id.jsonl",
+      "records": 120,
+      "sha256": "fc1aa2895b7a9a984454a027f86764acc56dd69263f0c996c9fe3da9316beac4"
+    },
+    {
+      "path": "outputs/traces/grpo-long_test_ood.jsonl",
+      "records": 100,
+      "sha256": "dcbe140d30d386e79a60fb20e083d131501087c057839b6dc1327d16115c6f65"
+    },
+    {
       "path": "outputs/traces/grpo-mixed_test_id.jsonl",
       "records": 120,
       "sha256": "e1126077fa48633a99eb9633c71996ea2c8c91ca60bf282208fe037fab2829f4"
@@ -533,6 +543,52 @@
             "n_mismatches": 0
           }
         },
+        "grpo-long": {
+          "n": 120,
+          "metrics": {
+            "tool_call_precision_name": 0.9979166666666667,
+            "tool_call_recall_name": 0.9583333333333334,
+            "tool_call_f1_name": 0.9738095238095238,
+            "tool_call_f1": 0.8496031746031746,
+            "redundant_tool_calls": 0.0020833333333333333,
+            "agent_loop_detection": 1.0,
+            "tool_call_validity": 1.0,
+            "task_success": 0.875
+          },
+          "counts": {
+            "tool_call_precision_name": 120,
+            "tool_call_recall_name": 120,
+            "tool_call_f1_name": 120,
+            "tool_call_f1": 120,
+            "redundant_tool_calls": 120,
+            "agent_loop_detection": 120,
+            "tool_call_validity": 120,
+            "task_success": 120
+          },
+          "failed_episodes": 0,
+          "failures": [],
+          "auditkit_summary": "Agent eval   Mode: recorded   Cases: 120\nVerified success: 105/120 (105/120 decided)   Failure: 15   Unknown outcome: 0   Error: 0   Over budget: 0\nEndpoint errors: 0\nStatus: completed 120\nTrace coverage: full 120, tool names only 0, answer only 0\nTool validity: 120/120 eligible\nMedian latency: n/a          Agent calls: 0",
+          "by_template_group": {
+            "rl_only": {
+              "n": 38,
+              "tool_call_f1_name": 0.9541353383458647,
+              "tool_call_f1": 0.7101503759398496,
+              "task_success": 0.7894736842105263
+            },
+            "sft_seen": {
+              "n": 82,
+              "tool_call_f1_name": 0.9829268292682927,
+              "tool_call_f1": 0.9142276422764228,
+              "task_success": 0.9146341463414634
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "checked_episodes": 120,
+            "mismatches": [],
+            "n_mismatches": 0
+          }
+        },
         "grpo-mixed": {
           "n": 120,
           "metrics": {
@@ -955,6 +1011,46 @@
             "n_mismatches": 0
           }
         },
+        "grpo-long": {
+          "n": 100,
+          "metrics": {
+            "tool_call_precision_name": 0.965,
+            "tool_call_recall_name": 0.91,
+            "tool_call_f1_name": 0.9250476190476191,
+            "tool_call_f1": 0.6282380952380953,
+            "redundant_tool_calls": 0.0575,
+            "agent_loop_detection": 0.89,
+            "tool_call_validity": 1.0,
+            "task_success": 0.5
+          },
+          "counts": {
+            "tool_call_precision_name": 100,
+            "tool_call_recall_name": 100,
+            "tool_call_f1_name": 100,
+            "tool_call_f1": 100,
+            "redundant_tool_calls": 100,
+            "agent_loop_detection": 100,
+            "tool_call_validity": 100,
+            "task_success": 100
+          },
+          "failed_episodes": 0,
+          "failures": [],
+          "auditkit_summary": "Agent eval   Mode: recorded   Cases: 100\nVerified success: 50/100 (50/100 decided)   Failure: 50   Unknown outcome: 0   Error: 0   Over budget: 0\nEndpoint errors: 0\nStatus: completed 100\nTrace coverage: full 100, tool names only 0, answer only 0\nTool validity: 100/100 eligible\nMedian latency: n/a          Agent calls: 0",
+          "by_template_group": {
+            "unseen_domain": {
+              "n": 100,
+              "tool_call_f1_name": 0.9250476190476191,
+              "tool_call_f1": 0.6282380952380953,
+              "task_success": 0.5
+            }
+          },
+          "crosscheck": {
+            "ok": true,
+            "checked_episodes": 100,
+            "mismatches": [],
+            "n_mismatches": 0
+          }
+        },
         "grpo-mixed": {
           "n": 100,
           "metrics": {
@@ -1232,6 +1328,33 @@
           }
         },
         {
+          "model": "grpo-long",
+          "metrics": {
+            "tool_call_f1_name": {
+              "n_paired": 120,
+              "direction": "max",
+              "baseline_mean": 0.7146428571428571,
+              "candidate_mean": 0.9738095238095238,
+              "delta": 0.2591666666666667,
+              "ci_low": 0.23222222222222225,
+              "ci_high": 0.28507936507936515,
+              "excludes_zero": true,
+              "verdict": "better"
+            },
+            "tool_call_f1": {
+              "n_paired": 120,
+              "direction": "max",
+              "baseline_mean": 0.4629365079365079,
+              "candidate_mean": 0.8496031746031746,
+              "delta": 0.38666666666666666,
+              "ci_low": 0.336468253968254,
+              "ci_high": 0.4356746031746032,
+              "excludes_zero": true,
+              "verdict": "better"
+            }
+          }
+        },
+        {
           "model": "grpo-mixed",
           "metrics": {
             "tool_call_f1_name": {
@@ -1474,6 +1597,33 @@
               "delta": 0.067,
               "ci_low": 0.02180952380952382,
               "ci_high": 0.11409523809523811,
+              "excludes_zero": true,
+              "verdict": "better"
+            }
+          }
+        },
+        {
+          "model": "grpo-long",
+          "metrics": {
+            "tool_call_f1_name": {
+              "n_paired": 100,
+              "direction": "max",
+              "baseline_mean": 0.677,
+              "candidate_mean": 0.9250476190476191,
+              "delta": 0.24804761904761907,
+              "ci_low": 0.22171428571428575,
+              "ci_high": 0.27490476190476193,
+              "excludes_zero": true,
+              "verdict": "better"
+            },
+            "tool_call_f1": {
+              "n_paired": 100,
+              "direction": "max",
+              "baseline_mean": 0.4793333333333333,
+              "candidate_mean": 0.6282380952380953,
+              "delta": 0.14890476190476193,
+              "ci_low": 0.09142857142857146,
+              "ci_high": 0.20980952380952383,
               "excludes_zero": true,
               "verdict": "better"
             }

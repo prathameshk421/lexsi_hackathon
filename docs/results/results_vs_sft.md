@@ -17,6 +17,7 @@ Task ids: 120 in total, 120 shared by all models.
 | `zero-shot` | 120 | 0.083 | 0.683 | 0.350 | 0.358 | 0.000 | 0.625 | 0.600 | 0.130 | 0.889 | 0.741 (10/120) | 2.60 | 2.3 | 5183 | 1.14 | 0.57 | 0.042 | 12.73 | 327.84 |
 | `grpo` | 120 | 0.833 | 0.967 | 0.967 | 0.000 | 0.000 | 0.950 | 0.950 | 0.848 | 0.986 | 0.999 (100/120) | 2.34 | 2.2 | 9870 | 1.00 | 0.93 | 0.833 | 5.65 | 125.37 |
 | `grpo-ungated` | 120 | 0.817 | 0.967 | 0.967 | 0.000 | 0.025 | 0.950 | 0.950 | 0.833 | 0.985 | 0.999 (98/120) | 2.34 | 2.2 | 9536 | 1.00 | 0.91 | 0.817 | 5.60 | 125.05 |
+| `grpo-long` | 120 | 0.875 | 1.000 | 1.000 | 0.000 | 0.000 | 0.981 | 0.967 | 0.887 | 0.989 | 0.999 (105/120) | 2.23 | 2.0 | 10201 | 0.96 | 1.14 | 0.875 | 5.26 | 115.60 |
 
 Breakdown by level: accuracy ↑ / mean reward ↑ / mean tool calls ↓ (n)
 
@@ -26,6 +27,7 @@ Breakdown by level: accuracy ↑ / mean reward ↑ / mean tool calls ↓ (n)
 | `zero-shot` | 0.225 / 0.247 / 2.35 (n=40) | 0.026 / 0.079 / 2.76 (n=38) | 0.000 / 0.065 / 2.69 (n=42) |
 | `grpo` | 0.850 / 0.865 / 2.00 (n=40) | 0.921 / 0.928 / 2.08 (n=38) | 0.738 / 0.759 / 2.90 (n=42) |
 | `grpo-ungated` | 0.850 / 0.865 / 2.00 (n=40) | 0.895 / 0.903 / 2.13 (n=38) | 0.714 / 0.739 / 2.86 (n=42) |
+| `grpo-long` | 1.000 / 0.999 / 2.00 (n=40) | 1.000 / 1.000 / 2.00 (n=38) | 0.643 / 0.678 / 2.67 (n=42) |
 
 Breakdown by domain: accuracy ↑ / mean reward ↑ / mean tool calls ↓ (n)
 
@@ -35,6 +37,7 @@ Breakdown by domain: accuracy ↑ / mean reward ↑ / mean tool calls ↓ (n)
 | `zero-shot` | 0.167 / 0.192 / 2.40 (n=30) | 0.000 / 0.060 / 2.80 (n=30) | 0.167 / 0.208 / 2.77 (n=30) | 0.000 / 0.062 / 2.43 (n=30) |
 | `grpo` | 0.800 / 0.820 / 2.30 (n=30) | 1.000 / 1.000 / 2.20 (n=30) | 0.900 / 0.904 / 2.40 (n=30) | 0.633 / 0.668 / 2.47 (n=30) |
 | `grpo-ungated` | 0.767 / 0.788 / 2.37 (n=30) | 0.933 / 0.940 / 2.20 (n=30) | 0.933 / 0.935 / 2.33 (n=30) | 0.633 / 0.668 / 2.47 (n=30) |
+| `grpo-long` | 0.800 / 0.820 / 2.27 (n=30) | 0.900 / 0.910 / 2.10 (n=30) | 0.933 / 0.939 / 2.20 (n=30) | 0.867 / 0.879 / 2.37 (n=30) |
 
 Breakdown by template group (rl_only: never in the SFT data): accuracy ↑ / mean reward ↑ / mean tool calls ↓ (n)
 
@@ -44,6 +47,7 @@ Breakdown by template group (rl_only: never in the SFT data): accuracy ↑ / mea
 | `zero-shot` | 0.158 / 0.195 / 2.34 (n=38) | 0.049 / 0.101 / 2.72 (n=82) |
 | `grpo` | 0.526 / 0.568 / 2.34 (n=38) | 0.976 / 0.978 / 2.34 (n=82) |
 | `grpo-ungated` | 0.474 / 0.519 / 2.34 (n=38) | 0.976 / 0.978 / 2.34 (n=82) |
+| `grpo-long` | 0.789 / 0.809 / 2.13 (n=38) | 0.915 / 0.923 / 2.28 (n=82) |
 
 ## Split `test_ood`
 
@@ -55,6 +59,7 @@ Task ids: 100 in total, 100 shared by all models.
 | `zero-shot` | 100 | 0.080 | 0.520 | 0.290 | 0.250 | 0.000 | 0.700 | 0.710 | 0.125 | 0.878 | 0.740 (8/100) | 2.30 | 0.6 | 6245 | 1.01 | 0.71 | 0.030 | 11.64 | 297.20 |
 | `grpo` | 100 | 0.470 | 0.870 | 0.870 | 0.000 | 0.000 | 0.788 | 0.730 | 0.508 | 0.934 | 0.963 (47/100) | 2.45 | 1.3 | 8578 | 1.05 | 1.28 | 0.410 | 6.28 | 141.90 |
 | `grpo-ungated` | 100 | 0.450 | 0.870 | 0.870 | 0.000 | 0.000 | 0.793 | 0.760 | 0.490 | 0.937 | 0.964 (45/100) | 2.41 | 1.3 | 8578 | 1.03 | 1.31 | 0.400 | 6.25 | 140.30 |
+| `grpo-long` | 100 | 0.500 | 0.880 | 0.880 | 0.000 | 0.000 | 0.841 | 0.880 | 0.538 | 0.946 | 0.974 (50/100) | 2.27 | 1.0 | 8740 | 0.96 | 1.32 | 0.500 | 5.80 | 130.89 |
 
 Breakdown by level: accuracy ↑ / mean reward ↑ / mean tool calls ↓ (n)
 
@@ -64,6 +69,7 @@ Breakdown by level: accuracy ↑ / mean reward ↑ / mean tool calls ↓ (n)
 | `zero-shot` | 0.200 / 0.231 / 2.80 (n=30) | 0.067 / 0.109 / 2.03 (n=30) | 0.000 / 0.058 / 2.12 (n=40) |
 | `grpo` | 0.867 / 0.880 / 2.00 (n=30) | 0.600 / 0.612 / 2.67 (n=30) | 0.075 / 0.150 / 2.62 (n=40) |
 | `grpo-ungated` | 0.833 / 0.850 / 2.00 (n=30) | 0.567 / 0.584 / 2.53 (n=30) | 0.075 / 0.150 / 2.62 (n=40) |
+| `grpo-long` | 0.900 / 0.910 / 2.00 (n=30) | 0.667 / 0.684 / 2.13 (n=30) | 0.075 / 0.149 / 2.58 (n=40) |
 
 Breakdown by domain: accuracy ↑ / mean reward ↑ / mean tool calls ↓ (n)
 
@@ -73,6 +79,7 @@ Breakdown by domain: accuracy ↑ / mean reward ↑ / mean tool calls ↓ (n)
 | `zero-shot` | 0.080 / 0.125 / 2.30 (n=100) |
 | `grpo` | 0.470 / 0.508 / 2.45 (n=100) |
 | `grpo-ungated` | 0.450 / 0.490 / 2.41 (n=100) |
+| `grpo-long` | 0.500 / 0.538 / 2.27 (n=100) |
 
 Breakdown by template group (rl_only: never in the SFT data): accuracy ↑ / mean reward ↑ / mean tool calls ↓ (n)
 
@@ -82,6 +89,7 @@ Breakdown by template group (rl_only: never in the SFT data): accuracy ↑ / mea
 | `zero-shot` | 0.080 / 0.125 / 2.30 (n=100) |
 | `grpo` | 0.470 / 0.508 / 2.45 (n=100) |
 | `grpo-ungated` | 0.450 / 0.490 / 2.41 (n=100) |
+| `grpo-long` | 0.500 / 0.538 / 2.27 (n=100) |
 
 ## Paired comparisons with the baseline
 
@@ -103,6 +111,10 @@ Method: Per-episode values come from AuditKit (ak.evaluate with model='precomput
 | `grpo-ungated` | 120 | mean reward ↑ | 0.825 to 0.833 | +0.008 | [+0.000, +0.023] | no | no clear change (AuditKit p=0.662) |
 | `grpo-ungated` | 120 | mean efficiency ↑ | 0.984 to 0.985 | +0.001 | [+0.000, +0.002] | no | no clear change (AuditKit p=0.634) |
 | `grpo-ungated` | 120 | mean tool calls ↓ | 2.342 to 2.342 | +0.000 | [+0.000, +0.000] | no | no clear change (AuditKit p=1.000) |
+| `grpo-long` | 120 | accuracy ↑ | 0.808 to 0.875 | +0.067 | [+0.000, +0.142] | no | no clear change (AuditKit p=0.093) |
+| `grpo-long` | 120 | mean reward ↑ | 0.825 to 0.887 | +0.062 | [+0.001, +0.130] | yes | better (AuditKit p=0.057) |
+| `grpo-long` | 120 | mean efficiency ↑ | 0.984 to 0.989 | +0.004 | [-0.010, +0.018] | no | no clear change (AuditKit p=0.560) |
+| `grpo-long` | 120 | mean tool calls ↓ | 2.342 to 2.233 | -0.108 | [-0.192, -0.033] | yes | better (AuditKit p=0.017) |
 
 ### Split `test_ood`
 
@@ -120,6 +132,10 @@ Method: Per-episode values come from AuditKit (ak.evaluate with model='precomput
 | `grpo-ungated` | 100 | mean reward ↑ | 0.497 to 0.490 | -0.006 | [-0.025, +0.006] | no | no clear change (AuditKit p=0.617) |
 | `grpo-ungated` | 100 | mean efficiency ↑ | 0.928 to 0.937 | +0.009 | [-0.000, +0.021] | no | no clear change (AuditKit p=0.073) |
 | `grpo-ungated` | 100 | mean tool calls ↓ | 2.440 to 2.410 | -0.030 | [-0.090, +0.010] | no | no clear change (AuditKit p=0.350) |
+| `grpo-long` | 100 | accuracy ↑ | 0.460 to 0.500 | +0.040 | [+0.000, +0.090] | no | no clear change (AuditKit p=0.150) |
+| `grpo-long` | 100 | mean reward ↑ | 0.497 to 0.538 | +0.041 | [+0.002, +0.084] | yes | better (AuditKit p=0.062) |
+| `grpo-long` | 100 | mean efficiency ↑ | 0.928 to 0.946 | +0.018 | [+0.005, +0.035] | yes | better (AuditKit p=0.027) |
+| `grpo-long` | 100 | mean tool calls ↓ | 2.440 to 2.270 | -0.170 | [-0.270, -0.070] | yes | better (AuditKit p=0.001) |
 
 ## Inputs
 
@@ -133,3 +149,5 @@ Method: Per-episode values come from AuditKit (ak.evaluate with model='precomput
 | `outputs/traces/grpo_test_ood.jsonl` | 100 | `cb4e00593f62811852efb1e118d309773bf0040c2ef0d9280260763b13aec196` |
 | `outputs/traces/grpo-ungated_test_id.jsonl` | 120 | `1dbc08ada9693eadfa529488832b4fbb05665347c8a7e675c7f79404da7c9058` |
 | `outputs/traces/grpo-ungated_test_ood.jsonl` | 100 | `9a02e35c7f145112a7bcd89b5bf272ce749abc98723335d491ad9814a7e30c1d` |
+| `outputs/traces/grpo-long_test_id.jsonl` | 120 | `fc1aa2895b7a9a984454a027f86764acc56dd69263f0c996c9fe3da9316beac4` |
+| `outputs/traces/grpo-long_test_ood.jsonl` | 100 | `dcbe140d30d386e79a60fb20e083d131501087c057839b6dc1327d16115c6f65` |
