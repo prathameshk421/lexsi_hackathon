@@ -542,8 +542,8 @@ Expected before/after is a forecast: we expect the largest new gain on the held-
 | Traces and logs dataset | https://huggingface.co/datasets/prathameshk421/frugal-analyst-data |
 | Job output repos | `prathameshk421/frugal-analyst-runs` (all runs except `grpo-long`) and `aarush323/frugal-analyst-runs` (`grpo-long` adapter, log and rollouts) |
 | GitHub repository | https://github.com/prathameshk421/lexsi_hackathon |
-| HF article (write-up) | `{{HF_ARTICLE}}` |
-| Demo Space | `{{HF_SPACE}}` |
+| Write-up | This README: https://github.com/prathameshk421/lexsi_hackathon#readme |
+| Demo | Not hosted. Hugging Face now needs a PRO plan for Gradio Spaces on free CPU. Run it locally with `python app/app.py`, or build a Space folder with `space/build_space.py`. |
 
 The demo (`app/app.py`) is a Gradio app with 4 tabs: replay two models side by side, ask a question live, a SQL playground with VM-step cost, and the results tables. It needs no GPU. See [`app/README.md`](app/README.md).
 

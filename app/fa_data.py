@@ -33,8 +33,10 @@ RUN_INFO = {
                   "Tiny Aya with the two tools and no training. The baseline for every headline number."),
     "distilled": ("SFT, 274 tasks", "SFT",
                   "LoRA SFT on scripted oracle traces of 274 train tasks. 12 templates are held back for RL."),
-    "grpo": ("SFT + GRPO (final)", "SFT + GRPO",
-             "The SFT model plus 50 GRPO steps with the evidence-gated cost reward. The final model."),
+    "grpo-long": ("SFT + GRPO, 200 steps (final)", "GRPO 200",
+                  "The 50-step GRPO model plus 150 more GRPO steps. The final model."),
+    "grpo": ("SFT + GRPO, 50 steps", "GRPO 50",
+             "The SFT model plus 50 GRPO steps with the evidence-gated cost reward."),
     "grpo-ungated": ("SFT + GRPO, ungated reward (ablation)", "GRPO ungated",
                      "Like the final model, but 30 GRPO steps with no evidence gate in the reward."),
     "distilled-mixed": ("SFT, mixed teacher", "SFT mixed",
@@ -54,7 +56,7 @@ RUN_INFO = {
 LABEL_ORDER = list(RUN_INFO)
 BASELINE_LABEL = "zero-shot"
 # The run that the first screen compares with the baseline: the final model, else SFT.
-PREFERRED_AFTER = ("grpo", "distilled")
+PREFERRED_AFTER = ("grpo-long", "grpo", "distilled")
 
 MAX_FILE_BYTES = 80 * 1024 * 1024
 _FILE_RE = re.compile(r"^([a-z0-9][a-z0-9-]{0,30})_(test_id|test_ood|val|train)\.jsonl$")

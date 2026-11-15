@@ -16,7 +16,7 @@ The form fields are in the order of the Tally form. "Team member fills this" mea
 |---|---|---|
 | HF model collection link | yes | https://huggingface.co/collections/prathameshk421/frugal-analyst-models-and-adapters-6af8aee6fad812f5859dc8f9 |
 | HF dataset collection link | yes | https://huggingface.co/collections/prathameshk421/frugal-analyst-datasets-traces-and-logs-6af8aee8307f37a24ac0d10d |
-| Hugging Face article link | yes | `{{HF_ARTICLE}}`, or the GitHub README if HF articles are not open to us |
+| Hugging Face article link | yes | https://github.com/prathameshk421/lexsi_hackathon#readme |
 | GitHub repo link | yes | https://github.com/prathameshk421/lexsi_hackathon |
 
 ## Page 3
