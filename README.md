@@ -614,7 +614,11 @@ Team Dear_Basketball:
 - Aarush Oak: GitHub and Hugging Face [@aarush323](https://huggingface.co/aarush323), Discord `rush32306`
 - Aayush Kulkarni: Hugging Face [@aayush-k](https://huggingface.co/aayush-k), Discord `thulium7479`, [LinkedIn](https://www.linkedin.com/in/aayush-kulkarni-0a2b5a337/)
 
-Author contributions: the project idea comes from Aarush Oak's query-efficient analyst plan (`docs/query-efficient-analyst.md`). The git history shows who changed what.
+Author contributions:
+
+- Aarush Oak: model training. He ran the SFT and GRPO training pipeline and produced the final model. The project idea also comes from his query-efficient analyst plan (`docs/query-efficient-analyst.md`).
+- Aayush Kulkarni: post-training evaluation. He benchmarked the trained models and analysed the results.
+- Prathamesh Kinagi: agent environment. He built the tools, the task data, the reward gate and the harness that the whole pipeline runs on.
 
 ## LLM usage statement
 
