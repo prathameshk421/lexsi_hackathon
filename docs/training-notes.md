@@ -145,7 +145,7 @@ its last turn after the step limit; the trajectory can.
 | New tokens per turn, runner | `gen_cfg["max_new_tokens"]` (transformers_engine.py:466) | 512 | `--max-new-tokens 256` |
 | Total completion length | nothing truncates the concatenated ids | none | bounded by turns x per-turn cap + tool output |
 
-Important: `GRPOConfig.max_completion_length` and `GRPOConfig.temperature` do
+`GRPOConfig.max_completion_length` and `GRPOConfig.temperature` do
 **not** reach the agentic rollout. TRL puts them in `trainer.generation_config`
 (trl grpo_trainer.py:912-929), but AgentTune passes explicit `max_new_tokens`
 and `temperature` to `generate()` next to that config, and explicit arguments
@@ -219,7 +219,7 @@ which matters here: Tiny Aya ties a 262,144 x 2,048 embedding to the output.
    The runner sets it to `[6, 3]`. The trainer path already stops on the
    tokenizer eos.
 
-Not changed, but worth knowing:
+Not changed:
 
 - In the trainer path AgentTune returns 0.0 for every sampled log-prob
   (rollout_factory.py:2084-2085). That is fine without vLLM: TRL only uses them
@@ -275,8 +275,8 @@ toward it. The cost: inference needs both adapters, merged in order
 
 SmolLM2's template also ignores `tools`, so it takes the same fallback path as
 Tiny Aya (AgentTune prints "The chat template of HuggingFaceTB/SmolLM2-135M-Instruct
-ignores `tools`; adding the tool schemas to the system prompt ..."). Model
-quality does not matter here; the code paths do.
+ignores `tools`; adding the tool schemas to the system prompt ..."). This test
+checks code paths, not model quality.
 
 **SFT, 8 traces, 3 steps:**
 

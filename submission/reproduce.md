@@ -27,7 +27,7 @@ export HF_TOKEN=<your token>
 .venv/bin/python -m pytest -q
 ```
 
-`gen_data.py` builds `data/dbs/*.sqlite`, the task splits in `data/tasks/`, the teacher traces in `data/teacher/`, and the `oracle` and `naive` traces in `outputs/traces/`. Two runs give identical files. The test suite has 402 tests. They passed in 35 s on our Mac.
+`gen_data.py` builds `data/dbs/*.sqlite`, the task splits in `data/tasks/`, the teacher traces in `data/teacher/`, and the `oracle` and `naive` traces in `outputs/traces/`. Two runs give identical files. The test suite has 411 tests. They passed in 35 s on our Mac.
 
 ## 3. GPU jobs on Hugging Face Jobs
 
@@ -150,7 +150,7 @@ hf jobs uv run --flavor l40sx1 --timeout 12h --secrets HF_TOKEN \
 
 We took the flag values from the team's training notes for this run. We did not check `--stop-if-no-signal` and `--timeout` for it. The script default for the first is 3. The smoke job for this stage took about 116 s on an A10G (0.03 USD).
 
-Note on the `grpo-ungated` and `grpo-mixed` commands: our job list stores the `grpo-ungated` and `grpo-mixed` command lines cut after `--rew`. The flags before that point are the ones shown. The reward mode comes from the run name, and the training log agrees: for `grpo-ungated`, mean reward 0.736 equals `0.5 * correct + 0.5 * efficiency` (0.531 and 0.942). We do not know if `--stop-if-no-signal` was given for these two runs. Its default is 3.
+Our job list stores the `grpo-ungated` and `grpo-mixed` command lines cut after `--rew`. The flags before that point are the ones shown. The reward mode comes from the run name, and the training log agrees: for `grpo-ungated`, mean reward 0.736 equals `0.5 * correct + 0.5 * efficiency` (0.531 and 0.942). We do not know if `--stop-if-no-signal` was given for these two runs. Its default is 3.
 
 ### 3e. Evaluation (a10g-small, both test splits, 220 tasks)
 

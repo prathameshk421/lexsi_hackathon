@@ -13,14 +13,14 @@ These notes explain the visual choices in the demo app. I studied webflow.com, l
 
 ## Principles for this app
 
-1. **One accent, one neutral scale.** A warm off-white or near-black page, white or graphite surfaces, two text greys and one cobalt accent. The accent marks focus, the selected state and the story rule. Primary buttons are ink, not blue, so colour stays rare and means something.
+1. **One accent, one neutral scale.** A warm off-white or near-black page, white or graphite surfaces, two text greys and one cobalt accent. The accent marks focus, the selected state and the story rule. Primary buttons are ink, not blue, so colour stays rare.
 2. **Hierarchy from weight and grey, not size alone.** The scale is 12, 13, 14, 15, 17, 22 and 40 px. Weights are 400, 500 and 600. Large headings get negative letter spacing. Secondary text is grey, not smaller and smaller.
 3. **Hairlines instead of shadows.** Cards, toolbars and tables use 1 px borders in the neutral scale. There are no drop shadows on content. Radii are 4 px for tags, 6 px for controls and 10 px for cards.
 4. **The product is the hero.** The headline says the idea in one line ("Same question. Same right answer. Very different cost."). The live comparison sits right under it. A sentence built from the two traces gives the cost gap in numbers before any chart.
 5. **The data is the design.** SQL and tool output use a mono face with colour on keywords, strings and numbers. Long output shows six lines, and a native disclosure shows the rest. Meters carry the real value, the optimal value and the ratio in text. Tables use tabular figures and right-aligned numbers.
 6. **Meaning never rides on colour alone.** "Correct" and "Wrong" are words. Bars above the optimal cost are orange and hatched, and their ratio is printed. Scripted reference policies have a dashed card border and a "scripted reference" tag, and their chart bars are hatched. A run with a wrong answer gets an outline cost bar and the words "no correct answer", so a cheap failure never looks like a good result.
 7. **An 8 px rhythm.** Gaps and padding are 4, 8, 12, 16, 20, 24, 32, 40 and 64 px. Line length stays under about 70 characters for prose.
-8. **Short, purposeful motion.** A new step fades and slides 4 px in 180 ms while a live run streams. Nothing else moves. `prefers-reduced-motion` turns all of it off.
+8. **Short motion.** A new step fades and slides 4 px in 180 ms while a live run streams. Nothing else moves. `prefers-reduced-motion` turns all of it off.
 
 ## Practical choices
 
