@@ -608,11 +608,11 @@ None. All code was written during the hackathon (stated by the team lead). An ol
 
 Team Dear_Basketball:
 
-- Prathamesh Kinagi (GitHub `prathameshk421`, HF and Discord handles: team member fills this)
-- Aarush Oak (handles: team member fills this)
-- Aayush Kulkarni (handles: team member fills this)
+- Prathamesh Kinagi: GitHub and Hugging Face [@prathameshk421](https://huggingface.co/prathameshk421), Discord `prathameshk421`
+- Aarush Oak: GitHub and Hugging Face [@aarush323](https://huggingface.co/aarush323), Discord `rush32306`
+- Aayush Kulkarni: Hugging Face [@aayush-k](https://huggingface.co/aayush-k), Discord `thulium7479`, [LinkedIn](https://www.linkedin.com/in/aayush-kulkarni-0a2b5a337/)
 
-Author contributions: team member fills this. The project idea comes from Aarush Oak's query-efficient analyst plan (`docs/query-efficient-analyst.md`).
+Author contributions: the project idea comes from Aarush Oak's query-efficient analyst plan (`docs/query-efficient-analyst.md`). The git history shows who changed what.
 
 ## LLM usage statement
 
